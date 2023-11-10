@@ -1,0 +1,15 @@
+{
+  "name": "seika",
+  "version": "0.0.1",
+  "dependencies": [
+    {
+      "name": "sdl2",
+      "version>=": "2.0.22#1"
+    },
+    {
+      "name": "freetype",
+      "version>=": "2.12.1"
+    }
+  ],
+  "builtin-baseline": "91393faf123c4f1d22ef3dbfb4ec03531bac907a"
+}
