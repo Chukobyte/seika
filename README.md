@@ -1,6 +1,6 @@
 # Seika
 
-A framework that can be used to make 2D games.
+A framework that can be used to make games.
 
 ## How to include in a project
 
@@ -12,7 +12,7 @@ include(FetchContent)
 FetchContent_Declare(
         seika
         GIT_REPOSITORY https://github.com/Chukobyte/seika.git
-        GIT_TAG main
+        GIT_TAG v0.0.1
 )
 
 FetchContent_MakeAvailable(seika)
@@ -24,3 +24,7 @@ Seika uses vcpkg as its package manager, be sure to include this as an option wh
 ```
 
 Make sure to link seika to whatever uses it with `target_link_libraries`.
+
+Example projects found [here](https://github.com/Chukobyte/seika-examples).
+
+*Note: Using v0.0.x versions as pre-alpha, won't create full releases until minor version is incremented.*
