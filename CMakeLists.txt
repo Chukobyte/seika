@@ -15,16 +15,6 @@ else ()
             "-Wno-unused-variable" "-Wno-cast-function-type" "-Wno-unused-parameter" "-Wno-missing-field-initializers")
 endif ()
 
-find_package(SDL2 CONFIG REQUIRED)
-
-find_package(freetype CONFIG)
-set(freetype_from_find_package TRUE)
-if (NOT freetype_FOUND)
-    find_package(PkgConfig REQUIRED)
-    pkg_check_modules(freetype REQUIRED freetype2)
-    set(freetype_from_find_package FALSE)
-endif()
-
 add_library(${PROJECT_NAME} STATIC
         seika/seika.c
         seika/asset/asset_manager.c
@@ -64,10 +54,29 @@ add_library(${PROJECT_NAME} STATIC
         seika/data_structures/se_tile_map.c
         )
 
-add_library(glad include/glad/glad.c)
-add_library(stb_image include/stb_image/stb_image.c)
-add_library(kuba_zip include/kuba_zip/zip.c)
-add_library(unity include/unity.c)
+#--- Dependencies ---#
+find_package(SDL2 CONFIG REQUIRED)
+
+find_package(freetype CONFIG)
+set(freetype_from_find_package TRUE)
+if (NOT freetype_FOUND)
+    find_package(PkgConfig REQUIRED)
+    pkg_check_modules(freetype REQUIRED freetype2)
+    set(freetype_from_find_package FALSE)
+endif()
+
+if (NOT TARGET glad)
+    add_library(glad include/glad/glad.c)
+endif()
+if (NOT TARGET stb_image)
+    add_library(stb_image include/stb_image/stb_image.c)
+endif()
+if (NOT TARGET kuba_zip)
+    add_library(kuba_zip include/kuba_zip/zip.c)
+endif()
+if (NOT TARGET unity)
+    add_library(unity include/unity.c)
+endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC
         "${PROJECT_BINARY_DIR}"
@@ -92,6 +101,7 @@ if (NOT freetype_from_find_package)
     target_include_directories(${PROJECT_NAME} PUBLIC ${freetype_INCLUDE_DIRS})
 endif()
 
+#--- Link ---#
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image kuba_zip SDL2::SDL2main SDL2::SDL2 freetype Ws2_32)
 elseif (WIN32)
