@@ -16,7 +16,7 @@ jobs:
         with:
           install: gcc make
 
-      - name: setup dependencies
+      - name: install dependencies
         shell: msys2 {0}
         run: |
           (echo ""; echo "y") | pacman -S mingw-w64-x86_64-toolchain
@@ -31,6 +31,8 @@ jobs:
           cmake --build .
 
       - name: run unit tests
+        shell: msys2 {0}
         run: |
           echo "Running seika tests!"
-          Start-Process -FilePath "${{ github.workspace }}\seika_test.exe"
+          ${{ github.workspace }}\seika_test.exe
+#          Start-Process -FilePath "${{ github.workspace }}\seika_test.exe"
