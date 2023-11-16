@@ -31,9 +31,7 @@ jobs:
           cmake --build .
 
       - name: run unit tests
-        shell: msys2 {0}
         run: |
           echo "Running seika tests!"
           cd ${{ github.workspace }}
-          seika_test.exe
-#          Start-Process -FilePath "${{ github.workspace }}\seika_test.exe"
+          Start-Process -FilePath "seika_test.exe"
