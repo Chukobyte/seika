@@ -29,4 +29,4 @@ jobs:
       - name: run unit tests
         run: |
           echo "Running seika tests!"
-          ${{ github.workspace }}\seika_test.exe
+          Start-Process -FilePath "${{ github.workspace }}\seika_test.exe" -Wait
