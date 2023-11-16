@@ -3,6 +3,8 @@ name: macosx-clang-build
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
 env:
   LC_ALL: en_US.UTF-8
