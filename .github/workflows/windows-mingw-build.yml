@@ -34,5 +34,6 @@ jobs:
         shell: msys2 {0}
         run: |
           echo "Running seika tests!"
-          ${{ github.workspace }}\seika_test.exe
+          cd ${{ github.workspace }}
+          seika_test.exe
 #          Start-Process -FilePath "${{ github.workspace }}\seika_test.exe"
