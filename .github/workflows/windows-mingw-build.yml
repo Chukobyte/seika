@@ -29,6 +29,4 @@ jobs:
       - name: run unit tests
         run: |
           echo "Running seika tests!"
-          cd ${{ github.workspace }}
-          Get-ChildItem -Path *.exe -Recurse
-#          ${{ github.workspace }}\builds\Debug\seika_test.exe
+          ${{ github.workspace }}\seika_test.exe
