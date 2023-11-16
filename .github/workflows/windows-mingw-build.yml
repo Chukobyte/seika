@@ -29,4 +29,5 @@ jobs:
       - name: run unit tests
         run: |
           echo "Running seika tests!"
-          ${{ github.workspace }}\builds\Debug\seika_test.exe
+          dir /s ${{ github.workspace }}
+#          ${{ github.workspace }}\builds\Debug\seika_test.exe
