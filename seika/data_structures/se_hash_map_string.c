@@ -111,6 +111,14 @@ void* se_string_hash_map_get(SEStringHashMap* hashMap, const char* key) {
     return NULL;
 }
 
+// TODO: Make better...
+void* se_string_hash_map_find(SEStringHashMap* hashMap, const char* key) {
+    if (se_string_hash_map_has(hashMap, key)) {
+        return se_string_hash_map_get(hashMap, key);
+    }
+    return NULL;
+}
+
 bool se_string_hash_map_erase(SEStringHashMap* hashMap, const char* key) {
     SE_ASSERT(hashMap != NULL);
     SE_ASSERT(key != NULL);

@@ -6,6 +6,7 @@
 #include "seika/data_structures/se_array_list.h"
 #include "seika/data_structures/se_spatial_hash_map.h"
 #include "seika/asset/asset_file_loader.h"
+#include "seika/utils/command_line_args_util.h"
 #include "seika/utils/se_string_util.h"
 #include "seika/utils/se_file_system_utils.h"
 #include "seika/utils/observer.h"
@@ -22,6 +23,7 @@ void tearDown() {}
 
 void seika_hash_map_test(void);
 void seika_spatial_hash_map_test(void);
+void seika_command_line_args_util_test(void);
 void seika_file_system_utils_test(void);
 void seika_string_utils_test(void);
 void seika_array_utils_test(void);
@@ -36,6 +38,7 @@ int main(int argv, char** args) {
     UNITY_BEGIN();
     RUN_TEST(seika_hash_map_test);
     RUN_TEST(seika_spatial_hash_map_test);
+    RUN_TEST(seika_command_line_args_util_test);
     RUN_TEST(seika_file_system_utils_test);
     RUN_TEST(seika_string_utils_test);
     RUN_TEST(seika_array_utils_test);
@@ -118,6 +121,21 @@ void seika_spatial_hash_map_test(void) {
     TEST_ASSERT_NULL(se_spatial_hash_map_get(spatialHashMap, entityTwo));
 
     se_spatial_hash_map_destroy(spatialHashMap);
+}
+
+void seika_command_line_args_util_test(void) {
+#define SK_CMD_LINE_TEST_ARGV 5
+    const int argv = 5;
+    char* args[SK_CMD_LINE_TEST_ARGV] = { "seika.exe", "--test", "true", "-l", "debug" };
+    SKCmdLineArgDef defs[3] = {
+            (SKCmdLineArgDef){ .id = "working-dir-override", .description = "Overrides the current working dir", .expectsValue = true, .keys = { "-d", NULL } },
+            (SKCmdLineArgDef){ .id = "log-level", .description = "Sets the log level for the engine runtime", .expectsValue = true, .keys = { "-l", NULL } },
+            (SKCmdLineArgDef){ NULL }
+    };
+    const SKCmdLineArgResult result = sk_cmd_line_args_util_parse(SK_CMD_LINE_TEST_ARGV, args, defs);
+    sk_cmd_line_args_util_print_results(&result);
+
+#undef SK_CMD_LINE_TEST_ARGV
 }
 
 void seika_file_system_utils_test(void) {

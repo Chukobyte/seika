@@ -44,6 +44,7 @@ SEStringHashMap* se_string_hash_map_create_default_capacity();
 bool se_string_hash_map_destroy(SEStringHashMap* hashMap);
 bool se_string_hash_map_add(SEStringHashMap* hashMap, const char* key, void* value, size_t valueSize);
 void* se_string_hash_map_get(SEStringHashMap* hashMap, const char* key);
+void* se_string_hash_map_find(SEStringHashMap* hashMap, const char* key);
 bool se_string_hash_map_has(SEStringHashMap* hashMap, const char* key);
 bool se_string_hash_map_erase(SEStringHashMap* hashMap, const char* key);
 // Int

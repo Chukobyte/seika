@@ -40,6 +40,7 @@ add_library(${PROJECT_NAME} STATIC
         seika/audio/audio.c
         seika/thread/se_pthread.c
         seika/thread/se_thread_pool.c
+        seika/utils/command_line_args_util.c
         seika/utils/logger.c
         seika/utils/se_file_system_utils.c
         seika/utils/se_platform.c
