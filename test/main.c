@@ -133,7 +133,11 @@ void seika_command_line_args_util_test(void) {
             (SKCmdLineArgDef){ NULL }
     };
     const SKCmdLineArgResult result = sk_cmd_line_args_util_parse(SK_CMD_LINE_TEST_ARGV, args, defs);
-    sk_cmd_line_args_util_print_results(&result);
+    TEST_ASSERT_EQUAL_INT(1, result.keyResultCount);
+    const SKCmdLineArgKeyResult* keyResult = &result.keyResults[0];
+    TEST_ASSERT_EQUAL_STRING("log-level", keyResult->id);
+    TEST_ASSERT_EQUAL_INT(1, keyResult->valueCount);
+    TEST_ASSERT_EQUAL_STRING("debug", keyResult->values[0]);
 
 #undef SK_CMD_LINE_TEST_ARGV
 }
