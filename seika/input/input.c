@@ -23,6 +23,7 @@ void input_load_gamepads();
 void input_process_gamepad(SDL_Event event);
 
 void input_initialize_gamepad_system();
+void input_finalize_gamepad_system();
 void input_gamepad_cleanup_flags();
 
 //--- Input ---//
@@ -173,7 +174,12 @@ bool se_input_initialize() {
     return true;
 }
 
-void se_input_finalize() {}
+void se_input_finalize() {
+    se_string_hash_map_destroy(inputActionMap);
+    se_string_hash_map_destroy(keyboardStringValuesMap);
+    input_finalize_gamepad_system();
+    se_mouse_clear();
+}
 
 void se_input_add_action_value(const char* actionName, const char* actionValue, int deviceId) {
     if (!se_string_hash_map_has(inputActionMap, actionName)) {
@@ -439,6 +445,10 @@ void input_initialize_gamepad_system() {
 
     // Initialize game pads
     input_load_gamepads();
+}
+
+void input_finalize_gamepad_system() {
+    se_string_hash_map_destroy(gamepadStringValuesMap);
 }
 
 void input_load_gamepads() {
