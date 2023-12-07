@@ -48,7 +48,7 @@ typedef struct SERect2 {
     float h;
 } SERect2;
 
-bool se_rect2_does_rectangles_overlap(SERect2* sourceRect, SERect2* targetRect);
+bool se_rect2_does_rectangles_overlap(const SERect2* sourceRect, const SERect2* targetRect);
 
 //--- SETransform2D ---//
 typedef struct SETransform2D {

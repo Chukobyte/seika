@@ -13,7 +13,7 @@ SEVector2 se_math_vec2_lerp(const SEVector2* v1, const SEVector2* v2, float t) {
 }
 
 // --- Rect2 --- //
-bool se_rect2_does_rectangles_overlap(SERect2* sourceRect, SERect2* targetRect) {
+bool se_rect2_does_rectangles_overlap(const SERect2* sourceRect, const SERect2* targetRect) {
     return (sourceRect->x + sourceRect->w >= targetRect->x) &&
            (targetRect->x + targetRect->w >= sourceRect->x) &&
            (sourceRect->y + sourceRect->h >= targetRect->y) &&
