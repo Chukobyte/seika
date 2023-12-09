@@ -7,7 +7,6 @@
 
 typedef struct SESubjectNotifyPayload {
     void* data; // Primary data, be sure to cast properly
-    int type; // Secondary data, can be used to filter things, an easier value to access, etc...
 } SESubjectNotifyPayload;
 
 typedef void (*SEObserverOnNotify)(SESubjectNotifyPayload*);

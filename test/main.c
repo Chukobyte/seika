@@ -284,7 +284,7 @@ void observer_func1(SESubjectNotifyPayload* payload) {
 
 void observer_func2(SESubjectNotifyPayload* payload) {
     const int dataValue = *(int*) payload->data;
-    if (dataValue == 3 && payload->type == 127) {
+    if (dataValue == 3) {
         hasObserved = true;
     }
 }
@@ -307,7 +307,7 @@ void seika_observer_test(void) {
     se_event_register_observer(event, observer);
     int dataValue = 3;
     se_event_notify_observers(event, &(SESubjectNotifyPayload) {
-        .data = &dataValue, .type = 127
+        .data = &dataValue
     });
     TEST_ASSERT(hasObserved);
 
