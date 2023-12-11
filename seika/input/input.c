@@ -13,10 +13,6 @@
 #include "mouse.h"
 #include "../asset/asset_file_loader.h"
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4996) // for strcpy
-#endif
-
 void input_process_keyboard(SDL_Event event);
 void input_process_mouse(SDL_Event event);
 void input_load_gamepads();

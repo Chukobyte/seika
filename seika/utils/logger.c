@@ -1,11 +1,10 @@
 #include "logger.h"
+
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4996) // for strcpy and strncat
-#endif
+#include "se_string_util.h"
 
 static SELogLevel currentLogLevel = SELogLevel_ERROR;
 
@@ -19,9 +18,9 @@ void se_logger_error(const char* fmt, ...) {
     if (currentLogLevel <= SELogLevel_ERROR) {
         char str[SE_LOG_BUFFER_SIZE];
         const char* logLevelText = "[ERROR] ";
-        strcpy(str, logLevelText);
-        strncat(str, fmt, (sizeof(str) - strlen(str) - 1) );
-        strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
+        se_strcpy(str, logLevelText);
+        se_strncat(str, fmt, (sizeof(str) - strlen(str) - 1) );
+        se_strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
         vfprintf(stderr, str, args);
     }
     va_end(args);
@@ -33,9 +32,9 @@ void se_logger_warn(const char* fmt, ...) {
     if (currentLogLevel <= SELogLevel_WARN) {
         char str[SE_LOG_BUFFER_SIZE];
         const char* logLevelText = "[WARN] ";
-        strcpy(str, logLevelText);
-        strncat(str, fmt, (sizeof(str) - strlen(str) - 1) );
-        strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
+        se_strcpy(str, logLevelText);
+        se_strncat(str, fmt, (sizeof(str) - strlen(str) - 1) );
+        se_strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
         vprintf(str, args);
     }
     va_end(args);
@@ -47,9 +46,9 @@ void se_logger_info(const char* fmt, ...) {
     if (currentLogLevel <= SELogLevel_INFO) {
         char str[SE_LOG_BUFFER_SIZE];
         const char* logLevelText = "[INFO] ";
-        strcpy(str, logLevelText);
-        strncat(str, fmt, (sizeof(str) - strlen(str) - 1) );
-        strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
+        se_strcpy(str, logLevelText);
+        se_strncat(str, fmt, (sizeof(str) - strlen(str) - 1) );
+        se_strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
         vprintf(str, args);
     }
     va_end(args);
@@ -61,9 +60,9 @@ void se_logger_debug(const char* fmt, ...) {
     if (currentLogLevel <= SELogLevel_DEBUG) {
         char str[SE_LOG_BUFFER_SIZE];
         const char* logLevelText = "[DEBUG] ";
-        strcpy(str, logLevelText);
-        strncat(str, fmt, (sizeof(str) - strlen(str) - 1) );
-        strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
+        se_strcpy(str, logLevelText);
+        se_strncat(str, fmt, (sizeof(str) - strlen(str) - 1) );
+        se_strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
         vprintf(str, args);
     }
     va_end(args);
@@ -74,8 +73,8 @@ void se_logger_print_err(const char* fmt, ...) {
     va_start(args, fmt);
     char str[SE_LOG_BUFFER_SIZE];
     memset(str, 0, SE_LOG_BUFFER_SIZE);
-    strncat(str,  fmt, (sizeof(str) - strlen(str) - 1) );
-    strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
+    se_strncat(str,  fmt, (sizeof(str) - strlen(str) - 1) );
+    se_strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
     vfprintf(stderr, str, args);
     va_end(args);
 }

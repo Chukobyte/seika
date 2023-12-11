@@ -7,10 +7,6 @@
 #include "../utils/logger.h"
 #include "../utils/se_assert.h"
 
-#ifdef _MSC_VER
-#pragma warning(disable : 4996) // for strcpy
-#endif
-
 //--- NETWORK ---//
 #define RBE_NETWORK_HANDSHAKE_MESSAGE "init"
 

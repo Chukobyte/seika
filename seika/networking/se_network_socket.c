@@ -5,10 +5,7 @@
 #include "../thread/se_pthread.h"
 #include "../utils/logger.h"
 #include "../utils/se_assert.h"
-
-#ifdef _MSC_VER
-#pragma warning(disable : 4996) // for strcpy
-#endif
+#include "seika/utils/se_string_util.h"
 
 //--- RBE Socket ---//
 int se_socket_get_last_error() {
@@ -42,7 +39,7 @@ void se_socket_system_finalize() {
 bool se_socket_send_message(SESocket* sock, const char* message) {
 #define CRE_SOCKET_SEND_BUFFER_SIZE 512
     static char socket_output_buffer[CRE_SOCKET_SEND_BUFFER_SIZE];
-    strcpy(socket_output_buffer, message);
+    se_strcpy(socket_output_buffer, message);
     if (sendto(sock->sock, socket_output_buffer, (int) strlen(socket_output_buffer), 0, (struct sockaddr*) &sock->si_other, sock->size) == SOCKET_ERROR) {
         se_logger_error("sendto() failed with error code : %d", se_socket_get_last_error());
         return false;

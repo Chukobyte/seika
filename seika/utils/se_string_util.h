@@ -7,6 +7,10 @@
 char* se_strdup(const char* string);
 // Copies string from a void pointer and allocated new memory
 char* se_strdup_from_memory(void* data, size_t size);
+void se_strcpy(char* destination, const char* source);
+void se_strncpy(char* destination, size_t sizeInBytes, const char* source);
+void se_strcat(char* destination, const char* source);
+void se_strncat(char* destination, const char* source, size_t sizeInBytes);
 const char* se_bool_to_string(bool value);
 char* se_str_to_lower();
 char* se_str_to_lower_and_underscore_whitespace(char* str);

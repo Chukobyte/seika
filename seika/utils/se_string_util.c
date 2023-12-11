@@ -7,7 +7,7 @@
 #include "../memory/se_mem.h"
 
 #ifdef _MSC_VER
-#pragma warning(disable : 4996) // for strcpy
+#pragma warning(disable : 4996) // for strcpy and strncat
 #endif
 
 char* se_strdup(const char* string) {
@@ -27,6 +27,27 @@ char* se_strdup_from_memory(void* data, size_t size) {
     newString[size] = '\0';
     return newString;
 }
+
+void se_strcpy(char* destination, const char* source) {
+    strcpy(destination, source);
+}
+
+void se_strncpy(char* destination, size_t sizeInBytes, const char* source) {
+#if defined(_MSC_VER)
+    strncpy_s(destination, sizeInBytes, source, sizeInBytes);
+#else
+    strncpy(destination, sizeInBytes, source);
+#endif
+}
+
+void se_strcat(char* destination, const char* source) {
+    strcat(destination, source);
+}
+
+void se_strncat(char* destination, const char* source, size_t sizeInBytes) {
+    strncat(destination, source, sizeInBytes);
+}
+
 
 const char* se_bool_to_string(bool value) {
     return value == true ? "true" : "false";
