@@ -163,7 +163,7 @@ bool se_fs_does_file_exist(const char* filePath) {
 }
 
 bool se_fs_does_dir_exist(const char* dirPath) {
-#ifdef WIN32
+#if defined(WIN32) || defined(WIN64)
     if (strnlen(dirPath, MAX_PATH + 1) > MAX_PATH) {
         return false;
     }

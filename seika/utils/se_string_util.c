@@ -33,7 +33,7 @@ void se_strcpy(char* destination, const char* source) {
 }
 
 void se_strncpy(char* destination, size_t sizeInBytes, const char* source, size_t maxCount) {
-#if WIN32
+#if defined(WIN32) || defined(WIN64)
     strncpy_s(destination, sizeInBytes, source, maxCount);
 #else
     strncpy(destination, source, maxCount);
