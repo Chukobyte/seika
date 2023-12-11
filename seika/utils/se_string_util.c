@@ -36,7 +36,7 @@ void se_strncpy(char* destination, size_t sizeInBytes, const char* source) {
 #if defined(_MSC_VER)
     strncpy_s(destination, sizeInBytes, source, sizeInBytes);
 #else
-    strncpy(destination, sizeInBytes, source);
+    strncpy(destination, source, sizeInBytes);
 #endif
 }
 
