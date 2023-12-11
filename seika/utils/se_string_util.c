@@ -32,9 +32,9 @@ void se_strcpy(char* destination, const char* source) {
     strcpy(destination, source);
 }
 
-void se_strncpy(char* destination, size_t sizeInBytes, const char* source) {
+void se_strncpy(char* destination, size_t sizeInBytes, const char* source, size_t maxCount) {
 #if defined(_MSC_VER)
-    strncpy_s(destination, sizeInBytes, source, sizeInBytes);
+    strncpy_s(destination, sizeInBytes, source, maxCount);
 #else
     strncpy(destination, source, sizeInBytes);
 #endif
