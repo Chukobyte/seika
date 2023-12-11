@@ -49,7 +49,7 @@ SKCmdLineArgKeyResult* sk_cmd_line_args_util_find_or_add_key_result(const SKCmdL
 }
 
 SKCmdLineArgResult sk_cmd_line_args_util_parse(int argv, char** args, SKCmdLineArgDef* argDefs) {
-    SKCmdLineArgResult result = { .keyResults = {0}, .keyResultCount = 0 };
+    SKCmdLineArgResult result = (SKCmdLineArgResult){ .keyResults = {0}, .keyResultCount = 0 };
     SEStringHashMap* keyToArgDefMap = sk_cmd_line_args_get_key_to_arg_def_map(argDefs);
 
     for (int i = 0; i < argv; i++) {
