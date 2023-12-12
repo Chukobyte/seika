@@ -40,7 +40,7 @@ bool se_strncpy(char* destination, size_t sizeInBytes, const char* source, size_
 #else
     strncpy(destination, source, maxCount);
     if (maxCount > 0) {
-        destination[maxCount - 1] = '\0';
+        destination[maxCount] = '\0';
     }
 #endif
     return true;
