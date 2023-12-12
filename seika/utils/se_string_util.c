@@ -32,12 +32,18 @@ void se_strcpy(char* destination, const char* source) {
     strcpy(destination, source);
 }
 
-void se_strncpy(char* destination, size_t sizeInBytes, const char* source, size_t maxCount) {
+bool se_strncpy(char* destination, size_t sizeInBytes, const char* source, size_t maxCount) {
 #if defined(WIN32) || defined(WIN64)
-    strncpy_s(destination, sizeInBytes, source, maxCount);
+    if (strncpy_s(destination, sizeInBytes, source, maxCount) != 0) {
+        return false;
+    }
 #else
     strncpy(destination, source, maxCount);
+    if (maxCount > 0) {
+        destination[maxCount - 1] = '\0';
+    }
 #endif
+    return true;
 }
 
 void se_strcat(char* destination, const char* source) {

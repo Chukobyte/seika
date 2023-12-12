@@ -155,6 +155,17 @@ void seika_string_utils_test(void) {
     // Test string dup
     char* filePath = se_strdup("project.cscn");
     TEST_ASSERT_EQUAL_STRING("project.cscn", filePath);
+    // Test string copy funcs
+    char stringTestBuffer[256];
+    se_strcpy(stringTestBuffer, "test");
+    TEST_ASSERT_EQUAL_STRING("test", stringTestBuffer);
+    se_strncpy(stringTestBuffer, sizeof(stringTestBuffer), "other test", 5);
+    TEST_ASSERT_EQUAL_STRING("other", stringTestBuffer);
+    // Test string cat funcs
+    se_strcat(stringTestBuffer, " message");
+    TEST_ASSERT_EQUAL_STRING("other message", stringTestBuffer);
+    se_strncat(stringTestBuffer, " okay", sizeof(char) * 3);
+    TEST_ASSERT_EQUAL_STRING("other message ok", stringTestBuffer);
     // Test trim
     char* filePathWithoutExtension = se_str_trim(filePath, '.');
     TEST_ASSERT_EQUAL_STRING("project", filePathWithoutExtension);
