@@ -18,6 +18,12 @@ extern "C" {
 #define SE_TRIGGER_BREAKPOINT
 #endif
 
+#if defined(_WIN32) || defined(_WIN64) // Windows
+#define SE_PLATFORM_PATH_SEPARATOR_STRING "\\"
+#else
+#define SE_PLATFORM_PATH_SEPARATOR_STRING "/"
+#endif
+
 bool se_platform_is_debugger_attached();
 
 #ifdef __cplusplus
