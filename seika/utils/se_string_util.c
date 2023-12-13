@@ -77,6 +77,17 @@ char* se_str_to_lower_and_underscore_whitespace(char* str) {
     return str;
 }
 
+unsigned char* se_str_convert_string_to_unsigned_char(const char* value, size_t* outSize) {
+    const size_t stringLength = strlen(value);
+    *outSize = stringLength + 1;
+    unsigned char* returnValue = (unsigned char*)SE_MEM_ALLOCATE_SIZE(*outSize);
+    for (size_t i = 0; i < stringLength; i++) {
+        returnValue[i] = (unsigned char)value[i];
+    }
+    returnValue[stringLength] = '\0';
+    return returnValue;
+}
+
 char* se_str_trim(const char* value, char delimiter) {
     char* newStr;
     char* lastExt;
