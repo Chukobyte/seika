@@ -2,10 +2,10 @@
 
 #ifdef __cplusplus
 extern "C" {
-#else
+#endif
+
 #include <stddef.h>
 #include <stdbool.h>
-#endif
 
 void se_asset_manager_initialize();
 void se_asset_manager_finalize();
