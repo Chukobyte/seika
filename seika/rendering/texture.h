@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdbool.h>
 
 #include <glad/glad.h>
