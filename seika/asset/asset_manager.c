@@ -62,13 +62,24 @@ bool se_asset_manager_has_texture(const char* key) {
 // --- Font --- //
 SEFont* se_asset_manager_load_font(const char* fileName, const char* key, int size, bool applyNearestNeighbor) {
     SE_ASSERT_FMT(!se_asset_manager_has_font(key), "Font key '%s' already exists!", key);
-    SEFont* font = se_font_create_font(fileName, size, applyNearestNeighbor);
+    SEFont* font = ska_font_create_font(fileName, size, applyNearestNeighbor);
     SE_ASSERT_FMT(font != NULL, "Failed to load font! file_name: '%s', key: '%s', size: '%d'", fileName, key, size);
     se_string_hash_map_add(fontMap, key, font, sizeof(SEFont));
     SE_MEM_FREE(font);
     font = (SEFont*) se_string_hash_map_get(fontMap, key);
     return font;
 }
+
+SEFont* se_asset_manager_load_font_from_memory(const char* key, void* buffer, size_t bufferSize, int size, bool applyNearestNeighbor) {
+    SE_ASSERT_FMT(!se_asset_manager_has_font(key), "Font key '%s' already exists!", key);
+    SEFont* font = ska_font_create_font_from_memory(buffer, bufferSize, size, applyNearestNeighbor);
+    SE_ASSERT_FMT(font != NULL, "Failed to load font! key: '%s', size: '%d'", key, size);
+    se_string_hash_map_add(fontMap, key, font, sizeof(SEFont));
+    SE_MEM_FREE(font);
+    font = (SEFont*) se_string_hash_map_get(fontMap, key);
+    return  font;
+}
+
 
 SEFont* se_asset_manager_get_font(const char* key) {
     return (SEFont*) se_string_hash_map_get(fontMap, key);

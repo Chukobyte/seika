@@ -62,6 +62,27 @@ SETexture* se_texture_create_texture_ex(const char* filePath, GLint wrapS, GLint
     return texture;
 }
 
+SETexture* se_texture_create_texture_from_memory(void* buffer, size_t bufferSize) {
+    return se_texture_create_texture_from_memory_ex(buffer, bufferSize, DEFAULT_TEXTURE_REF.wrapS, DEFAULT_TEXTURE_REF.wrapT, DEFAULT_TEXTURE_REF.applyNearestNeighbor);
+}
+
+SETexture* se_texture_create_texture_from_memory_ex(void* buffer, size_t bufferSize, GLint wrapS, GLint wrapT, bool applyNearestNeighbor) {
+    SETexture* texture = se_texture_create_default_texture();
+    texture->wrapS = wrapS;
+    texture->wrapT = wrapT;
+    texture->applyNearestNeighbor = applyNearestNeighbor;
+    texture->data = (unsigned char*) SE_MEM_ALLOCATE_SIZE(bufferSize);
+    unsigned char* imageData = stbi_load_from_memory((unsigned char*) buffer, (int)bufferSize, &texture->width, &texture->height, &texture->nrChannels, 0);
+    SE_ASSERT(imageData);
+    memcpy(texture->data, imageData, bufferSize);
+
+    se_texture_generate(texture);
+
+    sf_asset_file_loader_free_image_data(&(SEAssetFileImageData){ imageData });
+
+    return texture;
+}
+
 SETexture* se_texture_create_solid_colored_texture(GLsizei width, GLsizei height, GLuint colorValue) {
     SETexture* texture = se_texture_create_default_texture();
     texture->nrChannels = 4;
@@ -102,8 +123,6 @@ void se_texture_generate(SETexture* texture) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     // Unbind texture
     glBindTexture(GL_TEXTURE_2D, 0);
-
-    SE_ASSERT_FMT(se_texture_is_texture_valid(texture), "Texture at file path '%s' is not valid!", texture->fileName);
 }
 
 bool se_texture_is_texture_valid(SETexture* texture) {
