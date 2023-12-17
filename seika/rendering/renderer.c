@@ -1,12 +1,12 @@
 #include "renderer.h"
 
 #include <stdlib.h>
+#include <stddef.h>
 
 #include "render_context.h"
 #include "shader/shader.h"
 #include "shader/shader_cache.h"
 #include "shader/shader_source.h"
-#include "../data_structures/se_hash_map.h"
 #include "../data_structures/se_static_array.h"
 #include "../utils/se_assert.h"
 
