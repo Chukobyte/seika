@@ -73,7 +73,13 @@ if (NOT TARGET stb_image)
     add_library(stb_image include/stb_image/stb_image.c)
 endif()
 if (NOT TARGET kuba_zip)
-    add_library(kuba_zip include/kuba_zip/zip.c)
+    include(FetchContent)
+    FetchContent_Declare(
+            kuba_zip
+            GIT_REPOSITORY https://github.com/kuba--/zip.git
+            GIT_TAG v0.3.0
+    )
+    FetchContent_MakeAvailable(kuba_zip)
 endif()
 if (NOT TARGET unity)
     add_library(unity include/unity.c)
@@ -104,13 +110,13 @@ endif()
 
 #--- Link ---#
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image kuba_zip SDL2::SDL2main SDL2::SDL2 freetype Ws2_32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip SDL2::SDL2main SDL2::SDL2 freetype Ws2_32)
 elseif (WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image kuba_zip -lmingw32 -static-libgcc SDL2::SDL2main SDL2::SDL2 freetype -lws2_32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -lmingw32 -static-libgcc SDL2::SDL2main SDL2::SDL2 freetype -lws2_32)
 elseif (APPLE)
-    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image kuba_zip -Xlinker SDL2::SDL2main SDL2::SDL2 freetype m)
+    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -Xlinker SDL2::SDL2main SDL2::SDL2 freetype m)
 else ()
-    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image kuba_zip -static-libgcc -Xlinker -export-dynamic SDL2::SDL2main SDL2::SDL2 freetype m)
+    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -static-libgcc -Xlinker -export-dynamic SDL2::SDL2main SDL2::SDL2 freetype m)
 endif ()
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${flags})
