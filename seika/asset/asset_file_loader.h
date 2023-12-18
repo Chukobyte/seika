@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -28,6 +32,7 @@ bool sf_asset_file_loader_load_archive(const char* filePath);
 void sf_asset_file_loader_set_read_mode(SEAssetFileLoaderReadMode readMode);
 SEAssetFileLoaderReadMode sf_asset_file_loader_get_read_mode();
 SEArchiveFileAsset sf_asset_file_loader_get_asset(const char* path);
+SEArchiveFileAsset sf_asset_file_loader_load_asset_from_disk(const char* path);
 bool sf_asset_file_loader_is_asset_valid(SEArchiveFileAsset* fileAsset);
 
 // Asset loading types
@@ -35,3 +40,7 @@ SEAssetFileImageData* sf_asset_file_loader_load_image_data(const char* filePath)
 void sf_asset_file_loader_free_image_data(SEAssetFileImageData* data);
 char* sf_asset_file_loader_read_file_contents_as_string(const char* filePath, size_t* size);
 char* sf_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, size_t* size);
+
+#ifdef __cplusplus
+}
+#endif

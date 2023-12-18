@@ -281,7 +281,10 @@ void seika_asset_file_loader_test(void) {
     TEST_ASSERT_TRUE(sf_asset_file_loader_is_asset_valid(&existingFileAsset));
     // File doesn't exist
     SEArchiveFileAsset nonExistingFileAsset = sf_asset_file_loader_get_asset("test.png");
-    TEST_ASSERT_TRUE(!sf_asset_file_loader_is_asset_valid(&nonExistingFileAsset));
+    TEST_ASSERT_FALSE(sf_asset_file_loader_is_asset_valid(&nonExistingFileAsset));
+    // Test loading from disk
+    SEArchiveFileAsset diskAsset = sf_asset_file_loader_load_asset_from_disk("test/resources/test.pck");
+    TEST_ASSERT_TRUE(sf_asset_file_loader_is_asset_valid(&diskAsset));
 
     sf_asset_file_loader_finalize();
 }

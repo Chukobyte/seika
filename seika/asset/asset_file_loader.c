@@ -54,6 +54,14 @@ SEArchiveFileAsset sf_asset_file_loader_get_asset(const char* path) {
     };
 }
 
+SEArchiveFileAsset sf_asset_file_loader_load_asset_from_disk(const char* path) {
+    SEArchiveFileAsset asset = { NULL, 0 };
+    if (se_fs_does_file_exist(path)) {
+        asset.buffer = se_fs_read_file_contents(path, &asset.bufferSize);
+    }
+    return asset;
+}
+
 bool sf_asset_file_loader_is_asset_valid(SEArchiveFileAsset* fileAsset) {
     return fileAsset != NULL && fileAsset->buffer != NULL;
 }
