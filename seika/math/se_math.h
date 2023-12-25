@@ -108,7 +108,6 @@ typedef struct SKAColor {
 SKAColor ska_color_get_normalized_color_default_alpha(unsigned int r, unsigned int g, unsigned int b);
 SKAColor ska_color_get_normalized_color(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
 SKAColor ska_color_get_normalized_color_from_color(const SKAColor* color);
-SKAColor ska_color_get_white();
 
 // --- Misc --- //
 float ska_math_lerpf(float a, float b, float t);
