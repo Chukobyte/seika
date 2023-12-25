@@ -94,21 +94,21 @@ SEShaderParam* se_shader_instance_param_create_float(SEShaderInstance* shaderIns
     return (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
 }
 
-SEShaderParam* se_shader_instance_param_create_float2(SEShaderInstance* shaderInstance, const char* name, SEVector2 value) {
+SEShaderParam* se_shader_instance_param_create_float2(SEShaderInstance* shaderInstance, const char* name, SKAVector2 value) {
     SEShaderParam params = { .name = se_strdup(name), .type = SEShaderParamType_FLOAT2 };
     params.value.float2Value = value;
     se_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SEShaderParam));
     return (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
 }
 
-SEShaderParam* se_shader_instance_param_create_float3(SEShaderInstance* shaderInstance, const char* name, SEVector3 value) {
+SEShaderParam* se_shader_instance_param_create_float3(SEShaderInstance* shaderInstance, const char* name, SKAVector3 value) {
     SEShaderParam params = { .name = se_strdup(name), .type = SEShaderParamType_FLOAT3 };
     params.value.float3Value = value;
     se_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SEShaderParam));
     return (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
 }
 
-SEShaderParam* se_shader_instance_param_create_float4(SEShaderInstance* shaderInstance, const char* name, SEVector4 value) {
+SEShaderParam* se_shader_instance_param_create_float4(SEShaderInstance* shaderInstance, const char* name, SKAVector4 value) {
     SEShaderParam params = { .name = se_strdup(name), .type = SEShaderParamType_FLOAT4 };
     params.value.float4Value = value;
     se_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SEShaderParam));
@@ -138,21 +138,21 @@ void se_shader_instance_param_update_float(SEShaderInstance* shaderInstance, con
     shaderInstance->paramsDirty = true;
 }
 
-void se_shader_instance_param_update_float2(SEShaderInstance* shaderInstance, const char* name, SEVector2 value) {
+void se_shader_instance_param_update_float2(SEShaderInstance* shaderInstance, const char* name, SKAVector2 value) {
     SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
     SE_ASSERT(param->type == SEShaderParamType_FLOAT2);
     param->value.float2Value = value;
     shaderInstance->paramsDirty = true;
 }
 
-void se_shader_instance_param_update_float3(SEShaderInstance* shaderInstance, const char* name, SEVector3 value) {
+void se_shader_instance_param_update_float3(SEShaderInstance* shaderInstance, const char* name, SKAVector3 value) {
     SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
     SE_ASSERT(param->type == SEShaderParamType_FLOAT3);
     param->value.float3Value = value;
     shaderInstance->paramsDirty = true;
 }
 
-void se_shader_instance_param_update_float4(SEShaderInstance* shaderInstance, const char* name, SEVector4 value) {
+void se_shader_instance_param_update_float4(SEShaderInstance* shaderInstance, const char* name, SKAVector4 value) {
     SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
     SE_ASSERT(param->type == SEShaderParamType_FLOAT4);
     param->value.float4Value = value;
@@ -178,19 +178,19 @@ float se_shader_instance_param_get_float(SEShaderInstance* shaderInstance, const
     return param->value.floatValue;
 }
 
-SEVector2 se_shader_instance_param_get_float2(SEShaderInstance* shaderInstance, const char* name) {
+SKAVector2 se_shader_instance_param_get_float2(SEShaderInstance* shaderInstance, const char* name) {
     SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
     SE_ASSERT(param->type == SEShaderParamType_FLOAT2);
     return param->value.float2Value;
 }
 
-SEVector3 se_shader_instance_param_get_float3(SEShaderInstance* shaderInstance, const char* name) {
+SKAVector3 se_shader_instance_param_get_float3(SEShaderInstance* shaderInstance, const char* name) {
     SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
     SE_ASSERT(param->type == SEShaderParamType_FLOAT3);
     return param->value.float3Value;
 }
 
-SEVector4 se_shader_instance_param_get_float4(SEShaderInstance* shaderInstance, const char* name) {
+SKAVector4 se_shader_instance_param_get_float4(SEShaderInstance* shaderInstance, const char* name) {
     SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
     SE_ASSERT(param->type == SEShaderParamType_FLOAT4);
     return param->value.float4Value;

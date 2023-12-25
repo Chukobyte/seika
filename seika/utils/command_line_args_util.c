@@ -6,31 +6,31 @@
 
 #include "../data_structures/se_hash_map_string.h"
 
-SEStringHashMap* sk_cmd_line_args_get_key_to_arg_def_map(SKCmdLineArgDef* argDefs) {
+SEStringHashMap* sk_cmd_line_args_get_key_to_arg_def_map(SKACmdLineArgDef* argDefs) {
     SEStringHashMap* keyToArgDefMap = se_string_hash_map_create_default_capacity();
     for (size_t i = 0; i < 999999999; i++) {
         if (argDefs[i].id == NULL) {
             break;
         }
 
-        SKCmdLineArgDef* argDef = &argDefs[i];
-        for (size_t argIndex = 0; argIndex < SK_COMMAND_LINE_ARGS_KEY_LIMIT; argIndex++) {
+        SKACmdLineArgDef* argDef = &argDefs[i];
+        for (size_t argIndex = 0; argIndex < SKA_COMMAND_LINE_ARGS_KEY_LIMIT; argIndex++) {
             const char* argKey = argDef->keys[argIndex];
             if (!argKey) {
                 break;
             }
 
-            se_string_hash_map_add(keyToArgDefMap, argKey, argDef, sizeof(SKCmdLineArgDef));
+            se_string_hash_map_add(keyToArgDefMap, argKey, argDef, sizeof(SKACmdLineArgDef));
         }
     }
 
     return keyToArgDefMap;
 }
 
-SKCmdLineArgKeyResult* sk_cmd_line_args_util_find_or_add_key_result(const SKCmdLineArgDef* argDef, SKCmdLineArgResult* result) {
+SKACmdLineArgKeyResult* sk_cmd_line_args_util_find_or_add_key_result(const SKACmdLineArgDef* argDef, SKACmdLineArgResult* result) {
     for (size_t i = 0; i < result->keyResultCount; i++) {
-        SKCmdLineArgKeyResult* keyResult = &result->keyResults[i];
-        for (size_t j = 0; j < SK_COMMAND_LINE_ARGS_KEY_LIMIT; j++) {
+        SKACmdLineArgKeyResult* keyResult = &result->keyResults[i];
+        for (size_t j = 0; j < SKA_COMMAND_LINE_ARGS_KEY_LIMIT; j++) {
             if (!argDef->keys[j]) {
                 break;
             }
@@ -42,21 +42,21 @@ SKCmdLineArgKeyResult* sk_cmd_line_args_util_find_or_add_key_result(const SKCmdL
     }
 
     // If here, we don't have a key result so add one
-    SKCmdLineArgKeyResult* keyResult = &result->keyResults[result->keyResultCount++];
+    SKACmdLineArgKeyResult* keyResult = &result->keyResults[result->keyResultCount++];
     keyResult->id = argDef->id;
 
     return keyResult;
 }
 
-SKCmdLineArgResult sk_cmd_line_args_util_parse(int argv, char** args, SKCmdLineArgDef* argDefs) {
-    SKCmdLineArgResult result = (SKCmdLineArgResult){ .keyResults = {0}, .keyResultCount = 0 };
+SKACmdLineArgResult sk_cmd_line_args_util_parse(int argv, char** args, SKACmdLineArgDef* argDefs) {
+    SKACmdLineArgResult result = (SKACmdLineArgResult){ .keyResults = {0}, .keyResultCount = 0 };
     SEStringHashMap* keyToArgDefMap = sk_cmd_line_args_get_key_to_arg_def_map(argDefs);
 
     for (int i = 0; i < argv; i++) {
         const char* arg = args[i];
-        const SKCmdLineArgDef* argDef = (SKCmdLineArgDef*) se_string_hash_map_find(keyToArgDefMap, arg);
+        const SKACmdLineArgDef* argDef = (SKACmdLineArgDef*) se_string_hash_map_find(keyToArgDefMap, arg);
         if (argDef) {
-            SKCmdLineArgKeyResult* keyResult = sk_cmd_line_args_util_find_or_add_key_result(argDef, &result);
+            SKACmdLineArgKeyResult* keyResult = sk_cmd_line_args_util_find_or_add_key_result(argDef, &result);
             if (argDef->expectsValue) {
                 const int nextArgIndex = i + 1;
                 if (nextArgIndex < argv) {
@@ -71,9 +71,9 @@ SKCmdLineArgResult sk_cmd_line_args_util_parse(int argv, char** args, SKCmdLineA
     return result;
 }
 
-void sk_cmd_line_args_util_print_results(const SKCmdLineArgResult* result) {
+void sk_cmd_line_args_util_print_results(const SKACmdLineArgResult* result) {
     for (size_t i = 0; i < result->keyResultCount; i++) {
-        const SKCmdLineArgKeyResult* keyResult = &result->keyResults[i];
+        const SKACmdLineArgKeyResult* keyResult = &result->keyResults[i];
         printf("---------------------------------------------------------------\n");
         printf("Key Id: '%s'\n", keyResult->id);
         for (size_t valueIndex = 0; valueIndex < keyResult->valueCount; valueIndex++) {

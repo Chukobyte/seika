@@ -3,27 +3,27 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-#define SK_COMMAND_LINE_ARGS_KEY_LIMIT 8
-#define SK_COMMAND_LINE_ARGS_RETURN_LIMIT 8
-#define SK_COMMAND_LINE_ARGS_RETURN_VALUES_LIMIT 8
+#define SKA_COMMAND_LINE_ARGS_KEY_LIMIT 8
+#define SKA_COMMAND_LINE_ARGS_RETURN_LIMIT 8
+#define SKA_COMMAND_LINE_ARGS_RETURN_VALUES_LIMIT 8
 
-typedef struct SKCmdLineArgDef {
+typedef struct SKACmdLineArgDef {
     const char* id;
     const char* description;
     bool expectsValue;
-    const char* keys[SK_COMMAND_LINE_ARGS_KEY_LIMIT];
-} SKCmdLineArgDef;
+    const char* keys[SKA_COMMAND_LINE_ARGS_KEY_LIMIT];
+} SKACmdLineArgDef;
 
-typedef struct SKCmdLineArgKeyResult {
+typedef struct SKACmdLineArgKeyResult {
     const char* id;
-    const char* values[SK_COMMAND_LINE_ARGS_RETURN_VALUES_LIMIT];
+    const char* values[SKA_COMMAND_LINE_ARGS_RETURN_VALUES_LIMIT];
     size_t valueCount;
-} SKCmdLineArgKeyResult;
+} SKACmdLineArgKeyResult;
 
-typedef struct SKCmdLineArgResult {
-    SKCmdLineArgKeyResult keyResults[SK_COMMAND_LINE_ARGS_RETURN_LIMIT];
+typedef struct SKACmdLineArgResult {
+    SKACmdLineArgKeyResult keyResults[SKA_COMMAND_LINE_ARGS_RETURN_LIMIT];
     size_t keyResultCount;
-} SKCmdLineArgResult;
+} SKACmdLineArgResult;
 
-SKCmdLineArgResult sk_cmd_line_args_util_parse(int argv, char** args, SKCmdLineArgDef* argDefs);
-void sk_cmd_line_args_util_print_results(const SKCmdLineArgResult* result);
+SKACmdLineArgResult sk_cmd_line_args_util_parse(int argv, char** args, SKACmdLineArgDef* argDefs);
+void sk_cmd_line_args_util_print_results(const SKACmdLineArgResult* result);

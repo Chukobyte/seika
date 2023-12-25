@@ -48,7 +48,7 @@ void se_curve_float_add_control_points(SECurveFloat* curve, SECurveControlPoint 
 bool se_curve_float_remove_control_point(SECurveFloat* curve, double x, double y) {
     for (size_t i = 0; i < curve->controlPointCount; i++) {
         SECurveControlPoint* point = &curve->controlPoints[i];
-        if (se_math_is_almost_equal_double_default(x, point->x) && se_math_is_almost_equal_double_default(y, point->y)) {
+        if (ska_math_is_almost_equal_double_default(x, point->x) && ska_math_is_almost_equal_double_default(y, point->y)) {
             // We've found a matching point so set it's x to the highest value, sort it, then decrement the point count.
             point->x = DBL_MAX;
             selection_sort_curve_float(curve);

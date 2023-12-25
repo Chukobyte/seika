@@ -8,8 +8,8 @@
 
 typedef struct SECharacter {
     GLuint textureId;
-    SEVector2 size;
-    SEVector2 bearing;
+    SKAVector2 size;
+    SKAVector2 bearing;
     unsigned int advance;
 } SECharacter;
 

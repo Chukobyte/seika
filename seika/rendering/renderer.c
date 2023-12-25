@@ -25,7 +25,7 @@ typedef struct TextureCoordinates {
     GLfloat tMax;
 } TextureCoordinates;
 
-TextureCoordinates renderer_get_texture_coordinates(const SETexture* texture, const SERect2* drawSource, bool flipH, bool flipV);
+TextureCoordinates renderer_get_texture_coordinates(const SETexture* texture, const SKARect2* drawSource, bool flipH, bool flipV);
 void renderer_set_shader_instance_params(SEShaderInstance* shaderInstance);
 void renderer_print_opengl_errors();
 
@@ -36,7 +36,7 @@ void sprite_renderer_update_resolution();
 void font_renderer_initialize();
 void font_renderer_finalize();
 void font_renderer_update_resolution();
-void font_renderer_draw_text(const SEFont* font, const char* text, float x, float y, float scale, const SEColor* color);
+void font_renderer_draw_text(const SEFont* font, const char* text, float x, float y, float scale, const SKAColor* color);
 
 static GLuint spriteQuadVAO;
 static GLuint spriteQuadVBO;
@@ -59,12 +59,12 @@ static mat4 spriteProjection = {
 // Sprite Batching
 typedef struct SpriteBatchItem {
     SETexture* texture;
-    SERect2 sourceRect;
-    SESize2D destSize;
-    SEColor color;
+    SKARect2 sourceRect;
+    SKASize2D destSize;
+    SKAColor color;
     bool flipH;
     bool flipV;
-    SETransformModel2D* globalTransform;
+    SKATransformModel2D* globalTransform;
     SEShaderInstance* shaderInstance;
 } SpriteBatchItem;
 
@@ -74,7 +74,7 @@ typedef struct FontBatchItem {
     float x;
     float y;
     float scale;
-    SEColor color;
+    SKAColor color;
 } FontBatchItem;
 
 void renderer_batching_draw_sprites(SpriteBatchItem items[], size_t spriteCount);
@@ -138,8 +138,8 @@ void se_renderer_update_window_size(int windowWidth, int windowHeight) {
     const FrameBufferViewportData data = se_frame_buffer_generate_viewport_data(windowWidth, windowHeight);
 #else
     struct ViewportData {
-        SEVector2i position;
-        SESize2Di size;
+        SKAVector2i position;
+        SKASize2Di size;
     };
     const struct ViewportData data = { .position = { .x = 0, .y = 0 }, .size = { .w = windowWidth, .h = windowHeight } };
 #endif
@@ -161,13 +161,13 @@ void update_active_render_layer_index(int zIndex) {
     }
 }
 
-void se_renderer_queue_sprite_draw_call(SETexture* texture, SERect2 sourceRect, SESize2D destSize, SEColor color, bool flipH, bool flipV, SETransformModel2D* globalTransform, int zIndex, SEShaderInstance* shaderInstance) {
+void se_renderer_queue_sprite_draw_call(SETexture* texture, SKARect2 sourceRect, SKASize2D destSize, SKAColor color, bool flipH, bool flipV, SKATransformModel2D* globalTransform, int zIndex, SEShaderInstance* shaderInstance) {
     if (texture == NULL) {
         se_logger_error("NULL texture, not submitting draw call!");
         return;
     }
     SpriteBatchItem item = { .texture = texture, .sourceRect = sourceRect, .destSize = destSize, .color = color, .flipH = flipH, .flipV = flipV, .globalTransform = globalTransform, .shaderInstance = shaderInstance };
-    const int arrayZIndex = se_math_clamp_int(zIndex + SE_RENDERER_MAX_Z_INDEX / 2, 0, SE_RENDERER_MAX_Z_INDEX - 1);
+    const int arrayZIndex = ska_math_clamp_int(zIndex + SE_RENDERER_MAX_Z_INDEX / 2, 0, SE_RENDERER_MAX_Z_INDEX - 1);
     // Get texture layer index for render texture
     size_t textureLayerIndex = render_layer_items[arrayZIndex].renderTextureLayerCount;
     for (size_t i = 0; i < render_layer_items[arrayZIndex].renderTextureLayerCount; i++) {
@@ -186,14 +186,14 @@ void se_renderer_queue_sprite_draw_call(SETexture* texture, SERect2 sourceRect, 
     update_active_render_layer_index(arrayZIndex);
 }
 
-void se_renderer_queue_font_draw_call(SEFont* font, const char* text, float x, float y, float scale, SEColor color, int zIndex) {
+void se_renderer_queue_font_draw_call(SEFont* font, const char* text, float x, float y, float scale, SKAColor color, int zIndex) {
     if (font == NULL) {
         se_logger_error("NULL font, not submitting draw call!");
         return;
     }
 
     FontBatchItem item = { .font = font, .text = text, .x = x, .y = y, .scale = scale, .color = color };
-    const int arrayZIndex = se_math_clamp_int(zIndex + SE_RENDERER_MAX_Z_INDEX / 2, 0, SE_RENDERER_MAX_Z_INDEX - 1);
+    const int arrayZIndex = ska_math_clamp_int(zIndex + SE_RENDERER_MAX_Z_INDEX / 2, 0, SE_RENDERER_MAX_Z_INDEX - 1);
     // Update font batch item on render layer
     render_layer_items[arrayZIndex].fontBatchItems[render_layer_items[arrayZIndex].fontBatchItemCount++] = item;
     // Update active render layer indices
@@ -228,7 +228,7 @@ void se_renderer_flush_batches() {
     SE_STATIC_ARRAY_EMPTY(active_render_layer_items_indices);
 }
 
-void se_renderer_process_and_flush_batches(const SEColor* backgroundColor) {
+void se_renderer_process_and_flush_batches(const SKAColor* backgroundColor) {
 #ifdef SE_RENDER_TO_FRAMEBUFFER
     se_frame_buffer_bind();
 #endif
@@ -248,7 +248,7 @@ void se_renderer_process_and_flush_batches(const SEColor* backgroundColor) {
     se_frame_buffer_unbind();
 
     // Clear screen texture background
-    static const SEColor screenBackgroundColor = { 0.0f, 0.0f, 0.0f, 1.0f };
+    static const SKAColor screenBackgroundColor = {0.0f, 0.0f, 0.0f, 1.0f };
     glClearColor(screenBackgroundColor.r, screenBackgroundColor.g, screenBackgroundColor.b, screenBackgroundColor.a);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // Draw screen texture from framebuffer
@@ -267,7 +267,7 @@ void se_renderer_process_and_flush_batches(const SEColor* backgroundColor) {
 }
 
 #ifdef SE_RENDER_TO_FRAMEBUFFER
-void se_renderer_process_and_flush_batches_just_framebuffer(const SEColor* backgroundColor) {
+void se_renderer_process_and_flush_batches_just_framebuffer(const SKAColor* backgroundColor) {
     se_frame_buffer_bind();
 
     // Clear framebuffer with background color
@@ -444,8 +444,8 @@ void font_renderer_update_resolution() {
     se_shader_set_mat4_float(fontShader, "projection", &proj);
 }
 
-void font_renderer_draw_text(const SEFont* font, const char* text, float x, float y, float scale, const SEColor* color) {
-    SEVector2 currentScale = { scale, scale };
+void font_renderer_draw_text(const SEFont* font, const char* text, float x, float y, float scale, const SKAColor* color) {
+    SKAVector2 currentScale = {scale, scale };
     se_shader_use(fontShader);
     se_shader_set_vec4_float(fontShader, "textColor", color->r, color->g, color->b, color->a);
     glActiveTexture(GL_TEXTURE0);
@@ -487,7 +487,7 @@ void font_renderer_draw_text(const SEFont* font, const char* text, float x, floa
 }
 
 // --- Misc --- //
-TextureCoordinates renderer_get_texture_coordinates(const SETexture* texture, const SERect2* drawSource, bool flipH, bool flipV) {
+TextureCoordinates renderer_get_texture_coordinates(const SETexture* texture, const SKARect2* drawSource, bool flipH, bool flipV) {
     GLfloat sMin = 0.0f;
     GLfloat sMax = 1.0f;
     GLfloat tMin = 0.0f;

@@ -32,4 +32,4 @@ Make sure to link seika to whatever uses it with `target_link_libraries`.
 
 Example projects found [here](https://github.com/Chukobyte/seika-examples).
 
-*Note: Using v0.0.x versions as pre-alpha, won't create full releases until minor version is incremented.*
+*Warning: Using v0.0.x versions as pre-alpha, so expect naming inconsistencies and other holdovers from being a part of [crescent](https://github.com/Chukobyte/crescent) until v0.x.x.

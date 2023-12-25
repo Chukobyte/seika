@@ -14,9 +14,9 @@ typedef struct PositionHashes {
     int32_t hashes[SE_SPATIAL_HASH_MAX_POSITION_HASH];
 } PositionHashes;
 
-void spatial_hash_map_update(SESpatialHashMap* hashMap, unsigned int entity, SESpatialHashMapGridSpacesHandle* handle, SERect2* collisionRect);
-bool change_cell_size_if_needed(SESpatialHashMap* hashMap, SERect2* collisionRectToCheck);
-int32_t spatial_hash(SESpatialHashMap* hashMap, SEVector2* position);
+void spatial_hash_map_update(SESpatialHashMap* hashMap, unsigned int entity, SESpatialHashMapGridSpacesHandle* handle, SKARect2* collisionRect);
+bool change_cell_size_if_needed(SESpatialHashMap* hashMap, SKARect2* collisionRectToCheck);
+int32_t spatial_hash(SESpatialHashMap* hashMap, SKAVector2* position);
 void spatial_hash_map_destroy_node(SESpatialHashMap* hashMap);
 SESpatialHashMapGridSpace* get_or_create_grid_space(SESpatialHashMap* hashMap, int32_t positionHash);
 bool link_object_by_position_hash(SESpatialHashMap* hashMap, SESpatialHashMapGridSpacesHandle* object, unsigned int value, int32_t positionHash, PositionHashes* hashes);
@@ -55,7 +55,7 @@ void se_spatial_hash_map_destroy(SESpatialHashMap* hashMap) {
 }
 
 // The purpose of this function is to make sure that 'cellSize' is twice as big as the largest object
-bool change_cell_size_if_needed(SESpatialHashMap* hashMap, SERect2* collisionRectToCheck) {
+bool change_cell_size_if_needed(SESpatialHashMap* hashMap, SKARect2* collisionRectToCheck) {
     const int objectMaxSize = collisionRectToCheck->h > collisionRectToCheck->w ? (int)collisionRectToCheck->h : (int)collisionRectToCheck->w;
     // Update largest object size of hashmap if applicable
     if (objectMaxSize > hashMap->largestObjectSize) {
@@ -70,12 +70,12 @@ bool change_cell_size_if_needed(SESpatialHashMap* hashMap, SERect2* collisionRec
     return false;
 }
 
-SESpatialHashMapGridSpacesHandle* se_spatial_hash_map_insert_or_update(SESpatialHashMap* hashMap, unsigned int entity, SERect2* collisionRect) {
+SESpatialHashMapGridSpacesHandle* se_spatial_hash_map_insert_or_update(SESpatialHashMap* hashMap, unsigned int entity, SKARect2* collisionRect) {
     // Create new object handle if it doesn't exist
     if (!se_hash_map_has(hashMap->objectToGridMap, &entity)) {
         SESpatialHashMapGridSpacesHandle* newHandle = SE_MEM_ALLOCATE(SESpatialHashMapGridSpacesHandle);
         newHandle->gridSpaceCount = 0;
-        newHandle->collisionRect = (SERect2) {
+        newHandle->collisionRect = (SKARect2) {
             0.0f, 0.0f, 0.0f, 0.0f
         };
         se_hash_map_add(hashMap->objectToGridMap, &entity, &newHandle);
@@ -98,8 +98,8 @@ SESpatialHashMapGridSpacesHandle* se_spatial_hash_map_insert_or_update(SESpatial
     return objectHandle;
 }
 
-void spatial_hash_map_update(SESpatialHashMap* hashMap, unsigned int entity, SESpatialHashMapGridSpacesHandle* handle, SERect2* collisionRect) {
-    memcpy(&handle->collisionRect, collisionRect, sizeof(SERect2));
+void spatial_hash_map_update(SESpatialHashMap* hashMap, unsigned int entity, SESpatialHashMapGridSpacesHandle* handle, SKARect2* collisionRect) {
+    memcpy(&handle->collisionRect, collisionRect, sizeof(SKARect2));
 
     // Unlink all previous spaces and objects
     unlink_all_objects_by_entity(hashMap, handle, entity);
@@ -107,22 +107,22 @@ void spatial_hash_map_update(SESpatialHashMap* hashMap, unsigned int entity, SES
     // Add values to spaces and spaces to object handles (moving clockwise starting from top-left)
     PositionHashes hashes = { .hashCount = 0 };
     // Top left
-    const int32_t topLeftHash = spatial_hash(hashMap, &(SEVector2) {
+    const int32_t topLeftHash = spatial_hash(hashMap, &(SKAVector2) {
         collisionRect->x, collisionRect->y
     });
     link_object_by_position_hash(hashMap, handle, entity, topLeftHash, &hashes);
     // Top right
-    const int32_t topRightHash = spatial_hash(hashMap, &(SEVector2) {
+    const int32_t topRightHash = spatial_hash(hashMap, &(SKAVector2) {
         collisionRect->x + collisionRect->w, collisionRect->y
     });
     link_object_by_position_hash(hashMap, handle, entity, topRightHash, &hashes);
     // Bottom Left
-    const int32_t bottomLeftHash = spatial_hash(hashMap, &(SEVector2) {
+    const int32_t bottomLeftHash = spatial_hash(hashMap, &(SKAVector2) {
         collisionRect->x, collisionRect->y + collisionRect->h
     });
     link_object_by_position_hash(hashMap, handle, entity, bottomLeftHash, &hashes);
     // Bottom Right
-    const int32_t bottomRightHash = spatial_hash(hashMap, &(SEVector2) {
+    const int32_t bottomRightHash = spatial_hash(hashMap, &(SKAVector2) {
         collisionRect->x + collisionRect->w, collisionRect->y + collisionRect->h
     });
     link_object_by_position_hash(hashMap, handle, entity, bottomRightHash, &hashes);
@@ -190,7 +190,7 @@ SESpatialHashMapCollisionResult se_spatial_hash_map_compute_collision(SESpatialH
 }
 
 // Internal Functions
-int32_t spatial_hash(SESpatialHashMap* hashMap, SEVector2* position) {
+int32_t spatial_hash(SESpatialHashMap* hashMap, SKAVector2* position) {
     const int32_t x = (int32_t) position->x / hashMap->cellSize;
     const int32_t y = (int32_t) position->y / hashMap->cellSize;
     const int32_t hash = ((x * x) ^ (y * y)) % INT32_MAX;

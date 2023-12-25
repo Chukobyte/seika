@@ -222,7 +222,7 @@ char* shader_file_parse_function_body(const char* functionSource) {
 }
 
 typedef struct ShaderFileParseVecParseResult {
-    SEVector4 vector;
+    SKAVector4 vector;
     char errorMessage[64];
 } ShaderFileParseVecParseResult;
 
@@ -371,17 +371,17 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
                 shaderUniform.value.floatValue = 0.0f;
             } else if (strcmp(shaderUniformTypeName, "vec2") == 0) {
                 shaderUniform.type = SEShaderParamType_FLOAT2;
-                shaderUniform.value.float2Value = (SEVector2) {
+                shaderUniform.value.float2Value = (SKAVector2) {
                     0.0f, 0.0f
                 };
             } else if (strcmp(shaderUniformTypeName, "vec3") == 0) {
                 shaderUniform.type = SEShaderParamType_FLOAT3;
-                shaderUniform.value.float3Value = (SEVector3) {
+                shaderUniform.value.float3Value = (SKAVector3) {
                     0.0f, 0.0f, 0.0f
                 };
             } else if (strcmp(shaderUniformTypeName, "vec4") == 0) {
                 shaderUniform.type = SEShaderParamType_FLOAT4;
-                shaderUniform.value.float4Value = (SEVector4) {
+                shaderUniform.value.float4Value = (SKAVector4) {
                     0.0f, 0.0f, 0.0f, 0.0f
                 };
             } else {

@@ -90,20 +90,20 @@ void seika_spatial_hash_map_test(void) {
 
     // Create two entities and insert them into hash map
     const unsigned int entity = 1;
-    SESpatialHashMapGridSpacesHandle* handle = se_spatial_hash_map_insert_or_update(spatialHashMap, entity, &(SERect2) {
+    SESpatialHashMapGridSpacesHandle* handle = se_spatial_hash_map_insert_or_update(spatialHashMap, entity, &(SKARect2) {
         0.0f, 0.0f, 32.0f, 32.0f
     });
     TEST_ASSERT_EQUAL(handle, se_spatial_hash_map_get(spatialHashMap, entity));
 
     const unsigned int entityTwo = 2;
-    SESpatialHashMapGridSpacesHandle* handleTwo = se_spatial_hash_map_insert_or_update(spatialHashMap, entityTwo, &(SERect2) {
+    SESpatialHashMapGridSpacesHandle* handleTwo = se_spatial_hash_map_insert_or_update(spatialHashMap, entityTwo, &(SKARect2) {
         16.0f, 16.0f, 48.0f, 48.0f
     });
     TEST_ASSERT_EQUAL(handleTwo, se_spatial_hash_map_get(spatialHashMap, entityTwo));
 
     // An entity that should not be collided with
     const unsigned int entityNotCollided = 3;
-    se_spatial_hash_map_insert_or_update(spatialHashMap, entityNotCollided, &(SERect2) {
+    se_spatial_hash_map_insert_or_update(spatialHashMap, entityNotCollided, &(SKARect2) {
         64.0f, 64.0f, 96.0f, 96.0f
     });
 
@@ -127,14 +127,14 @@ void seika_command_line_args_util_test(void) {
 #define SK_CMD_LINE_TEST_ARGV 5
     const int argv = 5;
     char* args[SK_CMD_LINE_TEST_ARGV] = { "seika.exe", "--test", "true", "-l", "debug" };
-    SKCmdLineArgDef defs[3] = {
-            (SKCmdLineArgDef){ .id = "working-dir-override", .description = "Overrides the current working dir", .expectsValue = true, .keys = { "-d", NULL } },
-            (SKCmdLineArgDef){ .id = "log-level", .description = "Sets the log level for the engine runtime", .expectsValue = true, .keys = { "-l", NULL } },
-            (SKCmdLineArgDef){ NULL }
+    SKACmdLineArgDef defs[3] = {
+            (SKACmdLineArgDef){ .id = "working-dir-override", .description = "Overrides the current working dir", .expectsValue = true, .keys = {"-d", NULL } },
+            (SKACmdLineArgDef){ .id = "log-level", .description = "Sets the log level for the engine runtime", .expectsValue = true, .keys = {"-l", NULL } },
+            (SKACmdLineArgDef){NULL }
     };
-    const SKCmdLineArgResult result = sk_cmd_line_args_util_parse(SK_CMD_LINE_TEST_ARGV, args, defs);
+    const SKACmdLineArgResult result = sk_cmd_line_args_util_parse(SK_CMD_LINE_TEST_ARGV, args, defs);
     TEST_ASSERT_EQUAL_INT(1, result.keyResultCount);
-    const SKCmdLineArgKeyResult* keyResult = &result.keyResults[0];
+    const SKACmdLineArgKeyResult* keyResult = &result.keyResults[0];
     TEST_ASSERT_EQUAL_STRING("log-level", keyResult->id);
     TEST_ASSERT_EQUAL_INT(1, keyResult->valueCount);
     TEST_ASSERT_EQUAL_STRING("debug", keyResult->values[0]);

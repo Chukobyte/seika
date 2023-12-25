@@ -10,104 +10,120 @@ extern "C" {
 
 #include <cglm/cglm.h>
 
-#define SE_PI 3.14159265358979323846f
-#define SE_RAD_2_DEG (180.0f / SE_PI)
+#define SKA_PI 3.14159265358979323846f
+#define SKA_RAD_2_DEG (180.0f / SKA_PI)
 
-// --- SEVector2 --- //
-typedef struct SEVector2 {
+// --- SKAVector2 --- //
+typedef struct SKAVector2 {
     float x;
     float y;
-} SEVector2;
+} SKAVector2;
 
-bool se_math_vec2_equals(const SEVector2* v1, const SEVector2* v2);
-SEVector2 se_math_vec2_lerp(const SEVector2* v1, const SEVector2* v2, float t);
+#define SKA_VECTOR2_ZERO (SEVector2){ 0.0f, 0.0f }
+#define SKA_VECTOR2_LEFT (SEVector2){ -1.0f, 0.0f }
+#define SKA_VECTOR2_RIGHT (SEVector2){ 1.0f, 0.0f }
+#define SKA_VECTOR2_UP (SEVector2){ 0.0f, -1.0f }
+#define SKA_VECTOR2_DOWN (SEVector2){ 0.0f, 1.0f }
 
-// --- SEVector2i --- //
-typedef struct SEVector2i {
+bool ska_math_vec2_equals(const SKAVector2* v1, const SKAVector2* v2);
+SKAVector2 ska_math_vec2_lerp(const SKAVector2* v1, const SKAVector2* v2, float t);
+
+// --- SKAVector2i --- //
+typedef struct SKAVector2i {
     int x;
     int y;
-} SEVector2i;
+} SKAVector2i;
 
-// --- SESize2D --- //
-typedef struct SESize2D {
+// --- SKASize2D --- //
+typedef struct SKASize2D {
     float w;
     float h;
-} SESize2D;
+} SKASize2D;
 
-// --- SESize2Di --- //
-typedef struct SESize2Di {
+#define SKA_SIZE2D_ZERO (SESize2D){ 0.0f, 0.0f }
+
+// --- SKASize2Di --- //
+typedef struct SKASize2Di {
     int w;
     int h;
-} SESize2Di;
+} SKASize2Di;
 
-// --- SERect2 --- //
-typedef struct SERect2 {
+// --- SKARect2 --- //
+typedef struct SKARect2 {
     float x;
     float y;
     float w;
     float h;
-} SERect2;
+} SKARect2;
 
-bool se_rect2_does_rectangles_overlap(const SERect2* sourceRect, const SERect2* targetRect);
+#define SKA_RECT2D_ZERO (SESize2D){ 0.0f, 0.0f, 0.0f, 0.0f }
 
-//--- SETransform2D ---//
-typedef struct SETransform2D {
-    SEVector2 position;
-    SEVector2 scale;
+bool se_rect2_does_rectangles_overlap(const SKARect2* sourceRect, const SKARect2* targetRect);
+
+//--- SKATransform2D ---//
+typedef struct SKATransform2D {
+    SKAVector2 position;
+    SKAVector2 scale;
     float rotation; // degrees
-} SETransform2D;
+} SKATransform2D;
 
-typedef struct SETransformModel2D {
-    SEVector2 position;
-    SEVector2 scale;
+typedef struct SKATransformModel2D {
+    SKAVector2 position;
+    SKAVector2 scale;
     float rotation; // degrees
     int zIndex;
-    SEVector2 scaleSign;
+    SKAVector2 scaleSign;
     mat4 model;
-} SETransformModel2D;
+} SKATransformModel2D;
 
-// --- SEVector3 --- //
-typedef struct SEVector3 {
+// --- SKAVector3 --- //
+typedef struct SKAVector3 {
     float x;
     float y;
     float z;
-} SEVector3;
+} SKAVector3;
 
-// --- SEVector4 --- //
-typedef struct SEVector4 {
+// --- SKAVector4 --- //
+typedef struct SKAVector4 {
     float x;
     float y;
     float z;
     float w;
-} SEVector4;
+} SKAVector4;
 
-// --- SEColor --- //
-typedef struct SEColor {
+// --- SKAColor --- //
+typedef struct SKAColor {
     float r;
     float g;
     float b;
     float a;
-} SEColor;
+} SKAColor;
 
-SEColor se_color_get_normalized_color_default_alpha(unsigned int r, unsigned int g, unsigned int b);
-SEColor se_color_get_normalized_color(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
-SEColor se_color_get_normalized_color_from_color(const SEColor* color);
-SEColor se_color_get_white();
+#define SKA_COLOR_WHITE (SKAColor){ 1.0f, 1.0f, 1.0f, 1.0f }
+#define SKA_COLOR_BLACK (SKAColor){ 0.0f, 0.0f, 0.0f, 1.0f }
+#define SKA_COLOR_RED (SKAColor){ 1.0f, 0.0f, 0.0f, 1.0f }
+#define SKA_COLOR_GREEN (SKAColor){ 0.0f, 1.0f, 0.0f, 1.0f }
+#define SKA_COLOR_BLUE (SKAColor){ 0.0f, 0.0f, 1.0f, 1.0f }
+
+SKAColor ska_color_get_normalized_color_default_alpha(unsigned int r, unsigned int g, unsigned int b);
+SKAColor ska_color_get_normalized_color(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
+SKAColor ska_color_get_normalized_color_from_color(const SKAColor* color);
+SKAColor ska_color_get_white();
 
 // --- Misc --- //
-float se_math_lerpf(float a, float b, float t);
-float se_math_map_to_range(float input, float inputMin, float inputMax, float outputMin, float outputMax);
-float se_math_map_to_unit(float input, float inputMin, float inputMax);
-double se_math_map_to_range_double(double input, double inputMin, double inputMax, double outputMin, double outputMax);
-double se_math_map_to_unit_double(double input, double inputMin, double inputMax);
-float se_math_signf(float value);
-SEVector2 se_math_signvec2(SEVector2* value);
-int se_math_clamp_int(int value, int min, int max);
-float se_math_clamp_float(float value, float min, float max);
-bool se_math_is_almost_equal_float(float v1, float v2, float epsilon);
-bool se_math_is_almost_equal_float_default(float v1, float v2);
-bool se_math_is_almost_equal_double(double v1, double v2, double epsilon);
-bool se_math_is_almost_equal_double_default(double v1, double v2);
+float ska_math_lerpf(float a, float b, float t);
+float ska_math_map_to_range(float input, float inputMin, float inputMax, float outputMin, float outputMax);
+float ska_math_map_to_unit(float input, float inputMin, float inputMax);
+double ska_math_map_to_range_double(double input, double inputMin, double inputMax, double outputMin, double outputMax);
+double ska_math_map_to_unit_double(double input, double inputMin, double inputMax);
+float ska_math_signf(float value);
+SKAVector2 ska_math_signvec2(SKAVector2* value);
+int ska_math_clamp_int(int value, int min, int max);
+float ska_math_clamp_float(float value, float min, float max);
+bool ska_math_is_almost_equal_float(float v1, float v2, float epsilon);
+bool ska_math_is_almost_equal_float_default(float v1, float v2);
+bool ska_math_is_almost_equal_double(double v1, double v2, double epsilon);
+bool ska_math_is_almost_equal_double_default(double v1, double v2);
 
 #ifdef __cplusplus
 }
