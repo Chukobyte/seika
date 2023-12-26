@@ -19,11 +19,11 @@ typedef struct SKAVector2 {
     float y;
 } SKAVector2;
 
-#define SKA_VECTOR2_ZERO (SEVector2){ 0.0f, 0.0f }
-#define SKA_VECTOR2_LEFT (SEVector2){ -1.0f, 0.0f }
-#define SKA_VECTOR2_RIGHT (SEVector2){ 1.0f, 0.0f }
-#define SKA_VECTOR2_UP (SEVector2){ 0.0f, -1.0f }
-#define SKA_VECTOR2_DOWN (SEVector2){ 0.0f, 1.0f }
+#define SKA_VECTOR2_ZERO (SKAVector2){ 0.0f, 0.0f }
+#define SKA_VECTOR2_LEFT (SKAVector2){ -1.0f, 0.0f }
+#define SKA_VECTOR2_RIGHT (SKAVector2){ 1.0f, 0.0f }
+#define SKA_VECTOR2_UP (SKAVector2){ 0.0f, -1.0f }
+#define SKA_VECTOR2_DOWN (SKAVector2){ 0.0f, 1.0f }
 
 bool ska_math_vec2_equals(const SKAVector2* v1, const SKAVector2* v2);
 SKAVector2 ska_math_vec2_lerp(const SKAVector2* v1, const SKAVector2* v2, float t);
