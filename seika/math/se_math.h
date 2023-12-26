@@ -40,7 +40,7 @@ typedef struct SKASize2D {
     float h;
 } SKASize2D;
 
-#define SKA_SIZE2D_ZERO (SESize2D){ 0.0f, 0.0f }
+#define SKA_SIZE2D_ZERO (SKASize2D){ 0.0f, 0.0f }
 
 // --- SKASize2Di --- //
 typedef struct SKASize2Di {
