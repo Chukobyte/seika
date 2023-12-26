@@ -56,7 +56,7 @@ typedef struct SKARect2 {
     float h;
 } SKARect2;
 
-#define SKA_RECT2D_ZERO (SESize2D){ 0.0f, 0.0f, 0.0f, 0.0f }
+#define SKA_RECT2D_ZERO (SKARect2){ 0.0f, 0.0f, 0.0f, 0.0f }
 
 bool se_rect2_does_rectangles_overlap(const SKARect2* sourceRect, const SKARect2* targetRect);
 
