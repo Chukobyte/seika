@@ -20,6 +20,7 @@ typedef struct SKAVector2 {
 } SKAVector2;
 
 #define SKA_VECTOR2_ZERO (SKAVector2){ 0.0f, 0.0f }
+#define SKA_VECTOR2_ONE (SKAVector2){ 1.0f, 1.0f }
 #define SKA_VECTOR2_LEFT (SKAVector2){ -1.0f, 0.0f }
 #define SKA_VECTOR2_RIGHT (SKAVector2){ 1.0f, 0.0f }
 #define SKA_VECTOR2_UP (SKAVector2){ 0.0f, -1.0f }
@@ -67,6 +68,12 @@ typedef struct SKATransform2D {
     float rotation; // degrees
 } SKATransform2D;
 
+#define SKA_TRANSFORM_IDENTITY (SKATransform2D){ \
+    .position = SKA_VECTOR2_ZERO, \
+    .scale = SKA_VECTOR2_ONE, \
+    .rotation = 0.0f \
+}
+
 typedef struct SKATransformModel2D {
     SKAVector2 position;
     SKAVector2 scale;
@@ -75,6 +82,14 @@ typedef struct SKATransformModel2D {
     SKAVector2 scaleSign;
     mat4 model;
 } SKATransformModel2D;
+
+#define SKA_TRANSFORM_MODEL_IDENTITY (SKATransformModel2D){ \
+    .position = SKA_VECTOR2_ZERO, \
+    .scale = SKA_VECTOR2_ONE, \
+    .rotation = 0.0f, \
+    .zIndex = 0, \
+    .scaleSign = SKA_VECTOR2_ONE \
+}
 
 // --- SKAVector3 --- //
 typedef struct SKAVector3 {
