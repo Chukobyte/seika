@@ -20,6 +20,42 @@ bool se_rect2_does_rectangles_overlap(const SKARect2* sourceRect, const SKARect2
            (targetRect->y + targetRect->h >= sourceRect->y);
 }
 
+// --- Transform2D --- //
+void ska_transform2d_mat4_to_transform(mat4 matrix, SKATransform2D* transform) {
+    // Decompose trs matrix
+    vec4 translation;
+    mat4 rotation;
+    vec3 scale;
+    glm_decompose(matrix, translation, rotation, scale);
+    // Update position
+    transform->position = (SKAVector2){ .x = translation[0], .y = translation[1] };
+    // Update scale
+    transform->scale = (SKAVector2){ .x = fabsf(scale[0]), .y = fabsf(scale[1]) };
+    // Convert rotation to degrees
+    versor quat;
+    glm_mat4_quat(rotation, quat);
+    const float angleRadians = glm_quat_angle(quat);
+    transform->rotation = glm_deg(angleRadians);
+}
+
+void ska_transform2d_transform_to_mat4(const SKATransform2D* transform, mat4 matrix) {
+    // Create translation matrix
+    glm_translate_make(matrix, (vec3){transform->position.x, transform->position.y, 0.0f});
+    // Create rotation matrix (convert degrees to radians)
+    glm_rotate_z(matrix, glm_rad(transform->rotation), matrix);
+    // Create scale matrix
+    glm_scale(matrix, (vec3){transform->scale.x, transform->scale.y, 1.0f});
+}
+
+// --- Transform2D Model --- //
+SKATransform2D ska_transform2d_model_convert_to_transform(SKATransformModel2D* transformModel2D) {
+    SKATransform2D transform2D;
+    ska_transform2d_mat4_to_transform(transformModel2D->model, &transform2D);
+    // Update scale sign
+    transform2D.scale = (SKAVector2){ .x = transform2D.scale.x * transformModel2D->scaleSign.x, .y = transform2D.scale.y * transformModel2D->scaleSign.y };
+    return transform2D;
+}
+
 // --- Color --- //
 SKAColor ska_color_get_normalized_color_default_alpha(unsigned int r, unsigned int g, unsigned int b) {
     SKAColor color = {
@@ -49,11 +85,6 @@ SKAColor ska_color_get_normalized_color_from_color(const SKAColor* color) {
         .a = color->a / 255.0f
     };
     return newColor;
-}
-
-SKAColor ska_color_get_white() {
-    SKAColor white = {1.0f, 1.0f, 1.0f, 1.0f };
-    return white;
 }
 
 // --- Misc --- //

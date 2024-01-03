@@ -68,6 +68,9 @@ typedef struct SKATransform2D {
     float rotation; // degrees
 } SKATransform2D;
 
+void ska_transform2d_mat4_to_transform(mat4 matrix, SKATransform2D* transform);
+void ska_transform2d_transform_to_mat4(const SKATransform2D* transform, mat4 matrix);
+
 #define SKA_TRANSFORM_IDENTITY (SKATransform2D){ \
     .position = SKA_VECTOR2_ZERO, \
     .scale = SKA_VECTOR2_ONE, \
@@ -82,6 +85,8 @@ typedef struct SKATransformModel2D {
     SKAVector2 scaleSign;
     mat4 model;
 } SKATransformModel2D;
+
+SKATransform2D ska_transform2d_model_convert_to_transform(SKATransformModel2D* transformModel2D);
 
 #define SKA_TRANSFORM_MODEL_IDENTITY (SKATransformModel2D){ \
     .position = SKA_VECTOR2_ZERO, \

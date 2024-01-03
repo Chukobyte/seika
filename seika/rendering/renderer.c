@@ -64,7 +64,7 @@ typedef struct SpriteBatchItem {
     SKAColor color;
     bool flipH;
     bool flipV;
-    SKATransformModel2D* globalTransform;
+    SKARendererTransform2D transform2D;
     SEShaderInstance* shaderInstance;
 } SpriteBatchItem;
 
@@ -152,7 +152,7 @@ void se_renderer_update_window_size(int windowWidth, int windowHeight) {
 #endif
 }
 
-void update_active_render_layer_index(int zIndex) {
+static inline void update_active_render_layer_index(int zIndex) {
     const size_t sizeBefore = SE_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
     SE_STATIC_ARRAY_ADD_IF_UNIQUE(active_render_layer_items_indices, zIndex);
     const size_t sizeAfter = SE_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
@@ -161,17 +161,12 @@ void update_active_render_layer_index(int zIndex) {
     }
 }
 
-void se_renderer_queue_sprite_draw_call(SETexture* texture, SKARect2 sourceRect, SKASize2D destSize, SKAColor color, bool flipH, bool flipV, SKATransformModel2D* globalTransform, int zIndex, SEShaderInstance* shaderInstance) {
-    if (texture == NULL) {
-        se_logger_error("NULL texture, not submitting draw call!");
-        return;
-    }
-    SpriteBatchItem item = { .texture = texture, .sourceRect = sourceRect, .destSize = destSize, .color = color, .flipH = flipH, .flipV = flipV, .globalTransform = globalTransform, .shaderInstance = shaderInstance };
+static inline void ska_renderer_queue_sprite_draw_call(SpriteBatchItem* item, int zIndex) {
     const int arrayZIndex = ska_math_clamp_int(zIndex + SE_RENDERER_MAX_Z_INDEX / 2, 0, SE_RENDERER_MAX_Z_INDEX - 1);
     // Get texture layer index for render texture
     size_t textureLayerIndex = render_layer_items[arrayZIndex].renderTextureLayerCount;
     for (size_t i = 0; i < render_layer_items[arrayZIndex].renderTextureLayerCount; i++) {
-        if (texture == render_layer_items[arrayZIndex].renderTextureLayers[i].spriteBatchItems[0].texture && shaderInstance == render_layer_items[arrayZIndex].renderTextureLayers[i].spriteBatchItems[0].shaderInstance) {
+        if (item->texture == render_layer_items[arrayZIndex].renderTextureLayers[i].spriteBatchItems[0].texture && item->shaderInstance == render_layer_items[arrayZIndex].renderTextureLayers[i].spriteBatchItems[0].shaderInstance) {
             textureLayerIndex = i;
             break;
         }
@@ -181,9 +176,31 @@ void se_renderer_queue_sprite_draw_call(SETexture* texture, SKARect2 sourceRect,
     if (textureLayer->spriteBatchItemCount == 0) {
         render_layer_items[arrayZIndex].renderTextureLayerCount++;
     }
-    textureLayer->spriteBatchItems[textureLayer->spriteBatchItemCount++] = item;
+    // Copy batch item into batch items array and increment item count
+    SpriteBatchItem* currentItem = &textureLayer->spriteBatchItems[textureLayer->spriteBatchItemCount++];
+    memcpy(currentItem, item, sizeof(SpriteBatchItem));
     // Update active render layer indices
     update_active_render_layer_index(arrayZIndex);
+}
+
+void ska_renderer_queue_sprite_draw(SETexture* texture, SKARect2 sourceRect, SKASize2D destSize, SKAColor color, bool flipH, bool flipV, const SKATransform2D* transform2D, int zIndex, SEShaderInstance* shaderInstance) {
+    if (texture == NULL) {
+        se_logger_error("NULL texture, not submitting draw call!");
+        return;
+    }
+    SpriteBatchItem item = { .texture = texture, .sourceRect = sourceRect, .destSize = destSize, .color = color, .flipH = flipH, .flipV = flipV, .transform2D = {0}, .shaderInstance = shaderInstance };
+    ska_transform2d_transform_to_mat4(transform2D, item.transform2D.model);
+    ska_renderer_queue_sprite_draw_call(&item, zIndex);
+}
+
+void ska_renderer_queue_sprite_draw2(SETexture* texture, SKARect2 sourceRect, SKASize2D destSize, SKAColor color, bool flipH, bool flipV, mat4 trsMatrix, int zIndex, SEShaderInstance* shaderInstance) {
+    if (texture == NULL) {
+        se_logger_error("NULL texture, not submitting draw call!");
+        return;
+    }
+    SpriteBatchItem item = { .texture = texture, .sourceRect = sourceRect, .destSize = destSize, .color = color, .flipH = flipH, .flipV = flipV, .transform2D = {0}, .shaderInstance = shaderInstance };
+    glm_mat4_copy(trsMatrix, item.transform2D.model);
+    ska_renderer_queue_sprite_draw_call(&item, zIndex);
 }
 
 void se_renderer_queue_font_draw_call(SEFont* font, const char* text, float x, float y, float scale, SKAColor color, int zIndex) {
@@ -366,16 +383,16 @@ void renderer_batching_draw_sprites(SpriteBatchItem items[], size_t spriteCount)
             se_shader_use(spriteShader);
         }
 
-        glm_scale(items[i].globalTransform->model, (vec3) {
+        glm_scale(items[i].transform2D.model, (vec3) {
             items[i].destSize.w, items[i].destSize.h, 1.0f
         });
         const float spriteId = (float) i;
-        const float determinate = glm_mat4_det(items[i].globalTransform->model);
+        const float determinate = glm_mat4_det(items[i].transform2D.model);
         const TextureCoordinates textureCoords = renderer_get_texture_coordinates(texture, &items[i].sourceRect, items[i].flipH, items[i].flipV);
         // concat CRE_MODELS[] string for uniform param
         char modelsBuffer[24];
         sprintf(modelsBuffer, "CRE_MODELS[%zu]", i);
-        se_shader_set_mat4_float(spriteShader, modelsBuffer, &items[i].globalTransform->model);
+        se_shader_set_mat4_float(spriteShader, modelsBuffer, &items[i].transform2D.model);
 
         // Loop over vertices
         for (int j = 0; j < NUMBER_OF_VERTICES; j++) {
