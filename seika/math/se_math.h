@@ -10,6 +10,8 @@ extern "C" {
 
 #include <cglm/cglm.h>
 
+#include "../utils/se_macro_util.h"
+
 #define SKA_PI 3.14159265358979323846f
 #define SKA_RAD_2_DEG (180.0f / SKA_PI)
 
@@ -19,12 +21,12 @@ typedef struct SKAVector2 {
     float y;
 } SKAVector2;
 
-#define SKA_VECTOR2_ZERO (SKAVector2){ 0.0f, 0.0f }
-#define SKA_VECTOR2_ONE (SKAVector2){ 1.0f, 1.0f }
-#define SKA_VECTOR2_LEFT (SKAVector2){ -1.0f, 0.0f }
-#define SKA_VECTOR2_RIGHT (SKAVector2){ 1.0f, 0.0f }
-#define SKA_VECTOR2_UP (SKAVector2){ 0.0f, -1.0f }
-#define SKA_VECTOR2_DOWN (SKAVector2){ 0.0f, 1.0f }
+#define SKA_VECTOR2_ZERO SKA_STRUCT_LITERAL(SKAVector2){ 0.0f, 0.0f }
+#define SKA_VECTOR2_ONE SKA_STRUCT_LITERAL(SKAVector2){ 1.0f, 1.0f }
+#define SKA_VECTOR2_LEFT SKA_STRUCT_LITERAL(SKAVector2){ -1.0f, 0.0f }
+#define SKA_VECTOR2_RIGHT SKA_STRUCT_LITERAL(SKAVector2){ 1.0f, 0.0f }
+#define SKA_VECTOR2_UP SKA_STRUCT_LITERAL(SKAVector2){ 0.0f, -1.0f }
+#define SKA_VECTOR2_DOWN SKA_STRUCT_LITERAL(SKAVector2){ 0.0f, 1.0f }
 
 bool ska_math_vec2_equals(const SKAVector2* v1, const SKAVector2* v2);
 SKAVector2 ska_math_vec2_lerp(const SKAVector2* v1, const SKAVector2* v2, float t);
@@ -41,7 +43,7 @@ typedef struct SKASize2D {
     float h;
 } SKASize2D;
 
-#define SKA_SIZE2D_ZERO (SKASize2D){ 0.0f, 0.0f }
+#define SKA_SIZE2D_ZERO SKA_STRUCT_LITERAL(SKASize2D){ 0.0f, 0.0f }
 
 // --- SKASize2Di --- //
 typedef struct SKASize2Di {
@@ -57,7 +59,7 @@ typedef struct SKARect2 {
     float h;
 } SKARect2;
 
-#define SKA_RECT2D_ZERO (SKARect2){ 0.0f, 0.0f, 0.0f, 0.0f }
+#define SKA_RECT2D_ZERO SKA_STRUCT_LITERAL(SKARect2){ 0.0f, 0.0f, 0.0f, 0.0f }
 
 bool se_rect2_does_rectangles_overlap(const SKARect2* sourceRect, const SKARect2* targetRect);
 
@@ -119,11 +121,11 @@ typedef struct SKAColor {
     float a;
 } SKAColor;
 
-#define SKA_COLOR_WHITE (SKAColor){ 1.0f, 1.0f, 1.0f, 1.0f }
-#define SKA_COLOR_BLACK (SKAColor){ 0.0f, 0.0f, 0.0f, 1.0f }
-#define SKA_COLOR_RED (SKAColor){ 1.0f, 0.0f, 0.0f, 1.0f }
-#define SKA_COLOR_GREEN (SKAColor){ 0.0f, 1.0f, 0.0f, 1.0f }
-#define SKA_COLOR_BLUE (SKAColor){ 0.0f, 0.0f, 1.0f, 1.0f }
+#define SKA_COLOR_WHITE SKA_STRUCT_LITERAL(SKAColor){ 1.0f, 1.0f, 1.0f, 1.0f }
+#define SKA_COLOR_BLACK SKA_STRUCT_LITERAL(SKAColor){ 0.0f, 0.0f, 0.0f, 1.0f }
+#define SKA_COLOR_RED SKA_STRUCT_LITERAL(SKAColor){ 1.0f, 0.0f, 0.0f, 1.0f }
+#define SKA_COLOR_GREEN SKA_STRUCT_LITERAL(SKAColor){ 0.0f, 1.0f, 0.0f, 1.0f }
+#define SKA_COLOR_BLUE SKA_STRUCT_LITERAL(SKAColor){ 0.0f, 0.0f, 1.0f, 1.0f }
 
 SKAColor ska_color_get_normalized_color_default_alpha(unsigned int r, unsigned int g, unsigned int b);
 SKAColor ska_color_get_normalized_color(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
