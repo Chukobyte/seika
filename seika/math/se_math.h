@@ -13,10 +13,10 @@ extern "C" {
 #include "../utils/se_macro_util.h"
 
 #define SKA_PI 3.14159265358979323846f
-#define SKA_RAD_2_DEG(RADIANS) ((RADIANS) * 0.0174532925)
-#define SKA_RAD_2_DEGF(RADIANS) ((RADIANS) * 0.0174532925f)
-#define SKA_DEG_2_RAD(DEGREES) ((DEGREES) * 57.2957795)
-#define SKA_DEG_2_RADF(DEGREES) ((DEGREES) * 57.2957795f)
+#define SKA_RAD_2_DEG(RADIANS) ((RADIANS) * (180.0 / (double)SKA_PI))
+#define SKA_RAD_2_DEGF(RADIANS) ((RADIANS) * (180.0f / SKA_PI))
+#define SKA_DEG_2_RAD(DEGREES) ((DEGREES) * ((double)SKA_PI / 180.0))
+#define SKA_DEG_2_RADF(DEGREES) ((DEGREES) * (SKA_PI / 180.0f))
 
 
 // --- SKAVector2 --- //
@@ -34,6 +34,7 @@ typedef struct SKAVector2 {
 
 bool ska_math_vec2_equals(const SKAVector2* v1, const SKAVector2* v2);
 SKAVector2 ska_math_vec2_lerp(const SKAVector2* v1, const SKAVector2* v2, float t);
+float ska_math_vec2_angle(const SKAVector2* v);
 
 // --- SKAVector2i --- //
 typedef struct SKAVector2i {

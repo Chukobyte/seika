@@ -12,6 +12,14 @@ SKAVector2 ska_math_vec2_lerp(const SKAVector2* v1, const SKAVector2* v2, float 
     };
 }
 
+float ska_math_vec2_angle(const SKAVector2* v) {
+    float angle = atan2f(v->y, v->x);
+    if (angle < 0.0f) {
+        angle += 2.0f * SKA_PI;
+    }
+    return angle;
+}
+
 // --- Rect2 --- //
 bool se_rect2_does_rectangles_overlap(const SKARect2* sourceRect, const SKARect2* targetRect) {
     return (sourceRect->x + sourceRect->w >= targetRect->x) &&
