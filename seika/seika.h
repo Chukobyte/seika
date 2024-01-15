@@ -16,6 +16,7 @@ void sf_fixed_update(float deltaTime);
 void sf_render();
 bool sf_is_running();
 uint32_t sf_get_ticks();
+bool sf_set_vsync_enabled(bool enabled);
 void sf_delay(uint32_t timeToWait);
 void sf_shutdown();
 

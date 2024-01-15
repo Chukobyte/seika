@@ -176,6 +176,10 @@ uint32_t sf_get_ticks() {
     return SDL_GetTicks();
 }
 
+bool sf_set_vsync_enabled(bool enabled) {
+    return SDL_GL_SetSwapInterval((int)enabled) == 0;
+}
+
 void sf_delay(uint32_t timeToWait) {
     SDL_Delay(timeToWait);
 }
