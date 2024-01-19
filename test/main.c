@@ -21,6 +21,7 @@
 void setUp() {}
 void tearDown() {}
 
+void seika_generic_type_test(void);
 void seika_hash_map_test(void);
 void seika_spatial_hash_map_test(void);
 void seika_command_line_args_util_test(void);
@@ -36,6 +37,7 @@ void seika_shader_file_parser_test(void);
 
 int main(int argv, char** args) {
     UNITY_BEGIN();
+    RUN_TEST(seika_generic_type_test);
     RUN_TEST(seika_hash_map_test);
     RUN_TEST(seika_spatial_hash_map_test);
     RUN_TEST(seika_command_line_args_util_test);
@@ -49,6 +51,15 @@ int main(int argv, char** args) {
     RUN_TEST(seika_shader_instance_test);
     RUN_TEST(seika_shader_file_parser_test);
     return UNITY_END();
+}
+
+#include "test_component.h"
+#include "generic_type.h"
+
+void seika_generic_type_test(void) {
+//    const char* typeName = GENERIC_TYPE_GET_NAME(TestComponent);
+    const char* typeName = SKA_GENERIC_TYPE_get_name();
+    TEST_ASSERT_EQUAL_STRING("TestComponent", typeName);
 }
 
 void seika_hash_map_test(void) {
