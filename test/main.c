@@ -57,9 +57,10 @@ int main(int argv, char** args) {
 #include "generic_type.h"
 
 void seika_generic_type_test(void) {
-//    const char* typeName = GENERIC_TYPE_GET_NAME(TestComponent);
-    const char* typeName = SKA_GENERIC_TYPE_get_name();
+    const char* typeName = GENERIC_TYPE_GET_NAME(TestComponent);
     TEST_ASSERT_EQUAL_STRING("TestComponent", typeName);
+    const size_t typeIndex = GENERIC_TYPE_GET_INDEX(TestComponent);
+    TEST_ASSERT_EQUAL_UINT(0, typeIndex);
 }
 
 void seika_hash_map_test(void) {
