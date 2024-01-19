@@ -141,6 +141,6 @@ endif()
 
 if (SK_IS_MAIN)
     # Create seika test exe
-    add_executable(${PROJECT_NAME}_test test/main.c)
+    add_executable(${PROJECT_NAME}_test test/main.c test/generic_global.c)
     target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} unity)
 endif()
