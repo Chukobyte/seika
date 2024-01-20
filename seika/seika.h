@@ -1,5 +1,9 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -20,4 +24,6 @@ bool sf_set_vsync_enabled(bool enabled);
 void sf_delay(uint32_t timeToWait);
 void sf_shutdown();
 
-
+#ifdef __cplusplus
+}
+#endif
