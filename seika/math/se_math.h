@@ -21,42 +21,9 @@ extern "C" {
 
 // --- SKAVector2 --- //
 typedef struct SKAVector2 {
-    union {
-        struct {
-            float x;
-            float y;
-        };
-        struct {
-            float w;
-            float h;
-        };
-    };
-} SKAVector2;
-
-// --- SKAVector3 --- //
-typedef struct SKAVector3 {
     float x;
     float y;
-    float z;
-} SKAVector3;
-
-// --- SKAVector4 --- //
-typedef struct SKAVector4 {
-    union {
-        struct {
-            float x;
-            float y;
-            float z;
-            float w;
-        };
-        struct {
-            float r;
-            float g;
-            float b;
-            float a;
-        };
-    };
-} SKAVector4;
+} SKAVector2;
 
 #define SKA_VECTOR2_ZERO SKA_STRUCT_LITERAL(SKAVector2){ 0.0f, 0.0f }
 #define SKA_VECTOR2_ONE SKA_STRUCT_LITERAL(SKAVector2){ 1.0f, 1.0f }
@@ -71,25 +38,23 @@ float ska_math_vec2_angle(const SKAVector2* v);
 
 // --- SKAVector2i --- //
 typedef struct SKAVector2i {
-    union {
-        struct {
-            int x;
-            int y;
-        };
-        struct {
-            int w;
-            int h;
-        };
-    };
+    int x;
+    int y;
 } SKAVector2i;
 
 // --- SKASize2D --- //
-typedef SKAVector2 SKASize2D;
+typedef struct SKASize2D {
+    float w;
+    float h;
+} SKASize2D;
 
 #define SKA_SIZE2D_ZERO SKA_STRUCT_LITERAL(SKASize2D){ 0.0f, 0.0f }
 
 // --- SKASize2Di --- //
-typedef SKAVector2i SKASize2Di;
+typedef struct SKASize2Di {
+    int w;
+    int h;
+} SKASize2Di;
 
 // --- SKARect2 --- //
 typedef struct SKARect2 {
@@ -138,8 +103,28 @@ SKATransform2D ska_transform2d_model_convert_to_transform(SKATransformModel2D* t
     .scaleSign = SKA_VECTOR2_ONE \
 }
 
+// --- SKAVector3 --- //
+typedef struct SKAVector3 {
+    float x;
+    float y;
+    float z;
+} SKAVector3;
+
+// --- SKAVector4 --- //
+typedef struct SKAVector4 {
+    float x;
+    float y;
+    float z;
+    float w;
+} SKAVector4;
+
 // --- SKAColor --- //
-typedef SKAVector4 SKAColor;
+typedef struct SKAColor {
+    float r;
+    float g;
+    float b;
+    float a;
+} SKAColor;
 
 #define SKA_COLOR_WHITE SKA_STRUCT_LITERAL(SKAColor){ 1.0f, 1.0f, 1.0f, 1.0f }
 #define SKA_COLOR_BLACK SKA_STRUCT_LITERAL(SKAColor){ 0.0f, 0.0f, 0.0f, 1.0f }
