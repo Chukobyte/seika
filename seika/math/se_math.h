@@ -142,6 +142,8 @@ typedef struct SKAMinMaxVec2 {
     SKAVector2 max;
 } SKAMinMaxVec2;
 
+#define SKA_MINMAX_VEC2_ZERO SKA_STRUCT_LITERAL(SKAMinMaxVec2){ SKA_VECTOR2_ZERO, SKA_VECTOR2_ZERO }
+
 SKAVector2 ska_math_minmax_vec2_get_random_in_range(const SKAMinMaxVec2* minmax);
 
 // --- Misc --- //
