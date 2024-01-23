@@ -95,6 +95,14 @@ SKAColor ska_color_get_normalized_color_from_color(const SKAColor* color) {
     return newColor;
 }
 
+SKAVector2 ska_math_minmax_vec2_get_random_in_range(const SKAMinMaxVec2* minmax) {
+    const SKAVector2 randomVector = {
+        .x = minmax->min.x + (float)rand() / RAND_MAX * (minmax->max.x - minmax->min.x),
+        .y = minmax->min.y + (float)rand() / RAND_MAX * (minmax->max.y - minmax->min.y),
+    };
+    return randomVector;
+}
+
 // --- Misc --- //
 float ska_math_lerpf(float a, float b, float t) {
     return a + (b - a) * t;

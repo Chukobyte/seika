@@ -136,6 +136,14 @@ SKAColor ska_color_get_normalized_color_default_alpha(unsigned int r, unsigned i
 SKAColor ska_color_get_normalized_color(unsigned int r, unsigned int g, unsigned int b, unsigned int a);
 SKAColor ska_color_get_normalized_color_from_color(const SKAColor* color);
 
+// --- SKAMinMaxVec2 --- //
+typedef struct SKAMinMaxVec2 {
+    SKAVector2 min;
+    SKAVector2 max;
+} SKAMinMaxVec2;
+
+SKAVector2 ska_math_minmax_vec2_get_random_in_range(const SKAMinMaxVec2* minmax);
+
 // --- Misc --- //
 float ska_math_lerpf(float a, float b, float t);
 float ska_math_map_to_range(float input, float inputMin, float inputMax, float outputMin, float outputMax);
