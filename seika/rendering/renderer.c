@@ -11,7 +11,8 @@
 #include "../utils/se_assert.h"
 
 #define SE_RENDER_TO_FRAMEBUFFER
-#define SE_RENDER_LAYER_BATCH_ITEM_MAX (SE_RENDERER_MAX_Z_INDEX / 2)
+#define SE_RENDER_LAYER_BATCH_ITEM_MAX 1024
+#define SE_RENDER_LAYER_FONT_BATCH_ITEM_MAX 100
 #define SE_RENDER_TEXTURE_LAYER_TEXTURE_MAX 64
 
 #ifdef SE_RENDER_TO_FRAMEBUFFER
@@ -87,7 +88,7 @@ typedef struct RenderTextureLayer {
 
 typedef struct RenderLayer {
     RenderTextureLayer renderTextureLayers[SE_RENDER_TEXTURE_LAYER_TEXTURE_MAX];
-    FontBatchItem fontBatchItems[SE_RENDER_LAYER_BATCH_ITEM_MAX];
+    FontBatchItem fontBatchItems[SE_RENDER_LAYER_FONT_BATCH_ITEM_MAX];
     size_t renderTextureLayerCount;
     size_t fontBatchItemCount;
 } RenderLayer;
@@ -177,6 +178,7 @@ static inline void ska_renderer_queue_sprite_draw_call(SpriteBatchItem* item, in
         render_layer_items[arrayZIndex].renderTextureLayerCount++;
     }
     // Copy batch item into batch items array and increment item count
+    SE_ASSERT_FMT(textureLayer->spriteBatchItemCount + 1 < SE_RENDER_LAYER_BATCH_ITEM_MAX, "Exceeded SE_RENDER_LAYER_BATCH_ITEM_MAX '%d'", SE_RENDER_LAYER_BATCH_ITEM_MAX);
     SpriteBatchItem* currentItem = &textureLayer->spriteBatchItems[textureLayer->spriteBatchItemCount++];
     memcpy(currentItem, item, sizeof(SpriteBatchItem));
     // Update active render layer indices
@@ -359,13 +361,15 @@ void sprite_renderer_update_resolution() {
 }
 
 void renderer_batching_draw_sprites(SpriteBatchItem items[], size_t spriteCount) {
-#define MAX_SPRITE_COUNT 100
+#define MAX_SPRITE_COUNT 2000
 #define NUMBER_OF_VERTICES 6
 #define VERTEX_BUFFER_SIZE (VERTS_STRIDE * NUMBER_OF_VERTICES * MAX_SPRITE_COUNT)
 
     if (spriteCount <= 0) {
         return;
     }
+
+    SE_ASSERT(spriteCount <= MAX_SPRITE_COUNT);
 
     glDepthMask(false);
 
