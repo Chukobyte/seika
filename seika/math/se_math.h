@@ -33,7 +33,7 @@ typedef struct SKAVector2 {
 #define SKA_VECTOR2_DOWN SKA_STRUCT_LITERAL(SKAVector2){ 0.0f, 1.0f }
 
 bool ska_math_vec2_equals(const SKAVector2* v1, const SKAVector2* v2);
-SKAVector2 ska_math_vec2_lerp(const SKAVector2* v1, const SKAVector2* v2, float t);
+SKAVector2 ska_math_vec2_lerp(const SKAVector2* v1, const SKAVector2* v2, float alpha);
 float ska_math_vec2_angle(const SKAVector2* v);
 
 // --- SKAVector2i --- //
@@ -77,6 +77,7 @@ typedef struct SKATransform2D {
 
 void ska_transform2d_mat4_to_transform(mat4 matrix, SKATransform2D* transform);
 void ska_transform2d_transform_to_mat4(const SKATransform2D* transform, mat4 matrix);
+SKATransform2D ska_transform2d_lerp(const SKATransform2D* tA, const SKATransform2D* tB, float alpha);
 
 #define SKA_TRANSFORM_IDENTITY SKA_STRUCT_LITERAL(SKATransform2D){ \
     .position = SKA_VECTOR2_ZERO, \
@@ -147,7 +148,7 @@ typedef struct SKAMinMaxVec2 {
 SKAVector2 ska_math_minmax_vec2_get_random_in_range(const SKAMinMaxVec2* minmax);
 
 // --- Misc --- //
-float ska_math_lerpf(float a, float b, float t);
+float ska_math_lerpf(float a, float b, float alpha);
 float ska_math_map_to_range(float input, float inputMin, float inputMax, float outputMin, float outputMax);
 float ska_math_map_to_unit(float input, float inputMin, float inputMax);
 double ska_math_map_to_range_double(double input, double inputMin, double inputMax, double outputMin, double outputMax);

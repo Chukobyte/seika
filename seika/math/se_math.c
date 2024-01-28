@@ -5,10 +5,10 @@ bool ska_math_vec2_equals(const SKAVector2* v1, const SKAVector2* v2) {
     return v1->x == v2->x && v1->y == v2->y;
 }
 
-SKAVector2 ska_math_vec2_lerp(const SKAVector2* v1, const SKAVector2* v2, float t) {
+SKAVector2 ska_math_vec2_lerp(const SKAVector2* v1, const SKAVector2* v2, float alpha) {
     return (SKAVector2) {
-        .x = ska_math_lerpf(v1->x, v2->x, t),
-        .y = ska_math_lerpf(v1->y, v2->y, t)
+        .x = ska_math_lerpf(v1->x, v2->x, alpha),
+        .y = ska_math_lerpf(v1->y, v2->y, alpha)
     };
 }
 
@@ -53,6 +53,14 @@ void ska_transform2d_transform_to_mat4(const SKATransform2D* transform, mat4 mat
     glm_rotate_z(matrix, glm_rad(transform->rotation), matrix);
     // Create scale matrix
     glm_scale(matrix, (vec3){transform->scale.x, transform->scale.y, 1.0f});
+}
+
+SKATransform2D ska_transform2d_lerp(const SKATransform2D* tA, const SKATransform2D* tB, float alpha) {
+    return (SKATransform2D) {
+            .position = ska_math_vec2_lerp(&tA->position, &tB->position, alpha),
+            .scale = ska_math_vec2_lerp(&tA->scale, &tB->scale, alpha),
+            .rotation = ska_math_lerpf(tA->rotation, tB->rotation, alpha)
+    };
 }
 
 // --- Transform2D Model --- //
@@ -104,8 +112,8 @@ SKAVector2 ska_math_minmax_vec2_get_random_in_range(const SKAMinMaxVec2* minmax)
 }
 
 // --- Misc --- //
-float ska_math_lerpf(float a, float b, float t) {
-    return a + (b - a) * t;
+float ska_math_lerpf(float a, float b, float alpha) {
+    return a + (b - a) * alpha;
 }
 
 float ska_math_map_to_range(float input, float inputMin, float inputMax, float outputMin, float outputMax) {
