@@ -53,6 +53,10 @@ add_library(${PROJECT_NAME} STATIC
         seika/data_structures/se_hash_map_string.c
         seika/data_structures/se_spatial_hash_map.c
         seika/data_structures/se_tile_map.c
+        seika/ecs/ecs.c
+        seika/ecs/component.c
+        seika/ecs/entity.c
+        seika/ecs/ec_system.c
         )
 
 #--- Dependencies ---#

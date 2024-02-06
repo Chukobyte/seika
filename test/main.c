@@ -14,6 +14,8 @@
 #include "seika/math/se_curve_float.h"
 #include "seika/rendering/shader/shader_instance.h"
 #include "seika/rendering/shader/shader_file_parser.h"
+#include "seika/ecs/component.h"
+#include "seika/ecs/ecs.h"
 
 #define RESOURCES_PATH "test/resources"
 #define RESOURCES_PACK_PATH "test/resources/test.pck"
@@ -33,6 +35,7 @@ void seika_observer_test(void);
 void seika_curve_float_test(void);
 void seika_shader_instance_test(void);
 void seika_shader_file_parser_test(void);
+void seika_ecs_test(void);
 
 int main(int argv, char** args) {
     UNITY_BEGIN();
@@ -48,6 +51,7 @@ int main(int argv, char** args) {
     RUN_TEST(seika_curve_float_test);
     RUN_TEST(seika_shader_instance_test);
     RUN_TEST(seika_shader_file_parser_test);
+    RUN_TEST(seika_ecs_test);
     return UNITY_END();
 }
 
@@ -401,4 +405,73 @@ void seika_shader_file_parser_test(void) {
     }
     TEST_ASSERT_FALSE(hasErrorMessage);
     se_shader_file_parse_clear_parse_result(&result);
+}
+
+// ECS TEST
+typedef struct TestValueComponent {
+    int value;
+} TestValueComponent;
+
+typedef struct TestTransformComponent {
+    SKATransform2D transform2D;
+} TestTransformComponent;
+
+// test ecs callbacks
+
+static int entityRegisteredInTestCount = 0;
+void test_ecs_callback_on_entity_registered(SkaEntity entity){
+    entityRegisteredInTestCount++;
+}
+
+void seika_ecs_test(void) {
+    ska_ecs_initialize();
+
+    SKA_ECS_REGISTER_COMPONENT(TestValueComponent);
+    SKA_ECS_REGISTER_COMPONENT(TestTransformComponent);
+
+    // Test getting component type info
+    const SkaComponentTypeInfo* valueTypeInfo = SKA_ECS_COMPONENT_TYPE_INFO(TestValueComponent);
+    TEST_ASSERT_NOT_NULL(valueTypeInfo);
+    TEST_ASSERT_EQUAL_STRING("TestValueComponent", valueTypeInfo->name);
+    TEST_ASSERT_EQUAL_INT(1 << 0, valueTypeInfo->type);
+    TEST_ASSERT_EQUAL_UINT32(0, valueTypeInfo->index);
+    TEST_ASSERT_EQUAL_size_t(sizeof(TestValueComponent), valueTypeInfo->size);
+    const SkaComponentTypeInfo* transformTypeInfo = SKA_ECS_COMPONENT_TYPE_INFO(TestTransformComponent);
+    TEST_ASSERT_NOT_NULL(transformTypeInfo);
+    TEST_ASSERT_EQUAL_STRING("TestTransformComponent", transformTypeInfo->name);
+    TEST_ASSERT_EQUAL_INT(1 << 1, transformTypeInfo->type);
+    TEST_ASSERT_EQUAL_UINT32(1, transformTypeInfo->index);
+    TEST_ASSERT_EQUAL_size_t(sizeof(TestTransformComponent), transformTypeInfo->size);
+
+    // Test creating ecs system
+    const SkaEntity testEntity = 0;
+
+    SkaECSSystem* testValueEcsSystem = ska_ecs_system_create("test value system");
+    testValueEcsSystem->on_entity_registered_func = test_ecs_callback_on_entity_registered;
+    testValueEcsSystem->component_signature = SKA_ECS_COMPONENT_TYPE_FLAG(TestValueComponent);
+    ska_ecs_system_register(testValueEcsSystem);
+
+    SkaECSSystem* testValueTransformEcsSystem = ska_ecs_system_create("test value transform system");
+    testValueTransformEcsSystem->on_entity_registered_func = test_ecs_callback_on_entity_registered;
+    testValueTransformEcsSystem->component_signature = SKA_ECS_COMPONENT_TYPE_FLAG(TestValueComponent) | SKA_ECS_COMPONENT_TYPE_FLAG(TestTransformComponent);
+    ska_ecs_system_register(testValueTransformEcsSystem);
+
+    // Test getting component
+    TestValueComponent testComponent = { .value = 10 };
+    ska_ecs_component_manager_set_component(testEntity, valueTypeInfo->index, &testComponent);
+    TestValueComponent* returnedValueComponent = (TestValueComponent*)ska_ecs_component_manager_get_component(testEntity, valueTypeInfo->index);
+    TEST_ASSERT_NOT_NULL(returnedValueComponent);
+    TEST_ASSERT_EQUAL_INT(10, returnedValueComponent->value);
+    TestTransformComponent transformComponent = { .transform2D =  { .position = { .x = 10.0f, .y = 20.0f}, .scale = SKA_VECTOR2_ONE, .rotation = 0.0f } };
+    ska_ecs_component_manager_set_component(testEntity, transformTypeInfo->index, &transformComponent);
+    TestTransformComponent* returnedTransformComponent = (TestTransformComponent*)ska_ecs_component_manager_get_component(testEntity, transformTypeInfo->index);
+    TEST_ASSERT_NOT_NULL(returnedTransformComponent);
+    TEST_ASSERT_EQUAL_FLOAT(10.0f, returnedTransformComponent->transform2D.position.x);
+    TEST_ASSERT_EQUAL_FLOAT(20.0f, returnedTransformComponent->transform2D.position.y);
+
+    // Test component events
+    ska_ecs_system_update_entity_signature_with_systems(testEntity);
+    TEST_ASSERT_EQUAL_INT(2, entityRegisteredInTestCount);
+
+    ska_ecs_finalize();
 }

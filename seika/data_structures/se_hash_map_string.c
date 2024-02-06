@@ -66,7 +66,7 @@ bool hash_map_push_front_string(SEStringHashMap* hashMap, size_t index, const ch
     return hashMap->nodes[index] != NULL;
 }
 
-bool se_string_hash_map_add(SEStringHashMap* hashMap, const char* key, void* value, size_t valueSize) {
+bool se_string_hash_map_add(SEStringHashMap* hashMap, const char* key, const void* value, size_t valueSize) {
     SE_ASSERT(hashMap != NULL);
     SE_ASSERT(key != NULL);
     SE_ASSERT(value != NULL);

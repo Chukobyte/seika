@@ -9,6 +9,9 @@ extern "C" {
 #define SE_MEM_ALLOCATE(DataType)             \
 (DataType*) se_mem_allocate(sizeof(DataType))
 
+#define SE_MEM_ALLOCATE_ARRAY(DataType, ArraySize)             \
+(DataType*) se_mem_allocate_c(ArraySize, sizeof(DataType))
+
 #define SE_MEM_ALLOCATE_SIZE(Size)             \
 se_mem_allocate(Size)
 
@@ -19,7 +22,7 @@ se_mem_allocate_c(Blocks, Size)
 se_mem_free(Memory)
 
 void* se_mem_allocate(size_t size);
-void* se_mem_allocate_c(int blocks, size_t size);
+void* se_mem_allocate_c(size_t blocks, size_t size);
 void se_mem_free(void* memory);
 
 #ifdef __cplusplus

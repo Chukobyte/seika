@@ -10,7 +10,7 @@ void* se_mem_allocate(size_t size) {
     return memory;
 }
 
-void* se_mem_allocate_c(int blocks, size_t size) {
+void* se_mem_allocate_c(size_t blocks, size_t size) {
     void* memory = calloc(blocks, size);
     if (memory == NULL) {
         se_logger_error("Out of memory or malloc failed!, size = %d", size);
