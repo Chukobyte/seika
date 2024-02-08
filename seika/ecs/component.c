@@ -11,12 +11,12 @@
 static SkaComponentIndex globalComponentIndex = 0;
 static SEStringHashMap* componentNameToTypeMap = NULL;
 
-SkaComponentIndex ska_ecs_component_register_type(const char* name, size_t componentSize) {
+const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, size_t componentSize) {
     SE_ASSERT_FMT(globalComponentIndex + 1 < SKA_ECS_MAX_COMPONENTS, "Over the maximum allowed components which are '%d'", SKA_ECS_MAX_COMPONENTS);
     // Check if component already exists and return that index if it does
     const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)se_string_hash_map_find(componentNameToTypeMap, name);
     if (typeInfo) {
-        return typeInfo->index;
+        return typeInfo;
     }
     // Add new type info for component
     const SkaComponentIndex newTypeIndex = globalComponentIndex++;
@@ -27,13 +27,18 @@ SkaComponentIndex ska_ecs_component_register_type(const char* name, size_t compo
         .size = componentSize
     };
     se_string_hash_map_add(componentNameToTypeMap, name, &newTypeInfo, sizeof(SkaComponentTypeInfo));
-    return newTypeInfo.index;
+    return ska_ecs_component_get_type_info(name, componentSize);
 }
 
 const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, size_t componentSize) {
     const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)se_string_hash_map_find(componentNameToTypeMap, name);
     SE_ASSERT(typeInfo);
     SE_ASSERT(typeInfo->size == componentSize);
+    return typeInfo;
+}
+
+const SkaComponentTypeInfo* ska_ecs_component_find_type_info(const char* name) {
+    const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)se_string_hash_map_find(componentNameToTypeMap, name);
     return typeInfo;
 }
 

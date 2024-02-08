@@ -444,17 +444,28 @@ void seika_ecs_test(void) {
     TEST_ASSERT_EQUAL_size_t(sizeof(TestTransformComponent), transformTypeInfo->size);
 
     // Test creating ecs system
-    const SkaEntity testEntity = 0;
+    const SkaEntity testEntity = ska_ecs_entity_create();
 
-    SkaECSSystem* testValueEcsSystem = ska_ecs_system_create("test value system");
+    SkaECSSystem* testValueEcsSystem = SKA_ECS_SYSTEM_CREATE("test value system", TestValueComponent);
     testValueEcsSystem->on_entity_registered_func = test_ecs_callback_on_entity_registered;
-    testValueEcsSystem->component_signature = SKA_ECS_COMPONENT_TYPE_FLAG(TestValueComponent);
     ska_ecs_system_register(testValueEcsSystem);
 
-    SkaECSSystem* testValueTransformEcsSystem = ska_ecs_system_create("test value transform system");
+    SkaECSSystem* testValueTransformEcsSystem = SKA_ECS_SYSTEM_CREATE("test value transform system", TestValueComponent, TestTransformComponent);
     testValueTransformEcsSystem->on_entity_registered_func = test_ecs_callback_on_entity_registered;
-    testValueTransformEcsSystem->component_signature = SKA_ECS_COMPONENT_TYPE_FLAG(TestValueComponent) | SKA_ECS_COMPONENT_TYPE_FLAG(TestTransformComponent);
     ska_ecs_system_register(testValueTransformEcsSystem);
+
+    // Test entity id enqueue and dequeue
+#define TEST_ENTITY_QUEUE_AMOUNT 1000
+    for (SkaEntity entity = 1; entity < TEST_ENTITY_QUEUE_AMOUNT; entity++) {
+        const SkaEntity newEntity = ska_ecs_entity_create();
+        TEST_ASSERT_EQUAL_UINT32(entity, newEntity);
+    }
+    TEST_ASSERT_EQUAL_size_t(TEST_ENTITY_QUEUE_AMOUNT, ska_ecs_entity_get_active_count());
+    for (SkaEntity entity = 1; entity < TEST_ENTITY_QUEUE_AMOUNT; entity++) {
+        ska_ecs_entity_return(entity);
+    }
+    TEST_ASSERT_EQUAL_size_t(1, ska_ecs_entity_get_active_count());
+#undef TEST_ENTITY_QUEUE_AMOUNT
 
     // Test getting component
     TestValueComponent testComponent = { .value = 10 };

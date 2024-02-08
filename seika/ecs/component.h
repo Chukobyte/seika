@@ -33,8 +33,9 @@ typedef struct SkaComponentTypeInfo {
 
 
 
-SkaComponentIndex ska_ecs_component_register_type(const char* name, size_t componentSize);
+const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, size_t componentSize);
 const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, size_t componentSize);
+const SkaComponentTypeInfo* ska_ecs_component_find_type_info(const char* name);
 SkaComponentType ska_ecs_component_get_type_flag(const char* name, size_t componentSize);
 
 // --- Component Manager --- //

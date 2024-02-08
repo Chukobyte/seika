@@ -55,6 +55,34 @@ SkaECSSystem* ska_ecs_system_create(const char* systemName) {
     return newSystem;
 }
 
+SkaECSSystem* ska_ecs_system_create_with_signature_string(const char* systemName, const char* signatures) {
+    SkaECSSystem* newSystem = ska_ecs_system_create(systemName);
+    // Take signature string, create flags, and add to system's component signature
+    static char typeNameBuffer[256];
+    char* word = typeNameBuffer;
+    char* start = word;
+    for (const char* src = signatures; *src != '\0'; ++src) {
+        // Skip commas and whitespace
+        if (*src == ',') {
+            *word = '\0';
+            const SkaComponentTypeInfo* typeInfo = ska_ecs_component_find_type_info(typeNameBuffer);
+            SE_ASSERT_FMT(typeInfo, "Unable to get type info for '%s'", typeNameBuffer);
+            newSystem->component_signature |= typeInfo->type;
+            word = start;
+            continue;
+        } else if (*src == ' ') {
+            continue;
+        }
+        *word++ = *src;
+    }
+
+    const SkaComponentTypeInfo* typeInfo = ska_ecs_component_find_type_info(typeNameBuffer);
+    SE_ASSERT_FMT(typeInfo, "Unable to get type info for '%s'", typeNameBuffer);
+    newSystem->component_signature |= typeInfo->type;
+
+    return newSystem;
+}
+
 void ska_ecs_system_destroy(SkaECSSystem* entitySystem) {
     if (entitySystem->on_ec_system_destroy) {
         entitySystem->on_ec_system_destroy();

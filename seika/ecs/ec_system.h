@@ -2,6 +2,9 @@
 
 #include "component.h"
 
+#define SKA_ECS_SYSTEM_CREATE(Name, ...) \
+ska_ecs_system_create_with_signature_string(Name, #__VA_ARGS__)
+
 typedef void (*OnEntityRegisteredFunc) (SkaEntity); // init
 typedef void (*OnEntityStartFunc) (SkaEntity); // Useful for after initialization functionality (such as entering a scene)
 typedef void (*OnEntityEndFunc) (SkaEntity); // Useful for before deletion functionality (such as leaving a scene)
@@ -39,6 +42,7 @@ typedef struct SkaECSSystem {
 void ska_ecs_system_initialize();
 void ska_ecs_system_finalize();
 SkaECSSystem* ska_ecs_system_create(const char* systemName);
+SkaECSSystem* ska_ecs_system_create_with_signature_string(const char* systemName, const char* signatures);
 void ska_ecs_system_destroy(SkaECSSystem* entitySystem);
 void ska_ecs_system_register(SkaECSSystem* system);
 void ska_ecs_system_update_entity_signature_with_systems(SkaEntity entity);
