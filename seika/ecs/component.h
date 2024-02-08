@@ -4,6 +4,7 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdbool.h>
 
 #include "entity.h"
