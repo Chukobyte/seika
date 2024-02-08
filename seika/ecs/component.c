@@ -115,6 +115,7 @@ void ska_ecs_component_manager_finalize() {
         }
     }
     se_string_hash_map_destroy(componentNameToTypeMap);
+    componentNameToTypeMap = NULL;
 
     SE_ASSERT_FMT(componentManager != NULL, "Component Manager is NULL when trying to finalize...");
     SE_MEM_FREE(componentManager);

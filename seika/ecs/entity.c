@@ -15,6 +15,8 @@ void ska_ecs_entity_initialize() {
 
 void ska_ecs_entity_finalize() {
     SE_ASSERT(entityIdQueue != NULL);
+    se_queue_destroy(entityIdQueue);
+    entityIdQueue = NULL;
 }
 
 SkaEntity ska_ecs_entity_create() {

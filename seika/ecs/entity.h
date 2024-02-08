@@ -4,7 +4,7 @@
 
 // Entity is defined as a unsigned 32-bit integer
 
-#define SKA_MAX_ENTITIES 2000000 // starting with 2 million for now
+#define SKA_MAX_ENTITIES 200000 // starting with 200,000 for now
 #define SKA_NULL_ENTITY UINT32_MAX
 
 typedef uint32_t SkaEntity;
