@@ -47,7 +47,7 @@ typedef struct ComponentArray {
     void* components[SKA_ECS_MAX_COMPONENTS];
 } ComponentArray;
 
-ComponentArray* component_array_create() {
+static ComponentArray* component_array_create() {
     ComponentArray* componentArray = SE_MEM_ALLOCATE(ComponentArray);
     for (unsigned int i = 0; i < SKA_ECS_MAX_COMPONENTS; i++) {
         componentArray->components[i] = NULL;
@@ -55,32 +55,32 @@ ComponentArray* component_array_create() {
     return componentArray;
 }
 
-void component_array_initialize(ComponentArray* componentArray) {
+static void component_array_initialize(ComponentArray* componentArray) {
     for (unsigned int i = 0; i < SKA_ECS_MAX_COMPONENTS; i++) {
         componentArray->components[i] = NULL;
     }
 }
 
-bool component_array_has_component(ComponentArray* componentArray, SkaComponentIndex index) {
+static bool component_array_has_component(ComponentArray* componentArray, SkaComponentIndex index) {
     return componentArray->components[index] == NULL ? false : true;
 }
 
-void* component_array_get_component(ComponentArray* componentArray, SkaComponentIndex index) {
+static void* component_array_get_component(ComponentArray* componentArray, SkaComponentIndex index) {
     return componentArray->components[index];
 }
 
-void component_array_set_component(ComponentArray* componentArray, SkaComponentIndex index, void* component) {
+static void component_array_set_component(ComponentArray* componentArray, SkaComponentIndex index, void* component) {
     componentArray->components[index] = component;
 }
 
-void component_array_remove_component(ComponentArray* componentArray, SkaComponentIndex index) {
+static void component_array_remove_component(ComponentArray* componentArray, SkaComponentIndex index) {
     if (component_array_has_component(componentArray, index)) {
         SE_MEM_FREE(componentArray->components[index]);
         componentArray->components[index] = NULL;
     }
 }
 
-void component_array_remove_all_components(ComponentArray* componentArray) {
+static void component_array_remove_all_components(ComponentArray* componentArray) {
     for (size_t i = 0; i < SKA_ECS_MAX_COMPONENTS; i++) {
         component_array_remove_component(componentArray, (SkaComponentIndex)i);
     }
@@ -94,7 +94,7 @@ typedef struct ComponentManager {
 
 static ComponentManager* componentManager = NULL;
 
-SkaComponentType component_manager_translate_index_to_type(SkaComponentIndex index);
+static SkaComponentType component_manager_translate_index_to_type(SkaComponentIndex index);
 
 void ska_ecs_component_manager_initialize() {
     SE_ASSERT(componentNameToTypeMap == NULL);
