@@ -91,6 +91,7 @@ SkaECSSystem* ska_ecs_system_create(const char* systemName);
 SkaECSSystem* ska_ecs_system_create_from_template(SkaECSSystemTemplate* systemTemplate);
 SkaECSSystem* ska_ecs_system_create_with_signature_string(const char* systemName, const char* signatures);
 SkaECSSystem* ska_ecs_system_create_from_template_with_signature_string(SkaECSSystemTemplate* systemTemplate, const char* signatures);
+SkaECSSystemTemplate ska_ecs_system_create_default_template(const char* systemName);
 void ska_ecs_system_destroy(SkaECSSystem* entitySystem);
 void ska_ecs_system_register(SkaECSSystem* system);
 void ska_ecs_system_update_entity_signature_with_systems(SkaEntity entity);

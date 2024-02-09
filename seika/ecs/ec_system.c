@@ -74,8 +74,15 @@ SkaECSSystem* ska_ecs_system_create_from_template(SkaECSSystemTemplate* systemTe
     newSystem->update_func = systemTemplate->update_func;
     newSystem->fixed_update_func = systemTemplate->fixed_update_func;
     newSystem->network_callback_func = systemTemplate->network_callback_func;
-    newSystem->on_entity_start_func = systemTemplate->on_entity_start_func;
     return newSystem;
+}
+
+SkaECSSystemTemplate ska_ecs_system_create_default_template(const char* systemName) {
+    return (SkaECSSystemTemplate){
+        .name = systemName, .on_ec_system_register = NULL, .on_ec_system_destroy = NULL, .on_entity_registered_func = NULL, .on_entity_start_func = NULL, .on_entity_end_func = NULL,
+        .on_entity_unregistered_func = NULL, .on_entity_entered_scene_func = NULL, .render_func = NULL, .pre_update_all_func = NULL, .post_update_all_func = NULL,
+        .update_func = NULL, .fixed_update_func = NULL, .network_callback_func = NULL
+    };
 }
 
 static SkaECSSystem* update_system_with_type_signature_string(SkaECSSystem* system, const char* signatures) {
