@@ -419,7 +419,7 @@ typedef struct TestTransformComponent {
 // test ecs callbacks
 
 static int entityRegisteredInTestCount = 0;
-void test_ecs_callback_on_entity_registered(SkaEntity entity){
+void test_ecs_callback_on_entity_registered(SkaECSSystem* system, SkaEntity entity){
     entityRegisteredInTestCount++;
 }
 
@@ -450,9 +450,26 @@ void seika_ecs_test(void) {
     testValueEcsSystem->on_entity_registered_func = test_ecs_callback_on_entity_registered;
     ska_ecs_system_register(testValueEcsSystem);
 
-    SkaECSSystem* testValueTransformEcsSystem = SKA_ECS_SYSTEM_CREATE("test value transform system", TestValueComponent, TestTransformComponent);
-    testValueTransformEcsSystem->on_entity_registered_func = test_ecs_callback_on_entity_registered;
+    // Test creating with template
+#define VALUE_TRANSFORM_SYSTEM_TEMPLATE &(SkaECSSystemTemplate){ \
+    .name = "test value transform system", \
+    .on_ec_system_register = NULL, \
+    .on_ec_system_destroy = NULL, \
+    .on_entity_registered_func = test_ecs_callback_on_entity_registered, \
+    .on_entity_start_func = NULL, \
+    .on_entity_end_func = NULL, \
+    .on_entity_unregistered_func = NULL, \
+    .on_entity_entered_scene_func = NULL, \
+    .render_func = NULL, \
+    .pre_update_all_func = NULL, \
+    .post_update_all_func = NULL, \
+    .update_func = NULL, \
+    .fixed_update_func = NULL, \
+    .network_callback_func = NULL \
+}
+    SkaECSSystem* testValueTransformEcsSystem = SKA_ECS_SYSTEM_CREATE_FROM_TEMPLATE(VALUE_TRANSFORM_SYSTEM_TEMPLATE, TestValueComponent, TestTransformComponent);
     ska_ecs_system_register(testValueTransformEcsSystem);
+#undef VALUE_TRANSFORM_SYSTEM_TEMPLATE
 
     // Test entity id enqueue and dequeue
 #define TEST_ENTITY_QUEUE_AMOUNT 1000
