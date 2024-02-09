@@ -3,6 +3,7 @@
 #include "seika/utils/se_string_util.h"
 #include "seika/data_structures/se_queue.h"
 #include "seika/memory/se_mem.h"
+#include "seika/utils/flag_util.h"
 #include "seika/utils/logger.h"
 #include "seika/utils/se_assert.h"
 
@@ -125,7 +126,7 @@ void ska_ecs_system_register(SkaECSSystem* system) {
 void ska_ecs_system_update_entity_signature_with_systems(SkaEntity entity) {
     const SkaComponentType entityComponentSignature = ska_ecs_component_manager_get_component_signature(entity);
     for (size_t i = 0; i < entitySystemData.entity_systems_count; i++) {
-        if ((entityComponentSignature & entitySystemData.entity_systems[i]->component_signature) == entitySystemData.entity_systems[i]->component_signature) {
+        if (SKA_FLAG_CONTAINS(entityComponentSignature, entitySystemData.entity_systems[i]->component_signature)) {
             ska_ecs_system_insert_entity_into_system(entity, entitySystemData.entity_systems[i]);
         } else {
             ska_ecs_system_remove_entity_from_system(entity, entitySystemData.entity_systems[i]);
@@ -136,7 +137,7 @@ void ska_ecs_system_update_entity_signature_with_systems(SkaEntity entity) {
 void ska_ecs_system_event_entity_start(SkaEntity entity) {
     const SkaComponentType entityComponentSignature = ska_ecs_component_manager_get_component_signature(entity);
     for (size_t i = 0; i < entitySystemData.on_entity_start_systems_count; i++) {
-        if ((entityComponentSignature & entitySystemData.on_entity_start_systems[i]->component_signature) == entitySystemData.on_entity_start_systems[i]->component_signature) {
+        if (SKA_FLAG_CONTAINS(entityComponentSignature, entitySystemData.on_entity_start_systems[i]->component_signature)) {
             entitySystemData.on_entity_start_systems[i]->on_entity_start_func(entity);
         }
     }
@@ -147,7 +148,7 @@ void ska_ecs_system_event_entity_end(SkaEntity entity) {
     // TODO: Consider hooks for components instead of direct node component references
     const SkaComponentType entityComponentSignature = ska_ecs_component_manager_get_component_signature(entity);
     for (size_t i = 0; i < entitySystemData.on_entity_end_systems_count; i++) {
-        if ((entityComponentSignature & entitySystemData.on_entity_end_systems[i]->component_signature) == entitySystemData.on_entity_end_systems[i]->component_signature) {
+        if (SKA_FLAG_CONTAINS(entityComponentSignature, entitySystemData.on_entity_end_systems[i]->component_signature)) {
             entitySystemData.on_entity_end_systems[i]->on_entity_end_func(entity);
         }
     }
@@ -170,7 +171,7 @@ void ska_ecs_system_event_entity_entered_scene(SkaEntity entity) {
 //    }
     const SkaComponentType entityComponentSignature = ska_ecs_component_manager_get_component_signature(entity);
     for (size_t i = 0; i < entitySystemData.on_entity_entered_scene_systems_count; i++) {
-        if ((entityComponentSignature & entitySystemData.on_entity_entered_scene_systems[i]->component_signature) == entitySystemData.on_entity_entered_scene_systems[i]->component_signature) {
+        if (SKA_FLAG_CONTAINS(entityComponentSignature, entitySystemData.on_entity_entered_scene_systems[i]->component_signature)) {
             entitySystemData.on_entity_entered_scene_systems[i]->on_entity_entered_scene_func(entity);
         }
     }
