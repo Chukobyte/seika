@@ -467,8 +467,7 @@ void seika_ecs_test(void) {
     .fixed_update_func = NULL, \
     .network_callback_func = NULL \
 }
-    SkaECSSystem* testValueTransformEcsSystem = SKA_ECS_SYSTEM_CREATE_FROM_TEMPLATE(VALUE_TRANSFORM_SYSTEM_TEMPLATE, TestValueComponent, TestTransformComponent);
-    ska_ecs_system_register(testValueTransformEcsSystem);
+    SKA_ECS_SYSTEM_REGISTER_FROM_TEMPLATE(VALUE_TRANSFORM_SYSTEM_TEMPLATE, TestValueComponent, TestTransformComponent);
 #undef VALUE_TRANSFORM_SYSTEM_TEMPLATE
 
     // Test entity id enqueue and dequeue

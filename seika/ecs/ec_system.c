@@ -126,6 +126,9 @@ void ska_ecs_system_destroy(SkaECSSystem* entitySystem) {
 void ska_ecs_system_register(SkaECSSystem* system) {
     SE_ASSERT_FMT(system != NULL, "Passed in system is NULL!");
     entitySystemData.entity_systems[entitySystemData.entity_systems_count++] = system;
+    if (system->on_ec_system_register != NULL) {
+        system->on_ec_system_register(system);
+    }
     if (system->on_entity_start_func != NULL) {
         entitySystemData.on_entity_start_systems[entitySystemData.on_entity_start_systems_count++] = system;
     }

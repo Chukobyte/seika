@@ -8,6 +8,10 @@ ska_ecs_system_create_with_signature_string(NAME, #__VA_ARGS__)
 #define SKA_ECS_SYSTEM_CREATE_FROM_TEMPLATE(TEMPLATE, ...) \
 ska_ecs_system_create_from_template_with_signature_string(TEMPLATE, #__VA_ARGS__)
 
+// Creates and register system from template
+#define SKA_ECS_SYSTEM_REGISTER_FROM_TEMPLATE(TEMPLATE, ...) \
+ska_ecs_system_register(ska_ecs_system_create_from_template_with_signature_string(TEMPLATE, #__VA_ARGS__))
+
 struct SkaECSSystem;
 
 typedef void (*OnECSystemRegister) (struct SkaECSSystem*);
