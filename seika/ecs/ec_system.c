@@ -105,6 +105,7 @@ static SkaECSSystem* update_system_with_type_signature_string(SkaECSSystem* syst
         *word++ = *src;
     }
 
+    *word = '\0';
     const SkaComponentTypeInfo* typeInfo = ska_ecs_component_find_type_info(typeNameBuffer);
     SE_ASSERT_FMT(typeInfo, "Unable to get type info for '%s'", typeNameBuffer);
     system->component_signature |= typeInfo->type;
