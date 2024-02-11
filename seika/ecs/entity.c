@@ -18,12 +18,14 @@ void ska_ecs_entity_finalize() {
     SE_ASSERT(entityIdQueue);
     se_queue_destroy(entityIdQueue);
     entityIdQueue = NULL;
+    entityIdCounter = 0;
+    activeEntityCount = 0;
 }
 
 SkaEntity ska_ecs_entity_create() {
     SE_ASSERT(entityIdQueue);
     if (se_queue_is_empty(entityIdQueue)) {
-        SE_ASSERT_FMT(entityIdCounter + 1 < SKA_MAX_ENTITIES, "Reached maxed entities ids to create, considering increasing SKA_MAX_ENTITIES!");
+        SE_ASSERT_FMT(entityIdCounter < SKA_MAX_ENTITIES, "Reached maxed entities ids to create, considering increasing SKA_MAX_ENTITIES!");
         se_queue_enqueue(entityIdQueue, entityIdCounter++);
     }
     activeEntityCount++;
