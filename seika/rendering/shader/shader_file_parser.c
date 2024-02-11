@@ -599,16 +599,10 @@ void se_shader_file_parse_clear_parse_result(SEShaderFileParseResult* result) {
         SE_MEM_FREE(result->parseData.fullFragmentSource);
     }
     for (size_t i = 0; i < result->parseData.uniformCount; i++) {
-        if (result->parseData.uniforms[i].name) {
-            SE_MEM_FREE(result->parseData.uniforms[i].name);
-        }
+        SE_MEM_FREE(result->parseData.uniforms[i].name);
     }
     for (size_t i = 0; i < result->parseData.functionCount; i++) {
-        if (result->parseData.functions[i].name) {
-            SE_MEM_FREE(result->parseData.functions[i].name);
-        }
-        if (result->parseData.functions[i].fullFunctionSource) {
-            SE_MEM_FREE(result->parseData.functions[i].fullFunctionSource);
-        }
+        SE_MEM_FREE(result->parseData.functions[i].name);
+        SE_MEM_FREE(result->parseData.functions[i].fullFunctionSource);
     }
 }

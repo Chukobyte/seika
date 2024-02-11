@@ -79,10 +79,8 @@ static void component_array_set_component(ComponentArray* componentArray, SkaCom
 }
 
 static void component_array_remove_component(ComponentArray* componentArray, SkaComponentIndex index) {
-    if (component_array_has_component(componentArray, index)) {
-        SE_MEM_FREE(componentArray->components[index]);
-        componentArray->components[index] = NULL;
-    }
+    SE_MEM_FREE(componentArray->components[index]);
+    componentArray->components[index] = NULL;
 }
 
 static void component_array_remove_all_components(ComponentArray* componentArray) {
@@ -115,7 +113,7 @@ void ska_ecs_component_manager_finalize() {
     SE_STRING_HASH_MAP_FOR_EACH(componentNameToTypeMap, iter) {
         StringHashMapNode* node = iter.pair;
         SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)node->value;
-        if (typeInfo && typeInfo->name) {
+        if (typeInfo) {
             SE_MEM_FREE(typeInfo->name);
         }
     }

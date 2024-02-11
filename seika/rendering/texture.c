@@ -130,9 +130,7 @@ bool se_texture_is_texture_valid(SETexture* texture) {
 }
 
 void se_texture_delete(SETexture* texture) {
-    if (texture->fileName) {
-        SE_MEM_FREE(texture->fileName);
-    }
+    SE_MEM_FREE(texture->fileName);
     SE_MEM_FREE(texture);
 }
 
