@@ -46,6 +46,7 @@ add_library(${PROJECT_NAME} STATIC
         seika/utils/se_platform.c
         seika/utils/se_string_util.c
         seika/utils/observer.c
+        seika/data_structures/ska_array2d.c
         seika/data_structures/se_array_utils.c
         seika/data_structures/se_array_list.c
         seika/data_structures/se_queue.c

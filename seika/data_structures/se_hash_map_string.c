@@ -9,10 +9,10 @@
 size_t se_default_hash_string(const char* raw_key);
 int se_default_compare_string(const char* first_key, const char* second_key);
 
-StringHashMapNode* hash_map_create_node_string(SEStringHashMap* hashMap, const char* key, void* value, size_t valueSize, StringHashMapNode* next);
+StringHashMapNode* hash_map_create_node_string(SEStringHashMap* hashMap, const char* key, const void* value, size_t valueSize, StringHashMapNode* next);
 void hash_map_destroy_node_string(StringHashMapNode* node);
 
-bool hash_map_push_front_string(SEStringHashMap* hashMap, size_t index, const char* key, void* value, size_t valueSize);
+bool hash_map_push_front_string(SEStringHashMap* hashMap, size_t index, const char* key, const void* value, size_t valueSize);
 void string_hash_map_grow_if_needed(SEStringHashMap* hashMap);
 void string_hash_map_shrink_if_needed(SEStringHashMap* hashMap);
 void string_hash_map_allocate(SEStringHashMap* hashMap, size_t capacity);
@@ -34,7 +34,7 @@ SEStringHashMap* se_string_hash_map_create_default_capacity() {
     return se_string_hash_map_create(SE_STRING_HASH_MAP_MIN_CAPACITY);
 }
 
-StringHashMapNode* hash_map_create_node_string(SEStringHashMap* hashMap, const char* key, void* value, size_t valueSize, StringHashMapNode* next) {
+StringHashMapNode* hash_map_create_node_string(SEStringHashMap* hashMap, const char* key, const void* value, size_t valueSize, StringHashMapNode* next) {
     StringHashMapNode* node = (StringHashMapNode*) SE_MEM_ALLOCATE_SIZE(sizeof(StringHashMapNode));
     node->key = se_strdup(key);
     node->value = SE_MEM_ALLOCATE_SIZE(valueSize);
@@ -61,7 +61,7 @@ bool se_string_hash_map_destroy(SEStringHashMap* hashMap) {
     return true;
 }
 
-bool hash_map_push_front_string(SEStringHashMap* hashMap, size_t index, const char* key, void* value, size_t valueSize) {
+bool hash_map_push_front_string(SEStringHashMap* hashMap, size_t index, const char* key, const void* value, size_t valueSize) {
     hashMap->nodes[index] = hash_map_create_node_string(hashMap, key, value, valueSize, hashMap->nodes[index]);
     return hashMap->nodes[index] != NULL;
 }

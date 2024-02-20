@@ -5,6 +5,7 @@
 #include "seika/data_structures/se_array_utils.h"
 #include "seika/data_structures/se_array_list.h"
 #include "seika/data_structures/se_spatial_hash_map.h"
+#include "seika/data_structures/ska_array2d.h"
 #include "seika/asset/asset_file_loader.h"
 #include "seika/utils/command_line_args_util.h"
 #include "seika/utils/se_string_util.h"
@@ -30,6 +31,7 @@ void seika_file_system_utils_test(void);
 void seika_string_utils_test(void);
 void seika_array_utils_test(void);
 void seika_array_list_test(void);
+void seika_array2d_test(void);
 void seika_asset_file_loader_test(void);
 void seika_observer_test(void);
 void seika_curve_float_test(void);
@@ -46,6 +48,7 @@ int main(int argv, char** args) {
     RUN_TEST(seika_string_utils_test);
     RUN_TEST(seika_array_utils_test);
     RUN_TEST(seika_array_list_test);
+    RUN_TEST(seika_array2d_test);
     RUN_TEST(seika_asset_file_loader_test);
     RUN_TEST(seika_observer_test);
     RUN_TEST(seika_curve_float_test);
@@ -240,12 +243,12 @@ void seika_array_list_test(void) {
     SEArrayListNode* node = NULL;
     int loopIndex = 0;
     SE_ARRAY_LIST_FOR_EACH(list, node) {
-        const int indexNum = (int) *(int*) node->value;
+        const int indexNum = (int)*(int*)node->value;
         TEST_ASSERT_EQUAL_INT(indexNum, numbers[loopIndex]);
         loopIndex++;
     }
 
-    const int indexThreeNum = (int) *(int*) se_array_list_get(list, 3);
+    const int indexThreeNum = (int)*(int*)se_array_list_get(list, 3);
     TEST_ASSERT_EQUAL_INT(3, indexThreeNum);
 
     // Insert Test
@@ -255,14 +258,14 @@ void seika_array_list_test(void) {
     TEST_ASSERT_EQUAL_INT(6, list->size);
     se_array_list_insert(list, &insertNum2, 1);
     TEST_ASSERT_EQUAL_INT(7, list->size);
-    const int insertNumThree = (int) *(int*) se_array_list_get(list, 3);
+    const int insertNumThree = (int)*(int*)se_array_list_get(list, 3);
     TEST_ASSERT_EQUAL_INT(10, insertNumThree);
-    const int insertNumOne = (int) *(int*) se_array_list_get(list, 1);
+    const int insertNumOne = (int)*(int*)se_array_list_get(list, 1);
     TEST_ASSERT_EQUAL_INT(20, insertNumOne);
 
     se_array_list_sort(list, array_list_test_sort);
-    const int smallestNum = (int) *(int*) se_array_list_get_front(list);
-    const int highestNum = (int) *(int*) se_array_list_get_back(list);
+    const int smallestNum = (int)*(int*)se_array_list_get_front(list);
+    const int highestNum = (int)*(int*)se_array_list_get_back(list);
     TEST_ASSERT_EQUAL_INT(0, smallestNum);
     TEST_ASSERT_EQUAL_INT(20, highestNum);
 
@@ -271,6 +274,58 @@ void seika_array_list_test(void) {
     TEST_ASSERT_EQUAL_INT(0, list->size);
 
     se_array_list_destroy(list);
+}
+
+void seika_array2d_test(void) {
+    typedef struct TestArrayStruct {
+        int value;
+    } TestArrayStruct;
+
+    SkaArray2D* array2D = ska_array2d_create(5, 5, sizeof(TestArrayStruct));
+
+    TestArrayStruct* struct0_3 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_NOT_NULL(struct0_3);
+    TEST_ASSERT_EQUAL_INT(0, struct0_3->value);
+
+    struct0_3->value = 5;
+    const TestArrayStruct* struct0_3Again = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_EQUAL_INT(5, struct0_3Again->value);
+
+    TestArrayStruct* struct4_2 = (TestArrayStruct*)ska_array2d_get(array2D, 4, 2);
+    TEST_ASSERT_NOT_NULL(struct4_2);
+    TEST_ASSERT_EQUAL_INT(0, struct4_2->value);
+    bool wasSetSuccessful = ska_array2d_set(array2D, 4, 2, &(TestArrayStruct){ .value = 1000 });
+    TEST_ASSERT_TRUE(wasSetSuccessful);
+    TEST_ASSERT_EQUAL_INT(1000, struct4_2->value);
+    wasSetSuccessful = false;
+
+    TestArrayStruct* struct7_9 = (TestArrayStruct*)ska_array2d_get(array2D, 7, 7);
+    TEST_ASSERT_NULL(struct7_9);
+    wasSetSuccessful = ska_array2d_set(array2D, 7, 9, &(TestArrayStruct){ .value = 1000 });
+    TEST_ASSERT_FALSE(wasSetSuccessful);
+    ska_array2d_resize(array2D, 10, 10);
+    struct7_9 = (TestArrayStruct*)ska_array2d_get(array2D, 7, 7);
+    TEST_ASSERT_NOT_NULL(struct7_9);
+    // Test old struct values
+    const TestArrayStruct* struct0_3Again2 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    const TestArrayStruct* struct4_2Again = (TestArrayStruct*)ska_array2d_get(array2D, 4, 2);
+    TEST_ASSERT_EQUAL_INT(5, struct0_3Again2->value);
+    TEST_ASSERT_EQUAL_INT(1000, struct4_2Again->value);
+
+    ska_array2d_resize(array2D, 4, 4);
+    TEST_ASSERT_NULL(ska_array2d_get(array2D, 7, 7));
+    const TestArrayStruct* struct0_3Again3 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_NOT_NULL(struct0_3Again3);
+    TEST_ASSERT_EQUAL_INT(5, struct0_3Again3->value);
+
+    ska_array2d_reset(array2D);
+    const TestArrayStruct* struct0_3Again4 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_EQUAL_INT(0, struct0_3Again4->value);
+    ska_array2d_reset_default(array2D, &(TestArrayStruct){ .value = 230 });
+    const TestArrayStruct* struct0_3Again5 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_EQUAL_INT(230, struct0_3Again5->value);
+
+    ska_array2d_destroy(array2D);
 }
 
 void seika_asset_file_loader_test(void) {
