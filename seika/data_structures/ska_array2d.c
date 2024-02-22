@@ -43,17 +43,25 @@ bool ska_array2d_set(SkaArray2D* array2d, size_t x, size_t y, void* newValue) {
 
 void ska_array2d_resize(SkaArray2D* array2d, size_t newX, size_t newY) {
     // Reallocate memory for data array
-    array2d->data = ska_mem_reallocate(array2d->data, newY * sizeof(void*));
-    for (size_t i = 0; i < newY; i++) {
+    const size_t width = max(newX, 1);
+    const size_t height = max(newY, 1);
+
+    array2d->data = ska_mem_reallocate(array2d->data, height * sizeof(void*));
+    for (size_t i = 0; i < height; i++) {
         if (i < array2d->size.h) {
             // Resize existing rows
-            array2d->data[i] = ska_mem_reallocate(array2d->data[i], newX * array2d->elementSize);
+            array2d->data[i] = ska_mem_reallocate(array2d->data[i], width * array2d->elementSize);
         } else {
             // Allocate memory for new rows
-            array2d->data[i] = SE_MEM_ALLOCATE_SIZE(newX * array2d->elementSize);
+            array2d->data[i] = SE_MEM_ALLOCATE_SIZE(width * array2d->elementSize);
         }
     }
+
     array2d->size = (SKASize2Di){ .w = (int)newX, .h = (int)newY };
+
+    if (newX == 0 && newY == 0) {
+        ska_array2d_reset(array2d);
+    }
 }
 
 void ska_array2d_reset(SkaArray2D* array2d) {
