@@ -6,6 +6,7 @@
 #include "seika/data_structures/se_array_list.h"
 #include "seika/data_structures/se_spatial_hash_map.h"
 #include "seika/data_structures/ska_array2d.h"
+#include "seika/data_structures/ska_linked_list.h"
 #include "seika/asset/asset_file_loader.h"
 #include "seika/utils/command_line_args_util.h"
 #include "seika/utils/se_string_util.h"
@@ -29,6 +30,7 @@ void seika_spatial_hash_map_test(void);
 void seika_command_line_args_util_test(void);
 void seika_file_system_utils_test(void);
 void seika_string_utils_test(void);
+void seika_linked_list_test(void);
 void seika_array_utils_test(void);
 void seika_array_list_test(void);
 void seika_array2d_test(void);
@@ -46,6 +48,7 @@ int main(int argv, char** args) {
     RUN_TEST(seika_command_line_args_util_test);
     RUN_TEST(seika_file_system_utils_test);
     RUN_TEST(seika_string_utils_test);
+    RUN_TEST(seika_linked_list_test);
     RUN_TEST(seika_array_utils_test);
     RUN_TEST(seika_array_list_test);
     RUN_TEST(seika_array2d_test);
@@ -189,6 +192,74 @@ void seika_string_utils_test(void) {
     SE_MEM_FREE(filePathZip);
 }
 
+static bool linked_list_test_sort(void* a, void* b) {
+    int numA = (int) *(int*) a;
+    int numB = (int) *(int*) b;
+    return numA > numB;
+}
+
+void seika_linked_list_test(void) {
+    SkaLinkedList* list = ska_linked_list_create(sizeof(int));
+    // Test prepend
+    int num1 = 9;
+    int num2 = 7;
+    ska_linked_list_prepend(list, &num1);
+    const int returnedNum = (int) *(int*) ska_linked_list_get_front(list);
+    TEST_ASSERT_EQUAL_INT(1, list->size);
+    TEST_ASSERT_EQUAL_INT(num1, returnedNum);
+    ska_linked_list_prepend(list, &num2);
+    TEST_ASSERT_EQUAL_INT(2, list->size);
+    ska_linked_list_remove(list, &num1);
+    TEST_ASSERT_EQUAL_INT(1, list->size);
+    int* returnedNum2 = (int*) ska_linked_list_pop_front(list);
+    TEST_ASSERT_EQUAL_INT(7, *returnedNum2);
+    TEST_ASSERT_TRUE(ska_linked_list_is_empty(list));
+    SE_MEM_FREE(returnedNum2);
+
+    int numbers[5];
+    for (int i = 0; i < 5; i++) {
+        numbers[i] = i;
+        ska_linked_list_append(list, &i);
+    }
+    TEST_ASSERT_EQUAL_INT(5, list->size);
+
+    // For each loop test
+    SkaLinkedListNode* node = NULL;
+    int loopIndex = 0;
+    SKA_LINKED_LIST_FOR_EACH(list, node) {
+        const int indexNum = (int)*(int*)node->value;
+        TEST_ASSERT_EQUAL_INT(indexNum, numbers[loopIndex]);
+        loopIndex++;
+    }
+
+    const int indexThreeNum = (int)*(int*)ska_linked_list_get(list, 3);
+    TEST_ASSERT_EQUAL_INT(3, indexThreeNum);
+
+    // Insert Test
+    int insertNum1 = 10;
+    int insertNum2 = 20;
+    ska_linked_list_insert(list, &insertNum1, 3);
+    TEST_ASSERT_EQUAL_INT(6, list->size);
+    ska_linked_list_insert(list, &insertNum2, 1);
+    TEST_ASSERT_EQUAL_INT(7, list->size);
+    const int insertNumThree = (int)*(int*)ska_linked_list_get(list, 3);
+    TEST_ASSERT_EQUAL_INT(10, insertNumThree);
+    const int insertNumOne = (int)*(int*)ska_linked_list_get(list, 1);
+    TEST_ASSERT_EQUAL_INT(20, insertNumOne);
+
+    ska_linked_list_sort(list, linked_list_test_sort);
+    const int smallestNum = (int)*(int*)ska_linked_list_get_front(list);
+    const int highestNum = (int)*(int*)ska_linked_list_get_back(list);
+    TEST_ASSERT_EQUAL_INT(0, smallestNum);
+    TEST_ASSERT_EQUAL_INT(20, highestNum);
+
+    // Clear test
+    ska_linked_list_clear(list);
+    TEST_ASSERT_EQUAL_INT(0, list->size);
+
+    ska_linked_list_destroy(list);
+}
+
 void seika_array_utils_test(void) {
 #define ARRAY_SIZE 6
 
@@ -208,7 +279,7 @@ void seika_array_utils_test(void) {
 #undef ARRAY_SIZE
 }
 
-bool array_list_test_sort(void* a, void* b) {
+static bool array_list_test_sort(void* a, void* b) {
     int numA = (int) *(int*) a;
     int numB = (int) *(int*) b;
     return numA > numB;
