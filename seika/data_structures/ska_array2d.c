@@ -43,8 +43,8 @@ bool ska_array2d_set(SkaArray2D* array2d, size_t x, size_t y, void* newValue) {
 
 void ska_array2d_resize(SkaArray2D* array2d, size_t newX, size_t newY) {
     // Reallocate memory for data array
-    const size_t width = max(newX, 1);
-    const size_t height = max(newY, 1);
+    const size_t width = SKA_MATH_MAX(newX, 1);
+    const size_t height = SKA_MATH_MAX(newY, 1);
 
     array2d->data = ska_mem_reallocate(array2d->data, height * sizeof(void*));
     for (size_t i = 0; i < height; i++) {

@@ -148,6 +148,10 @@ typedef struct SKAMinMaxVec2 {
 SKAVector2 ska_math_minmax_vec2_get_random_in_range(const SKAMinMaxVec2* minmax);
 
 // --- Misc --- //
+#define SKA_MATH_MIN(A, B) ((A) < (B) ? (A) : (B))
+#define SKA_MATH_MAX(A, B) ((A) > (B) ? (A) : (B))
+#define SKA_MATH_CLAMP(VAL, MIN_VAL, MAX_VAL) ((VAL) < (MIN_VAL) ? (MIN_VAL) : (VAL) > (MAX_VAL) ? (MAX_VAL) : (VAL))
+
 float ska_math_lerpf(float a, float b, float alpha);
 float ska_math_map_to_range(float input, float inputMin, float inputMax, float outputMin, float outputMax);
 float ska_math_map_to_unit(float input, float inputMin, float inputMax);
