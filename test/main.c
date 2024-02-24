@@ -3,7 +3,7 @@
 #include <SDL2/SDL_main.h>
 
 #include "seika/data_structures/se_array_utils.h"
-#include "seika/data_structures/se_array_list.h"
+#include "seika/data_structures/ska_array_list.h"
 #include "seika/data_structures/se_spatial_hash_map.h"
 #include "seika/data_structures/ska_array2d.h"
 #include "seika/data_structures/ska_linked_list.h"
@@ -286,65 +286,29 @@ static bool array_list_test_sort(void* a, void* b) {
 }
 
 void seika_array_list_test(void) {
-    SEArrayList* list = se_array_list_create(sizeof(int));
-    // Test prepend
-    int num1 = 9;
-    int num2 = 7;
-    se_array_list_prepend(list, &num1);
-    const int returnedNum = (int) *(int*) se_array_list_get_front(list);
-    TEST_ASSERT_EQUAL_INT(1, list->size);
-    TEST_ASSERT_EQUAL_INT(num1, returnedNum);
-    se_array_list_prepend(list, &num2);
-    TEST_ASSERT_EQUAL_INT(2, list->size);
-    se_array_list_remove(list, &num1);
-    TEST_ASSERT_EQUAL_INT(1, list->size);
-    int* returnedNum2 = (int*) se_array_list_pop_front(list);
-    TEST_ASSERT_EQUAL_INT(7, *returnedNum2);
-    TEST_ASSERT_TRUE(se_array_list_is_empty(list));
-    SE_MEM_FREE(returnedNum2);
+    SkaArrayList* list = ska_array_list_create_default_capacity(sizeof(int));
 
-    int numbers[5];
-    for (int i = 0; i < 5; i++) {
-        numbers[i] = i;
-        se_array_list_append(list, &i);
+    for (int i = 0; i < 10; i += 2) {
+        ska_array_list_push_back(list, &i);
     }
-    TEST_ASSERT_EQUAL_INT(5, list->size);
+    TEST_ASSERT_EQUAL_size_t(5, list->size);
 
-    // For each loop test
-    SEArrayListNode* node = NULL;
-    int loopIndex = 0;
-    SE_ARRAY_LIST_FOR_EACH(list, node) {
-        const int indexNum = (int)*(int*)node->value;
-        TEST_ASSERT_EQUAL_INT(indexNum, numbers[loopIndex]);
-        loopIndex++;
+    int forEachValue = 0;
+    SKA_ARRAY_LIST_FOR_EACH(list, int, value) {
+        TEST_ASSERT_EQUAL_INT(forEachValue, *value);
+        forEachValue += 2;
     }
 
-    const int indexThreeNum = (int)*(int*)se_array_list_get(list, 3);
-    TEST_ASSERT_EQUAL_INT(3, indexThreeNum);
+    ska_array_list_remove_by_index(list, 0);
+    TEST_ASSERT_EQUAL_size_t(4, list->size);
+    const int indexZeroValue = (int)*(int*)ska_array_list_get(list, 0);
+    TEST_ASSERT_EQUAL_INT(2, indexZeroValue);
+    const int indexTwoValue = 6;
+    ska_array_list_remove(list, &indexTwoValue);
+    const int newIndexTwoValue = (int)*(int*)ska_array_list_get(list, 2);
+    TEST_ASSERT_EQUAL_INT(8, newIndexTwoValue);
 
-    // Insert Test
-    int insertNum1 = 10;
-    int insertNum2 = 20;
-    se_array_list_insert(list, &insertNum1, 3);
-    TEST_ASSERT_EQUAL_INT(6, list->size);
-    se_array_list_insert(list, &insertNum2, 1);
-    TEST_ASSERT_EQUAL_INT(7, list->size);
-    const int insertNumThree = (int)*(int*)se_array_list_get(list, 3);
-    TEST_ASSERT_EQUAL_INT(10, insertNumThree);
-    const int insertNumOne = (int)*(int*)se_array_list_get(list, 1);
-    TEST_ASSERT_EQUAL_INT(20, insertNumOne);
-
-    se_array_list_sort(list, array_list_test_sort);
-    const int smallestNum = (int)*(int*)se_array_list_get_front(list);
-    const int highestNum = (int)*(int*)se_array_list_get_back(list);
-    TEST_ASSERT_EQUAL_INT(0, smallestNum);
-    TEST_ASSERT_EQUAL_INT(20, highestNum);
-
-    // Clear test
-    se_array_list_clear(list);
-    TEST_ASSERT_EQUAL_INT(0, list->size);
-
-    se_array_list_destroy(list);
+    ska_array_list_destroy(list);
 }
 
 void seika_array2d_test(void) {
