@@ -10,7 +10,7 @@
 #include "seika/utils/se_assert.h"
 
 //--- EC System Manager ---//
-#define MAX_ENTITY_SYSTEMS_PER_HOOK 6
+#define MAX_ENTITY_SYSTEMS_PER_HOOK 12
 
 typedef struct EntitySystemData {
     size_t entity_systems_count;
@@ -133,35 +133,45 @@ void ska_ecs_system_destroy(SkaECSSystem* entitySystem) {
 
 void ska_ecs_system_register(SkaECSSystem* system) {
     SE_ASSERT_FMT(system != NULL, "Passed in system is NULL!");
+    SE_ASSERT_FMT(entitySystemData.entity_systems_count + 1 < SKA_ECS_MAX_COMPONENTS, "At system limit of '%d'", SKA_ECS_MAX_COMPONENTS);
     entitySystemData.entity_systems[entitySystemData.entity_systems_count++] = system;
     if (system->on_ec_system_register != NULL) {
         system->on_ec_system_register(system);
     }
     if (system->on_entity_start_func != NULL) {
+        SE_ASSERT_FMT(entitySystemData.on_entity_start_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'on_entity_start_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
         entitySystemData.on_entity_start_systems[entitySystemData.on_entity_start_systems_count++] = system;
     }
     if (system->on_entity_end_func != NULL) {
+        SE_ASSERT_FMT(entitySystemData.on_entity_end_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'on_entity_end_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
         entitySystemData.on_entity_end_systems[entitySystemData.on_entity_end_systems_count++] = system;
     }
     if (system->on_entity_entered_scene_func != NULL) {
+        SE_ASSERT_FMT(entitySystemData.on_entity_entered_scene_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'on_entity_entered_scene_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
         entitySystemData.on_entity_entered_scene_systems[entitySystemData.on_entity_entered_scene_systems_count++] = system;
     }
     if (system->render_func != NULL) {
+        SE_ASSERT_FMT(entitySystemData.render_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'render_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
         entitySystemData.render_systems[entitySystemData.render_systems_count++] = system;
     }
     if (system->pre_update_all_func != NULL) {
+        SE_ASSERT_FMT(entitySystemData.pre_update_all_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'pre_update_all_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
         entitySystemData.pre_update_all_systems[entitySystemData.pre_update_all_systems_count++] = system;
     }
     if (system->post_update_all_func != NULL) {
+        SE_ASSERT_FMT(entitySystemData.post_update_all_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'post_update_all_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
         entitySystemData.post_update_all_systems[entitySystemData.post_update_all_systems_count++] = system;
     }
     if (system->update_func != NULL) {
+        SE_ASSERT_FMT(entitySystemData.update_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'update_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
         entitySystemData.update_systems[entitySystemData.update_systems_count++] = system;
     }
     if (system->fixed_update_func != NULL) {
+        SE_ASSERT_FMT(entitySystemData.fixed_update_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'fixed_update_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
         entitySystemData.fixed_update_systems[entitySystemData.fixed_update_systems_count++] = system;
     }
     if (system->network_callback_func != NULL) {
+        SE_ASSERT_FMT(entitySystemData.network_callback_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'network_callback_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
         entitySystemData.network_callback_systems[entitySystemData.network_callback_systems_count++] = system;
     }
 }
