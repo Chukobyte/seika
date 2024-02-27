@@ -42,6 +42,13 @@ typedef struct SKAVector2i {
     int y;
 } SKAVector2i;
 
+#define SKA_VECTOR2I_ZERO SKA_STRUCT_LITERAL(SKAVector2i){ 0, 0 }
+#define SKA_VECTOR2I_ONE SKA_STRUCT_LITERAL(SKAVector2i){ 1, 1 }
+#define SKA_VECTOR2I_LEFT SKA_STRUCT_LITERAL(SKAVector2i){ -1, 0 }
+#define SKA_VECTOR2I_RIGHT SKA_STRUCT_LITERAL(SKAVector2i){ 1, 0 }
+#define SKA_VECTOR2I_UP SKA_STRUCT_LITERAL(SKAVector2i){ 0, -1 }
+#define SKA_VECTOR2I_DOWN SKA_STRUCT_LITERAL(SKAVector2i){ 0, 1 }
+
 // --- SKASize2D --- //
 typedef struct SKASize2D {
     float w;
@@ -55,6 +62,8 @@ typedef struct SKASize2Di {
     int w;
     int h;
 } SKASize2Di;
+
+#define SKA_SIZE2DI_ZERO SKA_STRUCT_LITERAL(SKASize2Di){ 0, 0 }
 
 // --- SKARect2 --- //
 typedef struct SKARect2 {
