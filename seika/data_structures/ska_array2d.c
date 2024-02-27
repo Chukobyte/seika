@@ -64,6 +64,10 @@ void ska_array2d_resize(SkaArray2D* array2d, size_t newX, size_t newY) {
     }
 }
 
+void ska_array2d_clear(SkaArray2D* array2d) {
+    ska_array2d_resize(array2d, 0, 0);
+}
+
 void ska_array2d_reset(SkaArray2D* array2d) {
     ska_array2d_reset_default(array2d, NULL);
 }
