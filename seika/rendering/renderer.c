@@ -190,7 +190,7 @@ void ska_renderer_queue_sprite_draw(SETexture* texture, SKARect2 sourceRect, SKA
         se_logger_error("NULL texture, not submitting draw call!");
         return;
     }
-    SpriteBatchItem item = { .texture = texture, .sourceRect = sourceRect, .destSize = destSize, .color = color, .flipH = flipH, .flipV = flipV, .transform2D = {0}, .shaderInstance = shaderInstance };
+    SpriteBatchItem item = (SpriteBatchItem){ .texture = texture, .sourceRect = sourceRect, .destSize = destSize, .color = color, .flipH = flipH, .flipV = flipV, .transform2D = {0}, .shaderInstance = shaderInstance };
     ska_transform2d_transform_to_mat4(transform2D, item.transform2D.model);
     ska_renderer_queue_sprite_draw_call(&item, zIndex);
 }
@@ -200,7 +200,7 @@ void ska_renderer_queue_sprite_draw2(SETexture* texture, SKARect2 sourceRect, SK
         se_logger_error("NULL texture, not submitting draw call!");
         return;
     }
-    SpriteBatchItem item = { .texture = texture, .sourceRect = sourceRect, .destSize = destSize, .color = color, .flipH = flipH, .flipV = flipV, .transform2D = {0}, .shaderInstance = shaderInstance };
+    SpriteBatchItem item = (SpriteBatchItem){ .texture = texture, .sourceRect = sourceRect, .destSize = destSize, .color = color, .flipH = flipH, .flipV = flipV, .transform2D = {0}, .shaderInstance = shaderInstance };
     glm_mat4_copy(trsMatrix, item.transform2D.model);
     ska_renderer_queue_sprite_draw_call(&item, zIndex);
 }

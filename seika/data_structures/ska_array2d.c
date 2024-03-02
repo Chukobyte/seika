@@ -5,7 +5,7 @@
 #include "../memory/se_mem.h"
 #include "seika/utils/se_assert.h"
 
-#define SKA_ARRAY2D_IS_VALID_COORD(ARRAY2D, ROW, COL) (!(ROW >= ARRAY2D->size.w || COL >= ARRAY2D->size.h))
+#define SKA_ARRAY2D_IS_VALID_COORD(ARRAY2D, ROW, COL) (!((int)ROW >= ARRAY2D->size.w || (int)COL >= ARRAY2D->size.h))
 
 SkaArray2D* ska_array2d_create(size_t rows, size_t cols, size_t elementSize) {
     SkaArray2D* newArray = SE_MEM_ALLOCATE(SkaArray2D);
@@ -19,7 +19,7 @@ SkaArray2D* ska_array2d_create(size_t rows, size_t cols, size_t elementSize) {
 }
 
 void ska_array2d_destroy(SkaArray2D* array2d) {
-    for (size_t i = 0; i < array2d->size.h; i++) {
+    for (int i = 0; i < array2d->size.h; i++) {
         SE_MEM_FREE(array2d->data[i]);
     }
     SE_MEM_FREE(array2d->data);
@@ -74,13 +74,13 @@ void ska_array2d_reset(SkaArray2D* array2d) {
 
 void ska_array2d_reset_default(SkaArray2D* array2d, void* defaultValue) {
     if (defaultValue) {
-        for (size_t y = 0; y < array2d->size.h; y++) {
-            for (size_t x = 0; x < array2d->size.w; x++) {
+        for (int y = 0; y < array2d->size.h; y++) {
+            for (int x = 0; x < array2d->size.w; x++) {
                 ska_array2d_set(array2d, x, y, defaultValue);
             }
         }
     } else {
-        for (size_t i = 0; i < array2d->size.h; i++) {
+        for (int i = 0; i < array2d->size.h; i++) {
             memset(array2d->data[i], 0, array2d->size.w * array2d->elementSize);
         }
     }

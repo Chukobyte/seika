@@ -70,7 +70,7 @@ ARRAY_NAME ##_count = 0;
 
 #define SE_STATIC_ARRAY_SORT_INT(ARRAY_NAME) \
 if (SE_STATIC_ARRAY_SIZE(ARRAY_NAME) > 0) {  \
-se_array_utils_selection_sort_int(ARRAY_NAME, (size_t) SE_STATIC_ARRAY_SIZE(ARRAY_NAME)); \
+se_array_utils_selection_sort_int(ARRAY_NAME, (int)SE_STATIC_ARRAY_SIZE(ARRAY_NAME)); \
 }
 
 // Array Utils (TODO: Move in own file)
