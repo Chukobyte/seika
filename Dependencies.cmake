@@ -57,13 +57,8 @@ if (NOT TARGET miniaudio)
 endif()
 
 if (NOT TARGET stb_image)
-    include(FetchContent)
-    FetchContent_Declare(
-            stb_image_content
-            GIT_REPOSITORY https://github.com/nothings/stb.git
-            GIT_TAG ae721c50eaf761660b4f90cc590453cdb0c2acd0
-    )
-    FetchContent_MakeAvailable(stb_image_content)
+    add_library(stb_image thirdparty/stb_image/stb_image.c)
+    target_include_directories(stb_image PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 endif()
 
 if (NOT TARGET unity)
