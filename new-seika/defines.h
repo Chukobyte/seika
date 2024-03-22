@@ -14,6 +14,9 @@ typedef int64_t int64;
 typedef uint32_t uint32;
 typedef uint64_t uint64;
 
+typedef float f32;
+typedef double f64;
+
 #ifndef DEBUG
 #define SKA_IF_DEBUG(STATEMENT) \
 do { STATEMENT } while(false)

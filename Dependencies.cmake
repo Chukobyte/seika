@@ -7,7 +7,6 @@ if (NOT TARGET SDL3::SDL3-static)
     FetchContent_Declare(
             SDL_content
             GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
-#            GIT_TAG release-2.30.1
             GIT_TAG cacac6cc341d5856d1857bdcf7390551eed54865
     )
     FetchContent_MakeAvailable(SDL_content)
@@ -19,10 +18,13 @@ if (NOT TARGET glad)
 endif()
 
 if (NOT TARGET cglm)
+    set(CGLM_STATIC ON)
+    set(CGLM_SHARED OFF)
+
     FetchContent_Declare(
             cglm_content
             GIT_REPOSITORY https://github.com/recp/cglm.git
-            GIT_TAG v0.9.2
+            GIT_TAG v0.9.1
     )
     FetchContent_MakeAvailable(cglm_content)
 endif()

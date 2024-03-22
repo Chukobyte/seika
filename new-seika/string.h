@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stddef.h>
 #include <stdbool.h>
 
 // Copies string and allocated new memory

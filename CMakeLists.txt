@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.27.0)
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD_REQUIRED ON)
 
 project(seika C)
 
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-#    list(APPEND flags "/std:c11" "/W3" "/Zc:preprocessor") # TODO: Adding "/std:c11" breaks editor, fix later...
     list(APPEND flags "/W3" "/Zc:preprocessor")
 elseif (APPLE)
     list(APPEND flags "-Wfatal-errors" "-Wall" "-Wextra" "-Wno-write-strings" "-Wno-deprecated-declarations"
@@ -16,9 +16,11 @@ else ()
 endif ()
 
 add_library(${PROJECT_NAME} STATIC
+        new-seika/input.c
         new-seika/seika.c
         new-seika/platform.c
         new-seika/string.c
+        new-seika/math.c
         new-seika/memory.c
 
 #        seika/seika.c
@@ -71,65 +73,13 @@ target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 #--- Dependencies ---#
 include(Dependencies.cmake)
 
-#find_package(SDL2 CONFIG REQUIRED)
-#
-#find_package(freetype CONFIG)
-#set(freetype_from_find_package TRUE)
-#if (NOT freetype_FOUND)
-#    find_package(PkgConfig REQUIRED)
-#    pkg_check_modules(freetype REQUIRED freetype2)
-#    set(freetype_from_find_package FALSE)
-#endif()
-
-#if (NOT TARGET glad)
-#    add_library(glad include/glad/glad.c)
-#endif()
-#if (NOT TARGET stb_image)
-#    add_library(stb_image include/stb_image/stb_image.c)
-#endif()
-#if (NOT TARGET kuba_zip)
-#    include(FetchContent)
-#    FetchContent_Declare(
-#            kuba_zip
-#            GIT_REPOSITORY https://github.com/kuba--/zip.git
-#            GIT_TAG v0.3.0
-#    )
-#    FetchContent_MakeAvailable(kuba_zip)
-#endif()
-#if (NOT TARGET unity)
-#    add_library(unity include/unity.c)
-#endif()
-
-#target_include_directories(${PROJECT_NAME} PUBLIC
-#        "${PROJECT_BINARY_DIR}"
-#        "include"
-#        "${PROJECT_SOURCE_DIR}"
-#        )
-#target_include_directories(glad PUBLIC
-#        "${PROJECT_BINARY_DIR}"
-#        "include"
-#        )
-#target_include_directories(stb_image PUBLIC
-#        "${PROJECT_BINARY_DIR}"
-#        "include"
-#        )
-#
-#target_include_directories(unity PUBLIC
-#        "${PROJECT_BINARY_DIR}"
-#        "include"
-#        )
-
-#if (NOT freetype_from_find_package)
-#    target_include_directories(${PROJECT_NAME} PUBLIC ${freetype_INCLUDE_DIRS})
-#endif()
-
 #--- Link ---#
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 #    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip SDL2::SDL2main SDL2::SDL2 freetype Ws2_32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image SDL3::SDL3-static freetype Ws2_32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image SDL3::SDL3-static freetype Ws2_32)
 elseif (WIN32)
 #    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -lmingw32 -static-libgcc SDL2::SDL2main SDL2::SDL2 freetype -lws2_32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -lmingw32 -static-libgcc SDL2::SDL2main SDL2::SDL2 freetype -lws2_32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image -lmingw32 -static-libgcc SDL3::SDL3-static freetype -lws2_32)
 elseif (APPLE)
 #    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -Xlinker SDL2::SDL2main SDL2::SDL2 freetype m)
     target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -Xlinker SDL2::SDL2main SDL2::SDL2 freetype m)
