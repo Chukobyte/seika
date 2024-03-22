@@ -1,13 +1,23 @@
 #include <stdio.h>
 
-#include <SDL3/SDL.h>
-#include <glad/glad.h>
-#include <stb_image/stb_image.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
+//#include <SDL3/SDL.h>
+//#include <glad/glad.h>
+//#include <stb_image/stb_image.h>
+//#include <ft2build.h>
+//#include FT_FREETYPE_H
 
+#include "seika.h"
 
 int main() {
-    printf("Hello, World!\n");
+    if (!ska_init_all("test", 800, 600, 800, 600)) {
+        return -1;
+    }
+
+    while (ska_is_running()) {
+        ska_update();
+    }
+
+    ska_shutdown_all();
+
     return 0;
 }

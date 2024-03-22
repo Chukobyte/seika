@@ -6,9 +6,12 @@ extern "C" {
 
 #include "defines.h"
 
+bool ska_init();
+void ska_shutdown();
 bool ska_init_all(const char* title, int32 windowWidth, int32 windowHeight, int32 resolutionWidth, int32 resolutionHeight);
 bool ska_init_all2(const char* title, int32 windowWidth, int32 windowHeight, int32 resolutionWidth, int32 resolutionHeight, uint32 audioWavSampleRate, bool maintainAspectRatio);
 void ska_shutdown_all();
+void ska_update();
 bool ska_is_running();
 uint64 ska_get_ticks();
 void ska_delay(uint32 timeToWait);
