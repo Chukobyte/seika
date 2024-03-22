@@ -17,6 +17,10 @@ endif ()
 
 add_library(${PROJECT_NAME} STATIC
         new-seika/seika.c
+        new-seika/platform.c
+        new-seika/string.c
+        new-seika/memory.c
+
 #        seika/seika.c
 #        seika/asset/asset_manager.c
 #        seika/asset/asset_file_loader.c
@@ -61,6 +65,8 @@ add_library(${PROJECT_NAME} STATIC
 #        seika/ecs/entity.c
 #        seika/ecs/ec_system.c
         )
+
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 #--- Dependencies ---#
 include(Dependencies.cmake)
