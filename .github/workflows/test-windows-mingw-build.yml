@@ -30,6 +30,5 @@ jobs:
           buildPreset: 'ninja-multi-vcpkg'
 
       - name: run unit tests
-        shell: msys2 {0}
         run: |
           ${{ github.workspace }}/builds/Debug/seika_test.exe

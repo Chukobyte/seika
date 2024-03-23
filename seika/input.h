@@ -264,7 +264,15 @@ f32 ska_input_get_key_strength(SkaInputKey key, SkaInputDeviceIndex deviceIndex)
 SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex deviceIndex);
 
 // Input Action
+SkaInputActionHandle ska_input_add_input_action(const char* actionName, SkaInputActionValue** actionValues, SkaInputDeviceIndex deviceIndex);
+SkaInputAction* ska_input_get_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
+bool ska_input_remove_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
+SkaInputActionHandle ska_input_find_input_action_handle(const char* actionName, SkaInputDeviceIndex deviceIndex);
 
+bool ska_input_is_input_action_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
+bool ska_input_is_input_action_just_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
+bool ska_input_is_input_action_just_released(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
+f32 ska_input_get_input_action_strength(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
 
 void ska_input_new_frame();
 void ska_input_reset_gamepad(SkaInputDeviceIndex deviceIndex);

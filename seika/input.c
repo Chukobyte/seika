@@ -333,6 +333,39 @@ SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex devic
     return (SkaVector2) { .x = xKeyState->strength, .y = yKeyState->strength };
 }
 
+// Input Action
+SkaInputActionHandle ska_input_add_input_action(const char* actionName, SkaInputActionValue** actionValues, SkaInputDeviceIndex deviceIndex) {
+    return SKA_INPUT_INVALID_INPUT_ACTION_HANDLE;
+}
+
+SkaInputAction* ska_input_get_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    return NULL;
+}
+
+bool ska_input_remove_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    return false;
+}
+
+SkaInputActionHandle ska_input_find_input_action_handle(const char* actionName, SkaInputDeviceIndex deviceIndex) {
+    return SKA_INPUT_INVALID_INPUT_ACTION_HANDLE;
+}
+
+bool ska_input_is_input_action_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    return false;
+}
+
+bool ska_input_is_input_action_just_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    return false;
+}
+
+bool ska_input_is_input_action_just_released(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    return false;
+}
+
+f32 ska_input_get_input_action_strength(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    return 0.0f;
+}
+
 void ska_input_new_frame() {
     for (size_t i = 0; i < inputState.cleanupKeyStateJustPressedCount; i++) {
         const SkaInputStateCleanup* stateCleanup = &inputState.cleanupKeyStateJustPressed[i];
