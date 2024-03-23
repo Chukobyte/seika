@@ -1,0 +1,46 @@
+name: test-macosx-clang-build
+
+on:
+  push:
+    branches: [ 2.0 ]
+
+env:
+  LC_ALL: en_US.UTF-8
+  LANG: en_US.UTF-8
+
+jobs:
+  build:
+    runs-on: macOS-latest
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: install dependencies
+        run: |
+          brew install pkg-config
+
+      - name: get cmake
+        uses: lukka/get-cmake@latest
+        with:
+          useLocalCache: true
+          useCloudCache: false
+          cmakeVersion: "3.25.0"
+
+      - name: run-vcpkg
+        uses: lukka/run-vcpkg@v11.0
+        with:
+          vcpkgDirectory: '${{ github.workspace }}/vcpkg'
+          vcpkgGitCommitId: 'efca044b75fbf481d6650ce4d3b223d8af94f7a7'
+
+      - name: run build
+        uses: lukka/run-cmake@v10.3
+        with:
+          cmakeListsTxtPath: '${{ github.workspace }}/CMakeLists.txt'
+          configurePreset: 'ninja-multi-vcpkg'
+          configurePresetAdditionalArgs: "['-DIS_CI_BUILD=true']"
+          buildPreset: 'ninja-multi-vcpkg'
+
+      - name: run unit tests
+        run: |
+          echo "Running seika tests!"
+          ${{ github.workspace }}/builds/Debug/seika_test
