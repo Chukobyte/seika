@@ -1,0 +1,4 @@
+#pragma once
+
+#define SKA_MACRO_STRINGIFY(X) #X
+#define SKA_MACRO_TO_STRING(X) SKA_MACRO_STRINGIFY(X)
