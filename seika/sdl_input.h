@@ -215,14 +215,15 @@ void ska_sdl_process_event(SDL_Event event) {
             inputEvent.key = ska_sdl_mouse_button_to_input_key(event.button);
             break;
         }
-            // Keyboard
+        // Keyboard
         case SDL_EVENT_KEY_DOWN:
         case SDL_EVENT_KEY_UP: {
             inputEvent.sourceType = SkaInputSourceType_KEYBOARD;
             inputEvent.triggerType = event.type == SDL_EVENT_KEY_DOWN ? SkaInputTriggerType_PRESSED : SkaInputTriggerType_RELEASED,
             inputEvent.key = ska_sdl_keycode_to_input_key(event.key.keysym.sym);
+            break;
         }
-            // Gamepad
+        // Gamepad
         case SDL_EVENT_GAMEPAD_ADDED: {
             const SDL_JoystickID deviceIndex = event.gdevice.which;
             SDL_Gamepad* newGamepad = SDL_OpenGamepad(deviceIndex);

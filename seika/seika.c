@@ -6,6 +6,7 @@
 #include <glad/glad.h>
 
 #include "flag_utils.h"
+#include "sdl_input.h"
 #include "seika/assert.h"
 
 #define SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE 44100
@@ -87,6 +88,8 @@ void ska_shutdown_all() {
 
 void ska_update() {
     SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+    ska_input_new_frame();
+
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
         switch(event.type) {
@@ -98,9 +101,16 @@ void ska_update() {
                 const Sint32 windowHeight = event.window.data2;
                 break;
             }
-            default:
+            default: {
+                ska_sdl_process_event(event);
                 break;
+            }
         }
+    }
+    ska_sdl_process_axis_events();
+
+    if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_ESCAPE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX)) {
+        skaState.shutdownRequested = true;
     }
 }
 
