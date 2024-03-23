@@ -32,4 +32,4 @@ jobs:
       - name: run unit tests
         shell: msys2 {0}
         run: |
-          ./seika_test.exe
+          ${{ github.workspace }}/builds/Debug/seika_test.exe

@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "../new-seika/math.h"
+#include "../seika/math.h"
 
 typedef int32 SkaInputDeviceIndex;
 typedef uint32 SkaInputSubscriberHandle;
@@ -262,6 +262,9 @@ bool ska_input_is_key_just_pressed(SkaInputKey key, SkaInputDeviceIndex deviceIn
 bool ska_input_is_key_just_released(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
 f32 ska_input_get_key_strength(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
 SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex deviceIndex);
+
+// Input Action
+
 
 void ska_input_new_frame();
 void ska_input_reset_gamepad(SkaInputDeviceIndex deviceIndex);

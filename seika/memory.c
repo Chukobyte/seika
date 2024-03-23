@@ -1,5 +1,5 @@
-#include "new-seika/memory.h"
-#include "new-seika/assert.h"
+#include "seika/memory.h"
+#include "seika/assert.h"
 
 void* ska_mem_allocate(size_t size) {
     void* memory = calloc(1, size);

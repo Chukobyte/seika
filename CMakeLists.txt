@@ -16,12 +16,12 @@ else ()
 endif ()
 
 add_library(${PROJECT_NAME} STATIC
-        new-seika/input.c
-        new-seika/seika.c
-        new-seika/platform.c
-        new-seika/string.c
-        new-seika/math.c
-        new-seika/memory.c
+        seika/input.c
+        seika/seika.c
+        seika/platform.c
+        seika/string.c
+        seika/math.c
+        seika/memory.c
 
 #        seika/seika.c
 #        seika/asset/asset_manager.c
@@ -110,7 +110,7 @@ endif()
 
 if (SK_IS_MAIN)
     # Test main
-    add_executable(${PROJECT_NAME}_app new-seika/main.c)
+    add_executable(${PROJECT_NAME}_app seika/main.c)
     target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME})
 
     # Create seika test exe

@@ -10,7 +10,7 @@ extern "C" {
 
 #include "defines.h"
 #include "platform.h"
-#include "new-seika/string.h"
+#include "seika/string.h"
 
 #define SKA_ASSERT_FAIL_EXIT_CODE (-1)
 

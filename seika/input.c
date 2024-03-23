@@ -1,5 +1,5 @@
 #include "input.h"
-#include "new-seika/assert.h"
+#include "seika/assert.h"
 
 #define SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE 16
 
