@@ -1,5 +1,6 @@
 #include "input.h"
 #include "seika/assert.h"
+#include "seika/memory.h"
 
 #define SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE 16
 
@@ -36,9 +37,22 @@ typedef struct SkaInputState {
     size_t cleanupKeyStateJustPressedCount;
     size_t cleanupKeyStateJustReleasedCount;
 
+    SkaInputActionHandle inputActionHandleIndex;
+    SkaInputActionData inputActionData[SKA_INPUT_MAX_DEVICES][SKA_INPUT_MAX_INPUT_ACTIONS];
 } SkaInputState;
 
-static SkaInputState inputState = {{0}};
+#define DEFAULT_INPUT_STATE { \
+    .inputKeyState = {{0}},                   \
+    .prevAxisInputs = {0},                    \
+    .cleanupKeyStateJustPressed = {0},        \
+    .cleanupKeyStateJustReleased = {0},       \
+    .cleanupKeyStateJustPressedCount = 0,     \
+    .cleanupKeyStateJustReleasedCount = 0,    \
+    .inputActionHandleIndex = 1,              \
+    .inputActionData = {{0}}                  \
+}
+
+static SkaInputState inputState = DEFAULT_INPUT_STATE;
 
 static SkaInputKey get_key_from_2d_axis_key(SkaInputKey axis2DKey, SkaAxisInputValues* axisInputValues, f32 axisValue);
 static void set_prev_input_axis_value(SkaInputKey key, SkaAxisInputValues* axisInputValues, f32 axisValue);
@@ -334,35 +348,88 @@ SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex devic
 }
 
 // Input Action
-SkaInputActionHandle ska_input_add_input_action(const char* actionName, SkaInputActionValue** actionValues, SkaInputDeviceIndex deviceIndex) {
-    return SKA_INPUT_INVALID_INPUT_ACTION_HANDLE;
+SkaInputActionHandle ska_input_add_input_action(const char* actionName, const SkaInputAction* action, SkaInputDeviceIndex deviceIndex) {
+    SKA_ASSERT(inputState.inputActionHandleIndex + 1 < SKA_INPUT_MAX_INPUT_ACTIONS);
+    const SkaInputActionHandle newHandle = inputState.inputActionHandleIndex++;
+    inputState.inputActionData[deviceIndex][newHandle].handle = newHandle;
+    inputState.inputActionData[deviceIndex][newHandle].action = *action;
+    return newHandle;
 }
 
 SkaInputAction* ska_input_get_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
+    if (actionData->handle) {
+        return &actionData->action;
+    }
     return NULL;
 }
 
 bool ska_input_remove_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
+    if (actionData->handle != SKA_INPUT_INVALID_INPUT_ACTION_HANDLE) {
+        SKA_MEM_FREE(actionData->action.name);
+        actionData->action.name = NULL;
+        actionData->handle = SKA_INPUT_INVALID_INPUT_ACTION_HANDLE;
+        return true;
+    }
     return false;
 }
 
 SkaInputActionHandle ska_input_find_input_action_handle(const char* actionName, SkaInputDeviceIndex deviceIndex) {
+    for (SkaInputActionHandle handle = 0; handle < SKA_INPUT_MAX_INPUT_ACTIONS; handle++) {
+        SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
+        if (actionData->handle == SKA_INPUT_INVALID_INPUT_ACTION_HANDLE) {
+            continue;
+        }
+        if (strcmp(actionData->action.name, actionName) == 0) {
+            return actionData->handle;
+        }
+    }
     return SKA_INPUT_INVALID_INPUT_ACTION_HANDLE;
 }
 
 bool ska_input_is_input_action_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
+    for (size_t i = 0; i < actionData->action.actionValuesCount; i++) {
+        const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
+        if (ska_input_is_key_pressed(actionValue->key, deviceIndex)) {
+            return true;
+        }
+    }
     return false;
 }
 
 bool ska_input_is_input_action_just_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
+    for (size_t i = 0; i < actionData->action.actionValuesCount; i++) {
+        const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
+        if (ska_input_is_key_just_pressed(actionValue->key, deviceIndex)) {
+            return true;
+        }
+    }
     return false;
 }
 
 bool ska_input_is_input_action_just_released(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
+    for (size_t i = 0; i < actionData->action.actionValuesCount; i++) {
+        const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
+        if (ska_input_is_key_just_released(actionValue->key, deviceIndex)) {
+            return true;
+        }
+    }
     return false;
 }
 
 f32 ska_input_get_input_action_strength(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
+    const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
+    for (size_t i = 0; i < actionData->action.actionValuesCount; i++) {
+        const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
+        const f32 keyStrength = ska_input_get_key_strength(actionValue->key, deviceIndex);
+        if (keyStrength >= actionValue->strengthThreshold) {
+            return keyStrength;
+        }
+    }
     return 0.0f;
 }
 
@@ -388,7 +455,7 @@ void ska_input_reset_gamepad(SkaInputDeviceIndex deviceIndex) {
 }
 
 void ska_input_reset(SkaInputDeviceIndex deviceIndex) {
-    inputState = (SkaInputState){{0}};
+    inputState = (SkaInputState)DEFAULT_INPUT_STATE;
 }
 
 // Private
