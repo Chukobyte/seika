@@ -6,7 +6,7 @@
 #include <glad/glad.h>
 
 #include "flag_utils.h"
-#include "sdl_input.h"
+#include "input/sdl_input.h"
 #include "seika/assert.h"
 
 #define SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE 44100

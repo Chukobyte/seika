@@ -16,11 +16,11 @@ else ()
 endif ()
 
 add_library(${PROJECT_NAME} STATIC
-        seika/input.c
+        seika/input/input.c
         seika/seika.c
         seika/platform.c
         seika/string.c
-        seika/math.c
+        seika/math/math.c
         seika/memory.c
 
 #        seika/seika.c
@@ -68,7 +68,7 @@ add_library(${PROJECT_NAME} STATIC
 #        seika/ecs/ec_system.c
         )
 
-target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 #--- Dependencies ---#
 include(Dependencies.cmake)
@@ -116,6 +116,6 @@ if (SK_IS_MAIN)
     # Create seika test exe
 #    add_executable(${PROJECT_NAME}_test test/main.c)
 #    target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} unity)
-    add_executable(${PROJECT_NAME}_test test/new_main.c)
+    add_executable(${PROJECT_NAME}_test test/test.c)
     target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} unity)
 endif()

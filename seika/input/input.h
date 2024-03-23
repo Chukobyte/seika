@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "../seika/math.h"
+#include "seika/math/math.h"
 
 typedef int32 SkaInputDeviceIndex;
 typedef uint32 SkaInputSubscriberHandle;

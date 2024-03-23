@@ -1,6 +1,6 @@
 #include <unity.h>
 
-#include "../seika/input.h"
+#include "seika/input/input.h"
 
 #define RESOURCES_PATH "test/resources"
 #define RESOURCES_PACK_PATH "test/resources/test.pck"
