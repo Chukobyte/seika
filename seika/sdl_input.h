@@ -3,11 +3,20 @@
 #include <SDL3/SDL.h>
 
 #include "input.h"
+#include "sdl_gamepad_db.h"
 
 typedef struct SkaSDLGamepadData {
     SDL_Gamepad* gamepad;
     SkaInputDeviceIndex deviceIndex;
 } SkaSDLGamepadData;
+
+typedef struct SkaSDLInputEvent {
+    SkaInputSourceType sourceType;
+    SkaInputTriggerType triggerType;
+    SkaInputDeviceIndex deviceIndex;
+    SkaInputKey key;
+    f32 axisMotionValue;
+} SkaSDLInputEvent;
 
 static SkaSDLGamepadData gamepadData[SKA_INPUT_MAX_DEVICES];
 static SkaSDLGamepadData gamepadDataByPlayerIndex[SKA_INPUT_MAX_DEVICES];
@@ -180,21 +189,18 @@ SkaInputKey ska_sdl_gamepad_axis_to_input_key(SDL_GamepadAxis axis) {
 }
 
 static bool ska_sdl_load_gamepad_mappings() {
-    return true;
+    const int loadResult = SDL_AddGamepadMapping(SKA_GAMEPAD_DB_STR);
+    return loadResult >= 0;
+}
+
+static inline void ska_sdl_notify_input_event(const SkaSDLInputEvent* inputEvent) {
+    ska_input_register_input_event(inputEvent->sourceType, inputEvent->key, inputEvent->triggerType, inputEvent->deviceIndex, inputEvent->axisMotionValue);
 }
 
 void ska_sdl_process_event(SDL_Event event) {
-    struct SkaSDLInputEvent {
-        SkaInputSourceType sourceType;
-        SkaInputTriggerType triggerType;
-        SkaInputDeviceIndex deviceIndex;
-        SkaInputKey key;
-        f32 axisMotionValue;
-    };
-
-    struct SkaSDLInputEvent inputEvent = {
+    SkaSDLInputEvent inputEvent = {
         .sourceType = SkaInputSourceType_INVALID,
-        .triggerType = SkaInputTriggerType_PRESSED,
+        .triggerType = SkaInputTriggerType_INVALID,
         .deviceIndex = SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX,
         .key = SkaInputKey_INVALID,
         .axisMotionValue = 0.0f
@@ -262,7 +268,60 @@ void ska_sdl_process_event(SDL_Event event) {
         default:
             break;
     }
+    ska_sdl_notify_input_event(&inputEvent);
 }
 
 // Call after looping through all sdl input events for a frame
-void ska_sdl_process_axis_events() {}
+void ska_sdl_process_axis_events() {
+#define SKA_SDL_GAMEPAD_AXIS_DEAD_ZONE 8000
+#define SKA_MAX_AXIS_VALUES 6
+
+    static const SDL_GamepadAxis AXIS_KEYS[SKA_MAX_AXIS_VALUES] = {
+        SDL_GAMEPAD_AXIS_LEFTX, SDL_GAMEPAD_AXIS_LEFTY,
+        SDL_GAMEPAD_AXIS_RIGHTX, SDL_GAMEPAD_AXIS_RIGHTY,
+        SDL_GAMEPAD_AXIS_LEFT_TRIGGER, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER
+    };
+    static bool hasGamepadStoppedAxisMotion[SKA_INPUT_MAX_DEVICES][SKA_MAX_AXIS_VALUES] = {
+        {true, true, true, true, true, true},
+        {true, true, true, true, true, true},
+        {true, true, true, true, true, true},
+        {true, true, true, true, true, true},
+        {true, true, true, true, true, true},
+        {true, true, true, true, true, true},
+        {true, true, true, true, true, true},
+        {true, true, true, true, true, true}
+    };
+
+    for (uint32 i = 0; i < activeGamepads; i++) {
+        SkaSDLGamepadData* currentGamepadData = &gamepadDataByPlayerIndex[i];
+        for (SDL_GamepadAxis axis = 0; axis < SKA_MAX_AXIS_VALUES; axis++) {
+            const int16 axisValue = SDL_GetGamepadAxis(currentGamepadData->gamepad, axis);
+            const SkaInputTriggerType triggerType =
+                    axisValue < SKA_SDL_GAMEPAD_AXIS_DEAD_ZONE && axisValue > -SKA_SDL_GAMEPAD_AXIS_DEAD_ZONE
+                    ? SkaInputTriggerType_AXIS_STOPPED_MOTION : SkaInputTriggerType_AXIS_IN_MOTION;
+            // Skip sending event if axis motion is already stopped
+            bool *hasStoppedAxisMotion = &hasGamepadStoppedAxisMotion[i][axis];
+            if (triggerType == SkaInputTriggerType_AXIS_STOPPED_MOTION) {
+                if (*hasStoppedAxisMotion) {
+                    continue;
+                } else {
+                    *hasStoppedAxisMotion = true;
+                }
+            } else {
+                *hasStoppedAxisMotion = false;
+            }
+            const f32 axisValueNormalized = ska_math_map_to_range((f32) axisValue, (f32) INT16_MIN, (f32) INT16_MAX,
+                                                                  -1.0f, 1.0f);
+            const SkaSDLInputEvent inputEvent = {
+                    .sourceType = SkaInputSourceType_GAMEPAD,
+                    .triggerType = triggerType,
+                    .deviceIndex = i,
+                    .key = ska_sdl_gamepad_axis_to_input_key(axis),
+                    .axisMotionValue = axisValueNormalized
+            };
+            ska_sdl_notify_input_event(&inputEvent);
+        }
+    }
+
+#undef SKA_MAX_AXIS_VALUES
+}

@@ -25,6 +25,7 @@ typedef enum SkaInputSourceType {
 } SkaInputSourceType;
 
 typedef enum SkaInputTriggerType {
+    SkaInputTriggerType_INVALID,
     SkaInputTriggerType_PRESSED,
     SkaInputTriggerType_RELEASED,
     SkaInputTriggerType_AXIS_IN_MOTION,
