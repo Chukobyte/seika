@@ -29,7 +29,8 @@ typedef enum SkaInputTriggerType {
     SkaInputTriggerType_RELEASED,
     SkaInputTriggerType_AXIS_IN_MOTION,
     SkaInputTriggerType_AXIS_STOPPED_MOTION,
-    SkaInputTriggerType_DEVICE_CHANGED,
+    SkaInputTriggerType_DEVICE_ADDED,
+    SkaInputTriggerType_DEVICE_REMOVED,
 } SkaInputTriggerType;
 
 typedef enum SkaInputInteractionStatus {

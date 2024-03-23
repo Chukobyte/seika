@@ -4,8 +4,17 @@
 
 #include "input.h"
 
-SkaInputKey ska_sdl_keycode_to_input_key(int keycode) {
-    switch (keycode) {
+typedef struct SkaSDLGamepadData {
+    SDL_Gamepad* gamepad;
+    SkaInputDeviceIndex deviceIndex;
+} SkaSDLGamepadData;
+
+static SkaSDLGamepadData gamepadData[SKA_INPUT_MAX_DEVICES];
+static SkaSDLGamepadData gamepadDataByPlayerIndex[SKA_INPUT_MAX_DEVICES];
+static uint32 activeGamepads = 0;
+
+SkaInputKey ska_sdl_keycode_to_input_key(SDL_GamepadButton keycode) {
+    switch ((int32)keycode) {
         case SDLK_TAB: return SkaInputKey_KEYBOARD_TAB;
         case SDLK_LEFT: return SkaInputKey_KEYBOARD_LEFT;
         case SDLK_RIGHT: return SkaInputKey_KEYBOARD_RIGHT;
@@ -169,3 +178,91 @@ SkaInputKey ska_sdl_gamepad_axis_to_input_key(SDL_GamepadAxis axis) {
         default: return SkaInputKey_INVALID;
     }
 }
+
+static bool ska_sdl_load_gamepad_mappings() {
+    return true;
+}
+
+void ska_sdl_process_event(SDL_Event event) {
+    struct SkaSDLInputEvent {
+        SkaInputSourceType sourceType;
+        SkaInputTriggerType triggerType;
+        SkaInputDeviceIndex deviceIndex;
+        SkaInputKey key;
+        f32 axisMotionValue;
+    };
+
+    struct SkaSDLInputEvent inputEvent = {
+        .sourceType = SkaInputSourceType_INVALID,
+        .triggerType = SkaInputTriggerType_PRESSED,
+        .deviceIndex = SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX,
+        .key = SkaInputKey_INVALID,
+        .axisMotionValue = 0.0f
+    };
+
+    switch (event.type) {
+        // Mouse
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP: {
+            inputEvent.sourceType = SkaInputSourceType_MOUSE;
+            inputEvent.triggerType = event.type == SDL_EVENT_MOUSE_BUTTON_DOWN ? SkaInputTriggerType_PRESSED : SkaInputTriggerType_RELEASED;
+            inputEvent.key = ska_sdl_mouse_button_to_input_key(event.button);
+            break;
+        }
+            // Keyboard
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP: {
+            inputEvent.sourceType = SkaInputSourceType_KEYBOARD;
+            inputEvent.triggerType = event.type == SDL_EVENT_KEY_DOWN ? SkaInputTriggerType_PRESSED : SkaInputTriggerType_RELEASED,
+            inputEvent.key = ska_sdl_keycode_to_input_key(event.key.keysym.sym);
+        }
+            // Gamepad
+        case SDL_EVENT_GAMEPAD_ADDED: {
+            const SDL_JoystickID deviceIndex = event.gdevice.which;
+            SDL_Gamepad* newGamepad = SDL_OpenGamepad(deviceIndex);
+            const int playerIndex = SDL_GetGamepadPlayerIndex(newGamepad);
+            const SkaSDLGamepadData newGamepadData = { .gamepad = newGamepad, .deviceIndex = playerIndex };
+            gamepadData[deviceIndex] = newGamepadData;
+            gamepadDataByPlayerIndex[playerIndex] = newGamepadData;
+            activeGamepads++;
+
+            inputEvent.sourceType = SkaInputSourceType_GAMEPAD;
+            inputEvent.triggerType = SkaInputTriggerType_DEVICE_ADDED;
+            inputEvent.deviceIndex = playerIndex;
+            break;
+        }
+        case SDL_EVENT_GAMEPAD_REMOVED: {
+            const SDL_JoystickID deviceIndex = event.gdevice.which;
+            SDL_Gamepad* removedGamepad = gamepadData[deviceIndex].gamepad;
+            const SkaInputDeviceIndex playerIndex = gamepadData[deviceIndex].deviceIndex;
+            SDL_CloseGamepad(removedGamepad);
+            const SkaSDLGamepadData defaultGamepadData = (SkaSDLGamepadData){ .gamepad = NULL, .deviceIndex = -1 };
+            gamepadData[deviceIndex] = defaultGamepadData;
+            gamepadDataByPlayerIndex[playerIndex] = defaultGamepadData;
+            activeGamepads--;
+
+            inputEvent.sourceType = SkaInputSourceType_GAMEPAD;
+            inputEvent.triggerType = SkaInputTriggerType_DEVICE_REMOVED;
+            inputEvent.deviceIndex = playerIndex;
+            break;
+        }
+        case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
+        case SDL_EVENT_GAMEPAD_BUTTON_UP: {
+            const SDL_JoystickID deviceIndex = event.jbutton.which;
+            const SkaInputDeviceIndex playerIndex = gamepadData[deviceIndex].deviceIndex;
+            const bool isButtonPressed = event.jbutton.state == SDL_PRESSED;
+            const SDL_GamepadButton buttonValue = event.jbutton.button;
+
+            inputEvent.sourceType = SkaInputSourceType_GAMEPAD;
+            inputEvent.triggerType = isButtonPressed ? SkaInputTriggerType_PRESSED : SkaInputTriggerType_RELEASED;
+            inputEvent.deviceIndex = playerIndex;
+            inputEvent.key = ska_sdl_gamepad_button_to_input_key(buttonValue);
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+// Call after looping through all sdl input events for a frame
+void ska_sdl_process_axis_events() {}

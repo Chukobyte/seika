@@ -313,7 +313,9 @@ void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey k
             }
             break;
         }
-        case SkaInputTriggerType_DEVICE_CHANGED:
+        case SkaInputTriggerType_DEVICE_ADDED:
+            break;
+        case SkaInputTriggerType_DEVICE_REMOVED:
             break;
     }
 
