@@ -50,4 +50,19 @@ void seika_input_test(void) {
     TEST_ASSERT_EQUAL_FLOAT(0.0f, firstAxisInput.x);
     TEST_ASSERT_EQUAL_FLOAT(-0.5f, firstAxisInput.y);
 
+    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X, SkaInputTriggerType_AXIS_IN_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.25f);
+    const SkaVector2 secondAxisInput = ska_input_get_axis_input(SkaInputAxis_LEFT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+    TEST_ASSERT_EQUAL_FLOAT(0.25f, secondAxisInput.x);
+    TEST_ASSERT_EQUAL_FLOAT(-0.5f, secondAxisInput.y);
+
+    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X, SkaInputTriggerType_AXIS_STOPPED_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.25f);
+    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y, SkaInputTriggerType_AXIS_STOPPED_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.25f);
+    const SkaVector2 thirdAxisInput = ska_input_get_axis_input(SkaInputAxis_LEFT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, thirdAxisInput.x);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, thirdAxisInput.y);
+
+    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X, SkaInputTriggerType_AXIS_IN_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 1.0f);
+    const SkaVector2 fourthAxisInput = ska_input_get_axis_input(SkaInputAxis_RIGHT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+    TEST_ASSERT_EQUAL_FLOAT(1.0f, fourthAxisInput.x);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, fourthAxisInput.y);
 }
