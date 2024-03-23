@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "new-seika/math.h"
+#include "../new-seika/math.h"
 
 typedef int32 SkaInputDeviceIndex;
 typedef uint32 SkaInputSubscriberHandle;
@@ -217,8 +217,8 @@ typedef enum SkaInputKey {
 #define SKA_INPUT_KEY_MOUSE_COUNT (SKA_INPUT_KEY_MOUSE_ENUM_END - SKA_INPUT_KEY_MOUSE_ENUM_START)
 
 #define SKA_INPUT_KEY_GAMEPAD_FOR_EACH(KeyName) for(SkaInputKey KeyName = SKA_INPUT_KEY_GAMEPAD_ENUM_START; KeyName <= SKA_INPUT_KEY_GAMEPAD_ENUM_END; KeyName++)
-#define SKA_INPUT_KEY_KEYBOARD_FOR_EACH(KeyName) for(SkaInputKey KeyName = SKA_INPUT_KEY_KEYBOARD_ENUM_START; keyName <= SKA_INPUT_KEY_KEYBOARD_ENUM_END; KeyName++)
-#define SKA_INPUT_KEY_MOUSE_FOR_EACH(KeyName) for(SkaInputKey KeyName = SKA_INPUT_KEY_MOUSE_ENUM_START; keyName <= SKA_INPUT_KEY_MOUSE_ENUM_END; KeyName++)
+#define SKA_INPUT_KEY_KEYBOARD_FOR_EACH(KeyName) for(SkaInputKey KeyName = SKA_INPUT_KEY_KEYBOARD_ENUM_START; KeyName <= SKA_INPUT_KEY_KEYBOARD_ENUM_END; KeyName++)
+#define SKA_INPUT_KEY_MOUSE_FOR_EACH(KeyName) for(SkaInputKey KeyName = SKA_INPUT_KEY_MOUSE_ENUM_START; KeyName <= SKA_INPUT_KEY_MOUSE_ENUM_END; KeyName++)
 
 typedef enum SkaInputAxis {
     SkaInputAxis_LEFT,

@@ -116,4 +116,6 @@ if (SK_IS_MAIN)
     # Create seika test exe
 #    add_executable(${PROJECT_NAME}_test test/main.c)
 #    target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} unity)
+    add_executable(${PROJECT_NAME}_test test/new_main.c)
+    target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} unity)
 endif()

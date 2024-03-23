@@ -242,8 +242,8 @@ void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey k
             } else {
                 keyState->isJustPressed = false;
             }
-            keyState->isJustPressed = false;
             keyState->isPressed = true;
+            keyState->isJustReleased = false;
             keyState->strength = 1.0f;
             break;
         }
