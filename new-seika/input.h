@@ -18,6 +18,7 @@ typedef float SkaInputKeyStrength;
 #define SKA_INPUT_MAX_INPUT_ACTION_VALUES 8
 
 typedef enum SkaInputSourceType {
+    SkaInputSourceType_INVALID,
     SkaInputSourceType_KEYBOARD,
     SkaInputSourceType_GAMEPAD,
     SkaInputSourceType_MOUSE,
@@ -41,7 +42,7 @@ typedef enum SkaInputInteractionStatus {
 } SkaInputInteractionStatus;
 
 typedef enum SkaInputKey {
-    SkaInputKey_INVALID = -1,
+    SkaInputKey_INVALID,
     // Gamepad
     SkaInputKey_GAMEPAD_DPAD_DOWN,
     SkaInputKey_GAMEPAD_DPAD_UP,
@@ -201,8 +202,23 @@ typedef enum SkaInputKey {
     SkaInputKey_MOUSE_BUTTON_RIGHT,
     SkaInputKey_MOUSE_BUTTON_MIDDLE,
 
-    SkaInputKey_NUMBER_OF_KEYS,
+    SkaInputKey_NUMBER_OF_KEYS
 } SkaInputKey;
+
+#define SKA_INPUT_KEY_GAMEPAD_ENUM_START SkaInputKey_GAMEPAD_DPAD_DOWN
+#define SKA_INPUT_KEY_GAMEPAD_ENUM_END SkaInputKey_GAMEPAD_RIGHT_ANALOG_DOWN
+#define SKA_INPUT_KEY_KEYBOARD_ENUM_START SkaInputKey_KEYBOARD_TAB
+#define SKA_INPUT_KEY_KEYBOARD_ENUM_END SkaInputKey_KEYBOARD_APP_BACK
+#define SKA_INPUT_KEY_MOUSE_ENUM_START SkaInputKey_MOUSE_BUTTON_LEFT
+#define SKA_INPUT_KEY_MOUSE_ENUM_END SkaInputKey_MOUSE_BUTTON_MIDDLE
+
+#define SKA_INPUT_KEY_GAMEPAD_COUNT (SKA_INPUT_KEY_GAMEPAD_ENUM_END - SKA_INPUT_KEY_GAMEPAD_ENUM_START)
+#define SKA_INPUT_KEY_KEYBOARD_COUNT (SKA_INPUT_KEY_KEYBOARD_ENUM_END - SKA_INPUT_KEY_KEYBOARD_ENUM_START)
+#define SKA_INPUT_KEY_MOUSE_COUNT (SKA_INPUT_KEY_MOUSE_ENUM_END - SKA_INPUT_KEY_MOUSE_ENUM_START)
+
+#define SKA_INPUT_KEY_GAMEPAD_FOR_EACH(KeyName) for(SkaInputKey KeyName = SKA_INPUT_KEY_GAMEPAD_ENUM_START; KeyName <= SKA_INPUT_KEY_GAMEPAD_ENUM_END; KeyName++)
+#define SKA_INPUT_KEY_KEYBOARD_FOR_EACH(KeyName) for(SkaInputKey KeyName = SKA_INPUT_KEY_KEYBOARD_ENUM_START; keyName <= SKA_INPUT_KEY_KEYBOARD_ENUM_END; KeyName++)
+#define SKA_INPUT_KEY_MOUSE_FOR_EACH(KeyName) for(SkaInputKey KeyName = SKA_INPUT_KEY_MOUSE_ENUM_START; keyName <= SKA_INPUT_KEY_MOUSE_ENUM_END; KeyName++)
 
 typedef enum SkaInputAxis {
     SkaInputAxis_LEFT,
@@ -241,11 +257,11 @@ void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey k
 void ska_input_register_input_event2(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType, SkaInputDeviceIndex deviceIndex);
 void ska_input_register_input_event3(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType);
 
-bool ska_input_is_key_pressed(SkaInputKey key);
-bool ska_input_is_key_just_pressed(SkaInputKey key);
-bool ska_input_is_key_just_released(SkaInputKey key);
-f32 ska_input_get_key_strength(SkaInputKey key);
-SkaVector2 ska_input_get_axis_input(SkaInputKey key);
+bool ska_input_is_key_pressed(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
+bool ska_input_is_key_just_pressed(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
+bool ska_input_is_key_just_released(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
+f32 ska_input_get_key_strength(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
+SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex deviceIndex);
 
 void ska_input_new_frame();
 void ska_input_reset_gamepad(SkaInputDeviceIndex deviceIndex);
