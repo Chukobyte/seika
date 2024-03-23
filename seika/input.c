@@ -48,7 +48,7 @@ typedef struct SkaInputState {
     .cleanupKeyStateJustReleased = {0},       \
     .cleanupKeyStateJustPressedCount = 0,     \
     .cleanupKeyStateJustReleasedCount = 0,    \
-    .inputActionHandleIndex = 1,              \
+    .inputActionHandleIndex = 0,              \
     .inputActionData = {{0}}                  \
 }
 
@@ -360,6 +360,7 @@ SkaInputActionHandle ska_input_add_input_action(const char* actionName, const Sk
             break;
         }
         actionData->action.actionValues[i] = actionValues[i];
+        actionData->action.actionValuesCount++;
     }
     return newHandle;
 }
@@ -386,7 +387,8 @@ bool ska_input_remove_input_action(SkaInputActionHandle handle, SkaInputDeviceIn
 SkaInputActionHandle ska_input_find_input_action_handle(const char* actionName, SkaInputDeviceIndex deviceIndex) {
     for (SkaInputActionHandle handle = 0; handle < SKA_INPUT_MAX_INPUT_ACTIONS; handle++) {
         SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-        if (actionData->handle == SKA_INPUT_INVALID_INPUT_ACTION_HANDLE) {
+        // TODO: Shouldn't have to check for NULL name as handle should be enough
+        if (actionData->handle == SKA_INPUT_INVALID_INPUT_ACTION_HANDLE || actionData->action.name == NULL) {
             continue;
         }
         if (strcmp(actionData->action.name, actionName) == 0) {
