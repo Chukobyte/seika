@@ -348,11 +348,19 @@ SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex devic
 }
 
 // Input Action
-SkaInputActionHandle ska_input_add_input_action(const char* actionName, const SkaInputAction* action, SkaInputDeviceIndex deviceIndex) {
+SkaInputActionHandle ska_input_add_input_action(const char* actionName, const SkaInputActionValue* actionValues, SkaInputDeviceIndex deviceIndex) {
     SKA_ASSERT(inputState.inputActionHandleIndex + 1 < SKA_INPUT_MAX_INPUT_ACTIONS);
     const SkaInputActionHandle newHandle = inputState.inputActionHandleIndex++;
-    inputState.inputActionData[deviceIndex][newHandle].handle = newHandle;
-    inputState.inputActionData[deviceIndex][newHandle].action = *action;
+    SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][newHandle];
+    actionData->handle = newHandle;
+    actionData->action.name = ska_strdup(actionName);
+    actionData->action.actionValuesCount = 0;
+    for (size_t i = 0; i < SKA_INPUT_MAX_INPUT_ACTION_VALUES; i++) {
+        if (actionValues[i].key == SkaInputKey_INVALID) {
+            break;
+        }
+        actionData->action.actionValues[i] = actionValues[i];
+    }
     return newHandle;
 }
 
