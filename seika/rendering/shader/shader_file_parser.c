@@ -7,7 +7,7 @@
 #include "seika/memory.h"
 
 #define SHADER_FILE_PARSER_ERROR_RETURN(RESULT, SOURCE, MESSAGE) \
-strcpy((RESULT).errorMessage, (MESSAGE));                        \
+ska_strcpy((RESULT).errorMessage, (MESSAGE));                        \
 SKA_MEM_FREE((SOURCE));                                           \
 return (RESULT);
 
@@ -23,37 +23,37 @@ static char* shader_file_parse_data_get_full_uniforms_source(SkaShaderFileParseD
     char uniformsBuffer[1024];
     uniformsBuffer[0] = '\0';
     for (size_t i = 0; i < parseData->uniformCount; i++) {
-        strcat(uniformsBuffer, "uniform ");
+        ska_strcat(uniformsBuffer, "uniform ");
         switch (parseData->uniforms[i].type) {
         case SkaShaderParamType_BOOL: {
-            strcat(uniformsBuffer, "bool ");
+            ska_strcat(uniformsBuffer, "bool ");
             break;
         }
         case SkaShaderParamType_INT: {
-            strcat(uniformsBuffer, "int ");
+            ska_strcat(uniformsBuffer, "int ");
             break;
         }
         case SkaShaderParamType_FLOAT: {
-            strcat(uniformsBuffer, "float ");
+            ska_strcat(uniformsBuffer, "float ");
             break;
         }
         case SkaShaderParamType_FLOAT2: {
-            strcat(uniformsBuffer, "vec2 ");
+            ska_strcat(uniformsBuffer, "vec2 ");
             break;
         }
         case SkaShaderParamType_FLOAT3: {
-            strcat(uniformsBuffer, "vec3 ");
+            ska_strcat(uniformsBuffer, "vec3 ");
             break;
         }
         case SkaShaderParamType_FLOAT4: {
-            strcat(uniformsBuffer, "vec4 ");
+            ska_strcat(uniformsBuffer, "vec4 ");
             break;
         }
         default:
             break;
         }
-        strcat(uniformsBuffer, parseData->uniforms[i].name);
-        strcat(uniformsBuffer, ";\n");
+        ska_strcat(uniformsBuffer, parseData->uniforms[i].name);
+        ska_strcat(uniformsBuffer, ";\n");
     }
     return ska_strdup(uniformsBuffer);
 }
@@ -65,8 +65,8 @@ char* shader_file_parse_data_get_full_functions_source(SkaShaderFileParseData* p
     char functionsBuffer[4096];
     functionsBuffer[0] = '\0';
     for (size_t i = 0; i < parseData->functionCount; i++) {
-        strcat(functionsBuffer, parseData->functions[i].fullFunctionSource);
-        strcat(functionsBuffer, "\n");
+        ska_strcat(functionsBuffer, parseData->functions[i].fullFunctionSource);
+        ska_strcat(functionsBuffer, "\n");
     }
     return ska_strdup(functionsBuffer);
 }
@@ -146,8 +146,8 @@ bool shader_file_find_next_uniform_default_value(char** shaderSource, char* toke
 SkaShaderFileParserFunction shader_file_find_next_function(char** shaderSource, const char* functionReturnType) {
     SkaShaderFileParserFunction parsedFunction = { .name = NULL, .fullFunctionSource = NULL };
     char shaderFunctionBuffer[1024];
-    strcpy(shaderFunctionBuffer, functionReturnType);
-    strcat(shaderFunctionBuffer, " ");
+    ska_strcpy(shaderFunctionBuffer, functionReturnType);
+    ska_strcat(shaderFunctionBuffer, " ");
     size_t bufferIndex = strlen(shaderFunctionBuffer);
 
     // Get name first
@@ -191,7 +191,7 @@ SkaShaderFileParserFunction shader_file_find_next_function(char** shaderSource, 
 char* shader_file_parse_function_body(const char* functionSource) {
     char shaderFunctionBuffer[1024];
     shaderFunctionBuffer[0] = '\0';
-    strcpy(shaderFunctionBuffer, functionSource);
+    ska_strcpy(shaderFunctionBuffer, functionSource);
     unsigned int functionBufferIndex = 0;
     char currentToken = shaderFunctionBuffer[functionBufferIndex];
     // Find beginning body
@@ -235,7 +235,7 @@ ShaderFileParseVecParseResult shader_file_parse_vec_default_value_token(const ch
     char currentFloat2Token = token[sourceTokenIndex];
     // TODO: Add more validation
     if (currentFloat2Token != '(') {
-        strcpy(result.errorMessage, "Didn't find '(' where expected for vec default value!");
+        ska_strcpy(result.errorMessage, "Didn't find '(' where expected for vec default value!");
         return result;
     }
 
@@ -338,8 +338,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
     // Parse shader type
     shader_file_find_next_token(&currentSource, shaderToken, &isSemicolonFound);
     if (strcmp(shaderToken, "shader_type") != 0) {
-        SHADER_FILE_PARSER_ERROR_FMT_RETURN(result, originalSource, "Didn't find 'shader_type' first line!  Found '%s'",
-                                            shaderToken);
+        SHADER_FILE_PARSER_ERROR_FMT_RETURN(result, originalSource, "Didn't find 'shader_type' first line!  Found '%s'", shaderToken);
     }
     // Parse shader type value
     shader_file_find_next_token(&currentSource, shaderToken, &isSemicolonFound);
@@ -491,7 +490,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
     const SEShaderFileParseBaseText shaderBaseText = shader_file_get_base_shader_text(result.parseData.shaderType);
     char fullShaderBuffer[4096];
     // Create vertex source
-    strcpy(fullShaderBuffer, shaderBaseText.vertex);
+    ska_strcpy(fullShaderBuffer, shaderBaseText.vertex);
     if (result.parseData.vertexFunctionSource) {
         // Vertex uniforms
         char* foundUniformsToken = strstr(fullShaderBuffer, SHADER_UNIFORMS_REPLACE_TOKEN);
@@ -536,7 +535,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
     result.parseData.fullVertexSource = ska_strdup(fullShaderBuffer);
 
     // Create fragment source
-    strcpy(fullShaderBuffer, shaderBaseText.fragment);
+    ska_strcpy(fullShaderBuffer, shaderBaseText.fragment);
     if (result.parseData.fragmentFunctionSource) {
         // Fragment uniforms
         char* foundUniformsToken = strstr(fullShaderBuffer, SHADER_UNIFORMS_REPLACE_TOKEN);
