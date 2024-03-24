@@ -23,8 +23,10 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(seika)
 ```
 
-Make sure to link seika to whatever uses it with `target_link_libraries`.
+Make sure to link seika to the target with `target_link_libraries`.
+
+```cmake
+target_link_libraries(${PROJECT_NAME} seika)
+```
 
 Example projects found [here](https://github.com/Chukobyte/seika-examples).
-
-*Warning: Using v0.0.x versions as pre-alpha, so expect naming inconsistencies and other holdovers from being a part of [crescent](https://github.com/Chukobyte/crescent) until v0.x.x.
