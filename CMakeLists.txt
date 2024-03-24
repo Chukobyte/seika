@@ -20,6 +20,10 @@ add_library(${PROJECT_NAME} STATIC
         seika/platform.c
         seika/string.c
         seika/memory.c
+        seika/ecs/component.c
+        seika/ecs/entity.c
+        seika/ecs/ec_system.c
+        seika/ecs/ecs.c
         seika/input/input.c
         seika/math/math.c
         seika/data_structures/array2d.c

@@ -5,6 +5,8 @@
 #include "seika/data_structures/spatial_hash_map.h"
 #include "seika/data_structures/array2d.h"
 #include "seika/data_structures/linked_list.h"
+#include "seika/ecs/ec_system.h"
+#include "seika/ecs/ecs.h"
 #include "seika/memory.h"
 
 #define RESOURCES_PATH "test/resources"
@@ -19,6 +21,13 @@ void seika_spatial_hash_map_test(void);
 void seika_linked_list_test(void);
 void seika_array2d_test(void);
 
+void seika_asset_file_loader_test(void);
+void seika_observer_test(void);
+void seika_curve_float_test(void);
+void seika_shader_instance_test(void);
+void seika_shader_file_parser_test(void);
+void seika_ecs_test(void);
+
 int32 main(int32 argv, char** args) {
     UNITY_BEGIN();
     RUN_TEST(seika_input_test);
@@ -26,6 +35,12 @@ int32 main(int32 argv, char** args) {
     RUN_TEST(seika_spatial_hash_map_test);
     RUN_TEST(seika_linked_list_test);
     RUN_TEST(seika_array2d_test);
+//    RUN_TEST(seika_asset_file_loader_test);
+//    RUN_TEST(seika_observer_test);
+//    RUN_TEST(seika_curve_float_test);
+//    RUN_TEST(seika_shader_instance_test);
+//    RUN_TEST(seika_shader_file_parser_test);
+    RUN_TEST(seika_ecs_test);
     return UNITY_END();
 }
 
@@ -299,4 +314,234 @@ void seika_array2d_test(void) {
     TEST_ASSERT_EQUAL_INT(230, struct0_3Again5->value);
 
     ska_array2d_destroy(array2D);
+}
+
+//void seika_asset_file_loader_test(void) {
+//    sf_asset_file_loader_initialize();
+//
+//    sf_asset_file_loader_set_read_mode(SEAssetFileLoaderReadMode_ARCHIVE);
+//    const bool hasLoaded = sf_asset_file_loader_load_archive("test/resources/test.pck");
+//    TEST_ASSERT_TRUE(hasLoaded);
+//
+//    // File exists in archive
+//    SEArchiveFileAsset existingFileAsset = sf_asset_file_loader_get_asset("test.txt");
+//    TEST_ASSERT_TRUE(sf_asset_file_loader_is_asset_valid(&existingFileAsset));
+//    // File doesn't exist
+//    SEArchiveFileAsset nonExistingFileAsset = sf_asset_file_loader_get_asset("test.png");
+//    TEST_ASSERT_FALSE(sf_asset_file_loader_is_asset_valid(&nonExistingFileAsset));
+//    // Test loading from disk
+//    SEArchiveFileAsset diskAsset = sf_asset_file_loader_load_asset_from_disk("test/resources/test.pck");
+//    TEST_ASSERT_TRUE(sf_asset_file_loader_is_asset_valid(&diskAsset));
+//
+//    sf_asset_file_loader_finalize();
+//}
+//
+//// Observer Test
+//static bool hasObserved = false;
+//
+//void observer_func1(SESubjectNotifyPayload* payload) {
+//    hasObserved = true;
+//}
+//
+//void observer_func2(SESubjectNotifyPayload* payload) {
+//    const int dataValue = *(int*) payload->data;
+//    if (dataValue == 3) {
+//        hasObserved = true;
+//    }
+//}
+//
+//void seika_observer_test(void) {
+//    SEEvent* event = se_event_new();
+//    // Test 1 - Simple test with passing a NULL payload
+//    SEObserver* observer = se_observer_new(observer_func1);
+//    se_event_register_observer(event, observer);
+//    TEST_ASSERT_EQUAL_INT(1, event->observerCount);
+//    se_event_notify_observers(event, NULL);
+//    TEST_ASSERT(hasObserved);
+//    se_event_unregister_observer(event, observer);
+//    TEST_ASSERT_EQUAL_INT(0, event->observerCount);
+//    hasObserved = false;
+//
+//    // Test 2 - A slightly more complicated example filling out the payload
+//    se_observer_delete(observer);
+//    observer = se_observer_new(observer_func2);
+//    se_event_register_observer(event, observer);
+//    int dataValue = 3;
+//    se_event_notify_observers(event, &(SESubjectNotifyPayload) {
+//            .data = &dataValue
+//    });
+//    TEST_ASSERT(hasObserved);
+//
+//    // Clean up
+//    se_event_delete(event);
+//    se_observer_delete(observer);
+//}
+//
+//void seika_curve_float_test(void) {
+//    SECurveFloat curve = { .controlPointCount = 0 };
+//    SECurveControlPoint point1 = { .x = 0.0, .y = 0.0, .tangentIn = 0.0, .tangentOut = 0.0 };
+//    se_curve_float_add_control_point(&curve, point1);
+//    TEST_ASSERT_EQUAL_UINT(1, curve.controlPointCount);
+//    TEST_ASSERT_EQUAL_DOUBLE(0.0, se_curve_float_eval(&curve, 1.0));
+//    SECurveControlPoint point2 = { .x = 1.0, .y = 1.0, .tangentIn = 0.0, .tangentOut = 0.0 };
+//    se_curve_float_add_control_point(&curve, point2);
+//    TEST_ASSERT_EQUAL_DOUBLE(0.0, se_curve_float_eval(&curve, 0.0));
+//    TEST_ASSERT_EQUAL_DOUBLE(0.5, se_curve_float_eval(&curve, 0.5));
+//    TEST_ASSERT_EQUAL_DOUBLE(1.0, se_curve_float_eval(&curve, 1.0));
+//    se_curve_float_remove_control_point(&curve, point2.x, point2.y);
+//    TEST_ASSERT_EQUAL_UINT(1, curve.controlPointCount);
+//
+//    // TODO: Write performance tests
+////    SE_PROFILE_CODE(
+////            for (int i = 0; i < 10000000; i++) {}
+////    )
+////
+////    double cpu_time_used;
+////    SE_PROFILE_CODE_WITH_VAR(cpu_time_used, for (int i = 0; i < 10000000; i++) {})
+////    printf("Time taken: %f seconds\n", cpu_time_used);
+//}
+//
+//void seika_shader_instance_test(void) {
+//    // Shader instance param tests
+//    SEShaderInstance shaderInstance = { .shader = NULL, .paramMap = se_string_hash_map_create_default_capacity() };
+//
+//    se_shader_instance_param_create_bool(&shaderInstance, "is_active", false);
+//    TEST_ASSERT_FALSE(se_shader_instance_param_get_bool(&shaderInstance, "is_active"));
+//    se_shader_instance_param_update_bool(&shaderInstance, "is_active", true);
+//    TEST_ASSERT_TRUE(se_shader_instance_param_get_bool(&shaderInstance, "is_active"));
+//
+//    // Clean up
+//    SE_STRING_HASH_MAP_FOR_EACH(shaderInstance.paramMap, iter) {
+//        StringHashMapNode* node = iter.pair;
+//        SEShaderParam* param = (SEShaderParam*) node->value;
+//        SE_MEM_FREE(param->name);
+//    }
+//    se_string_hash_map_destroy(shaderInstance.paramMap);
+//}
+//
+//void seika_shader_file_parser_test(void) {
+//    char shader[] =
+//            "shader_type screen;\n"
+//            "\n"
+//            "uniform float time;\n"
+//            "uniform vec2 size;\n"
+//            "uniform float brightness = 1.0f;\n"
+//            "uniform int spriteCount = 1;\n"
+//            "\n"
+//            "vec3 testFunc() {\n"
+//            "    return vec3(1.0f);\n"
+//            "}\n"
+//            "\n"
+//            "void vertex() {\n"
+//            "    VERTEX.x += 0.1f;"
+//            "}\n"
+//            "\n"
+//            "void fragment() {\n"
+//            "    COLOR *= brightness;\n"
+//            "}\n"
+//            "\n";
+//    SEShaderFileParseResult result = se_shader_file_parser_parse_shader(shader);
+//    // Shouldn't be an error message
+//    const bool hasErrorMessage = strlen(result.errorMessage) > 0;
+//    if (hasErrorMessage) {
+//        printf("Shader parse error = '%s'\n", result.errorMessage);
+//    }
+//    TEST_ASSERT_FALSE(hasErrorMessage);
+//    se_shader_file_parse_clear_parse_result(&result);
+//}
+//
+//// ECS TEST
+typedef struct TestValueComponent {
+    int32 value;
+} TestValueComponent;
+
+typedef struct TestTransformComponent {
+    SkaTransform2D transform2D;
+} TestTransformComponent;
+
+// test ecs callbacks
+
+static int32 entityRegisteredInTestCount = 0;
+void test_ecs_callback_on_entity_registered(SkaECSSystem* system, SkaEntity entity){
+    entityRegisteredInTestCount++;
+}
+
+void seika_ecs_test(void) {
+    ska_ecs_initialize();
+
+    SKA_ECS_REGISTER_COMPONENT(TestValueComponent);
+    SKA_ECS_REGISTER_COMPONENT(TestTransformComponent);
+
+    // Test getting component type info
+    const SkaComponentTypeInfo* valueTypeInfo = SKA_ECS_COMPONENT_TYPE_INFO(TestValueComponent);
+    TEST_ASSERT_NOT_NULL(valueTypeInfo);
+    TEST_ASSERT_EQUAL_STRING("TestValueComponent", valueTypeInfo->name);
+    TEST_ASSERT_EQUAL_INT(1 << 0, valueTypeInfo->type);
+    TEST_ASSERT_EQUAL_UINT32(0, valueTypeInfo->index);
+    TEST_ASSERT_EQUAL_size_t(sizeof(TestValueComponent), valueTypeInfo->size);
+    const SkaComponentTypeInfo* transformTypeInfo = SKA_ECS_COMPONENT_TYPE_INFO(TestTransformComponent);
+    TEST_ASSERT_NOT_NULL(transformTypeInfo);
+    TEST_ASSERT_EQUAL_STRING("TestTransformComponent", transformTypeInfo->name);
+    TEST_ASSERT_EQUAL_INT(1 << 1, transformTypeInfo->type);
+    TEST_ASSERT_EQUAL_UINT32(1, transformTypeInfo->index);
+    TEST_ASSERT_EQUAL_size_t(sizeof(TestTransformComponent), transformTypeInfo->size);
+
+    // Test creating ecs system
+    const SkaEntity testEntity = ska_ecs_entity_create();
+
+    SkaECSSystem* testValueEcsSystem = SKA_ECS_SYSTEM_CREATE("test value system", TestValueComponent);
+    testValueEcsSystem->on_entity_registered_func = test_ecs_callback_on_entity_registered;
+    ska_ecs_system_register(testValueEcsSystem);
+
+    // Test creating with template
+#define VALUE_TRANSFORM_SYSTEM_TEMPLATE &(SkaECSSystemTemplate){ \
+    .name = "test value transform system", \
+    .on_ec_system_register = NULL, \
+    .on_ec_system_destroy = NULL, \
+    .on_entity_registered_func = test_ecs_callback_on_entity_registered, \
+    .on_entity_start_func = NULL, \
+    .on_entity_end_func = NULL, \
+    .on_entity_unregistered_func = NULL, \
+    .on_entity_entered_scene_func = NULL, \
+    .render_func = NULL, \
+    .pre_update_all_func = NULL, \
+    .post_update_all_func = NULL, \
+    .update_func = NULL, \
+    .fixed_update_func = NULL, \
+    .network_callback_func = NULL \
+}
+    SKA_ECS_SYSTEM_REGISTER_FROM_TEMPLATE(VALUE_TRANSFORM_SYSTEM_TEMPLATE, TestValueComponent, TestTransformComponent);
+#undef VALUE_TRANSFORM_SYSTEM_TEMPLATE
+
+    // Test entity id enqueue and dequeue
+#define TEST_ENTITY_QUEUE_AMOUNT 1000
+    for (SkaEntity entity = 1; entity < TEST_ENTITY_QUEUE_AMOUNT; entity++) {
+        const SkaEntity newEntity = ska_ecs_entity_create();
+        TEST_ASSERT_EQUAL_UINT32(entity, newEntity);
+    }
+    TEST_ASSERT_EQUAL_size_t(TEST_ENTITY_QUEUE_AMOUNT, ska_ecs_entity_get_active_count());
+    for (SkaEntity entity = 1; entity < TEST_ENTITY_QUEUE_AMOUNT; entity++) {
+        ska_ecs_entity_return(entity);
+    }
+    TEST_ASSERT_EQUAL_size_t(1, ska_ecs_entity_get_active_count());
+#undef TEST_ENTITY_QUEUE_AMOUNT
+
+    // Test getting component
+    TestValueComponent testComponent = { .value = 10 };
+    ska_ecs_component_manager_set_component(testEntity, valueTypeInfo->index, &testComponent);
+    TestValueComponent* returnedValueComponent = (TestValueComponent*)ska_ecs_component_manager_get_component(testEntity, valueTypeInfo->index);
+    TEST_ASSERT_NOT_NULL(returnedValueComponent);
+    TEST_ASSERT_EQUAL_INT(10, returnedValueComponent->value);
+    TestTransformComponent transformComponent = { .transform2D =  { .position = { .x = 10.0f, .y = 20.0f}, .scale = SKA_VECTOR2_ONE, .rotation = 0.0f } };
+    ska_ecs_component_manager_set_component(testEntity, transformTypeInfo->index, &transformComponent);
+    TestTransformComponent* returnedTransformComponent = (TestTransformComponent*)ska_ecs_component_manager_get_component(testEntity, transformTypeInfo->index);
+    TEST_ASSERT_NOT_NULL(returnedTransformComponent);
+    TEST_ASSERT_EQUAL_FLOAT(10.0f, returnedTransformComponent->transform2D.position.x);
+    TEST_ASSERT_EQUAL_FLOAT(20.0f, returnedTransformComponent->transform2D.position.y);
+
+    // Test component events
+    ska_ecs_system_update_entity_signature_with_systems(testEntity);
+    TEST_ASSERT_EQUAL_INT(2, entityRegisteredInTestCount);
+
+    ska_ecs_finalize();
 }
