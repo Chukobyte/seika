@@ -2,11 +2,11 @@
 
 #include <SDL2/SDL_main.h>
 
-#include "seika/data_structures/se_array_utils.h"
-#include "seika/data_structures/ska_array_list.h"
-#include "seika/data_structures/se_spatial_hash_map.h"
-#include "seika/data_structures/ska_array2d.h"
-#include "seika/data_structures/ska_linked_list.h"
+#include "seika/data_structures/array_utils.h"
+#include "seika/data_structures/array_list.h"
+#include "seika/data_structures/spatial_hash_map.h"
+#include "seika/data_structures/array2d.h"
+#include "seika/data_structures/linked_list.h"
 #include "seika/asset/asset_file_loader.h"
 #include "seika/utils/command_line_args_util.h"
 #include "seika/utils/se_string_util.h"

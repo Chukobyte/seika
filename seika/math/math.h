@@ -59,8 +59,8 @@ typedef struct SkaSize2D {
 
 // --- SkaSize2Di --- //
 typedef struct SkaSize2Di {
-    int w;
-    int h;
+    int32 w;
+    int32 h;
 } SkaSize2Di;
 
 #define SKA_SIZE2DI_ZERO SKA_STRUCT_LITERAL(SkaSize2Di){ 0, 0 }
@@ -98,7 +98,7 @@ typedef struct SkaTransformModel2D {
     SkaVector2 position;
     SkaVector2 scale;
     f32 rotation; // degrees
-    int zIndex;
+    int32 zIndex;
     SkaVector2 scaleSign;
     mat4 model;
 } SkaTransformModel2D;
@@ -168,7 +168,7 @@ f64 ska_math_map_to_range_double(f64 input, f64 inputMin, f64 inputMax, f64 outp
 f64 ska_math_map_to_unit_double(f64 input, f64 inputMin, f64 inputMax);
 f32 ska_math_signf(f32 value);
 SkaVector2 ska_math_signvec2(SkaVector2* value);
-int ska_math_clamp_int(int32 value, int32 min, int32 max);
+int32 ska_math_clamp_int(int32 value, int32 min, int32 max);
 f32 ska_math_clamp_f32(f32 value, f32 min, f32 max);
 bool ska_math_is_almost_equal_f32(f32 v1, f32 v2, f32 epsilon);
 bool ska_math_is_almost_equal_f32_default(f32 v1, f32 v2);

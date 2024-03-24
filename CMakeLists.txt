@@ -16,56 +16,21 @@ else ()
 endif ()
 
 add_library(${PROJECT_NAME} STATIC
-        seika/input/input.c
         seika/seika.c
         seika/platform.c
         seika/string.c
-        seika/math/math.c
         seika/memory.c
-
-#        seika/seika.c
-#        seika/asset/asset_manager.c
-#        seika/asset/asset_file_loader.c
-#        seika/memory/se_mem.c
-#        seika/math/se_curve_float.c
-#        seika/math/se_math.c
-#        seika/input/input.c
-#        seika/input/input_action.c
-#        seika/input/mouse.c
-#        seika/networking/se_network.c
-#        seika/networking/se_network_socket.c
-#        seika/rendering/font.c
-#        seika/rendering/frame_buffer.c
-#        seika/rendering/renderer.c
-#        seika/rendering/render_context.c
-#        seika/rendering/shader/shader.c
-#        seika/rendering/shader/shader_cache.c
-#        seika/rendering/shader/shader_file_parser.c
-#        seika/rendering/shader/shader_instance.c
-#        seika/rendering/texture.c
-#        seika/audio/audio_manager.c
-#        seika/audio/audio.c
-#        seika/thread/se_pthread.c
-#        seika/thread/se_thread_pool.c
-#        seika/utils/command_line_args_util.c
-#        seika/utils/logger.c
-#        seika/utils/se_file_system_utils.c
-#        seika/utils/se_platform.c
-#        seika/utils/se_string_util.c
-#        seika/utils/observer.c
-#        seika/data_structures/ska_array2d.c
-#        seika/data_structures/ska_linked_list.c
-#        seika/data_structures/se_array_utils.c
-#        seika/data_structures/ska_array_list.c
-#        seika/data_structures/se_queue.c
-#        seika/data_structures/se_hash_map.c
-#        seika/data_structures/se_hash_map_string.c
-#        seika/data_structures/se_spatial_hash_map.c
-#        seika/data_structures/se_tile_map.c
-#        seika/ecs/ecs.c
-#        seika/ecs/component.c
-#        seika/ecs/entity.c
-#        seika/ecs/ec_system.c
+        seika/input/input.c
+        seika/math/math.c
+        seika/data_structures/array2d.c
+        seika/data_structures/array_list.c
+        seika/data_structures/array_utils.c
+        seika/data_structures/hash_map.c
+        seika/data_structures/hash_map_string.c
+        seika/data_structures/linked_list.c
+        seika/data_structures/queue.c
+        seika/data_structures/spatial_hash_map.c
+        seika/data_structures/tile_map.c
         )
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
