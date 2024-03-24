@@ -16,6 +16,7 @@ bool ska_is_running();
 uint64 ska_get_ticks();
 void ska_delay(uint32 timeToWait);
 bool ska_set_vsync_enabled(bool enabled);
+bool ska_print_errors();
 
 bool ska_window_init(const char* title, int32 windowWidth, int32 windowHeight);
 bool ska_window_init2(const char* title, int32 windowWidth, int32 windowHeight, int32 resolutionWidth, int32 resolutionHeight, bool maintainAspectRatio);

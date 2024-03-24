@@ -4,6 +4,7 @@
 
 #include "seika/string.h"
 #include "seika/flag_utils.h"
+#include "seika/logger.h"
 #include "seika/memory.h"
 #include "seika/assert.h"
 
@@ -290,7 +291,7 @@ void ska_ecs_system_insert_entity_into_system(SkaEntity entity, SkaECSSystem* sy
             system->on_entity_registered_func(system, entity);
         }
     } else {
-//        ska_logger_warn("Entity '%d' already in system '%s'", entity, system->name);
+        ska_logger_internal_queue_message("Entity '%d' already in system '%s'", entity, system->name);
     }
 }
 

@@ -6,6 +6,7 @@
 #include <glad/glad.h>
 
 #include "flag_utils.h"
+#include "logger.h"
 #include "input/sdl_input.h"
 #include "seika/assert.h"
 
@@ -133,6 +134,9 @@ bool ska_set_vsync_enabled(bool enabled) {
     return SDL_GL_SetSwapInterval((int)enabled) == 0;
 }
 
+bool ska_print_errors() {
+    return ska_logger_internal_print_queue();
+}
 
 bool ska_window_init(const char* title, int32 windowWidth, int32 windowHeight) {
     return ska_window_init2(title, windowWidth, windowHeight, windowWidth, windowHeight, SKA_WINDOW_DEFAULT_MAINTAIN_ASPECT_RATIO);
