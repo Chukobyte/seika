@@ -70,7 +70,7 @@ ARRAY_NAME ##_count = 0;
 
 #define SKA_STATIC_ARRAY_SORT_INT(ARRAY_NAME) \
 if (SKA_STATIC_ARRAY_SIZE(ARRAY_NAME) > 0) {  \
-se_array_utils_selection_sort_int(ARRAY_NAME, (int32)SKA_STATIC_ARRAY_SIZE(ARRAY_NAME)); \
+ska_array_utils_selection_sort_int(ARRAY_NAME, (int32)SKA_STATIC_ARRAY_SIZE(ARRAY_NAME)); \
 }
 
 // Array Utils (TODO: Move in own file)
