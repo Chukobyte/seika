@@ -1,5 +1,6 @@
 #include <unity.h>
 
+#include "seika/memory.h"
 #include "seika/input/input.h"
 #include "seika/data_structures/hash_map.h"
 #include "seika/data_structures/spatial_hash_map.h"
@@ -7,8 +8,8 @@
 #include "seika/data_structures/linked_list.h"
 #include "seika/ecs/ec_system.h"
 #include "seika/ecs/ecs.h"
-#include "seika/memory.h"
 #include "seika/math/curve_float.h"
+#include "seika/asset/asset_file_loader.h"
 
 #define RESOURCES_PATH "test/resources"
 #define RESOURCES_PACK_PATH "test/resources/test.pck"
@@ -36,7 +37,7 @@ int32 main(int32 argv, char** args) {
     RUN_TEST(seika_spatial_hash_map_test);
     RUN_TEST(seika_linked_list_test);
     RUN_TEST(seika_array2d_test);
-//    RUN_TEST(seika_asset_file_loader_test);
+    RUN_TEST(seika_asset_file_loader_test);
 //    RUN_TEST(seika_observer_test);
     RUN_TEST(seika_curve_float_test);
 //    RUN_TEST(seika_shader_instance_test);
@@ -317,26 +318,26 @@ void seika_array2d_test(void) {
     ska_array2d_destroy(array2D);
 }
 
-//void seika_asset_file_loader_test(void) {
-//    sf_asset_file_loader_initialize();
-//
-//    sf_asset_file_loader_set_read_mode(SEAssetFileLoaderReadMode_ARCHIVE);
-//    const bool hasLoaded = sf_asset_file_loader_load_archive("test/resources/test.pck");
-//    TEST_ASSERT_TRUE(hasLoaded);
-//
-//    // File exists in archive
-//    SEArchiveFileAsset existingFileAsset = sf_asset_file_loader_get_asset("test.txt");
-//    TEST_ASSERT_TRUE(sf_asset_file_loader_is_asset_valid(&existingFileAsset));
-//    // File doesn't exist
-//    SEArchiveFileAsset nonExistingFileAsset = sf_asset_file_loader_get_asset("test.png");
-//    TEST_ASSERT_FALSE(sf_asset_file_loader_is_asset_valid(&nonExistingFileAsset));
-//    // Test loading from disk
-//    SEArchiveFileAsset diskAsset = sf_asset_file_loader_load_asset_from_disk("test/resources/test.pck");
-//    TEST_ASSERT_TRUE(sf_asset_file_loader_is_asset_valid(&diskAsset));
-//
-//    sf_asset_file_loader_finalize();
-//}
-//
+void seika_asset_file_loader_test(void) {
+    ska_asset_file_loader_initialize();
+
+    ska_asset_file_loader_set_read_mode(SkaAssetFileLoaderReadMode_ARCHIVE);
+    const bool hasLoaded = ska_asset_file_loader_load_archive("test/resources/test.pck");
+    TEST_ASSERT_TRUE(hasLoaded);
+
+    // File exists in archive
+    SkaArchiveFileAsset existingFileAsset = ska_asset_file_loader_get_asset("test.txt");
+    TEST_ASSERT_TRUE(ska_asset_file_loader_is_asset_valid(&existingFileAsset));
+    // File doesn't exist
+    SkaArchiveFileAsset nonExistingFileAsset = ska_asset_file_loader_get_asset("test.png");
+    TEST_ASSERT_FALSE(ska_asset_file_loader_is_asset_valid(&nonExistingFileAsset));
+    // Test loading from disk
+    SkaArchiveFileAsset diskAsset = ska_asset_file_loader_load_asset_from_disk("test/resources/test.pck");
+    TEST_ASSERT_TRUE(ska_asset_file_loader_is_asset_valid(&diskAsset));
+
+    ska_asset_file_loader_finalize();
+}
+
 //// Observer Test
 //static bool hasObserved = false;
 //

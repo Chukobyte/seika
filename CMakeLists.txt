@@ -17,10 +17,13 @@ endif ()
 
 add_library(${PROJECT_NAME} STATIC
         seika/seika.c
+        seika/file_system.c
         seika/logger.c
         seika/platform.c
         seika/string.c
         seika/memory.c
+        seika/asset/asset_file_loader.c
+        seika/asset/asset_manager.c
         seika/ecs/component.c
         seika/ecs/entity.c
         seika/ecs/ec_system.c
@@ -47,16 +50,16 @@ include(Dependencies.cmake)
 #--- Link ---#
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
 #    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip SDL2::SDL2main SDL2::SDL2 freetype Ws2_32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image SDL3::SDL3-static freetype Ws2_32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip SDL3::SDL3-static freetype Ws2_32)
 elseif (WIN32)
 #    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -lmingw32 -static-libgcc SDL2::SDL2main SDL2::SDL2 freetype -lws2_32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image -lmingw32 -static-libgcc SDL3::SDL3-static freetype -lws2_32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip -lmingw32 -static-libgcc SDL3::SDL3-static freetype -lws2_32)
 elseif (APPLE)
 #    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -Xlinker SDL2::SDL2main SDL2::SDL2 freetype m)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image -Xlinker SDL3::SDL3-static freetype m)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip -Xlinker SDL3::SDL3-static freetype m)
 else ()
 #    target_link_libraries(${PROJECT_NAME} PUBLIC glad stb_image zip -static-libgcc -Xlinker -export-dynamic SDL2::SDL2main SDL2::SDL2 freetype m)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image -static-libgcc -Xlinker -export-dynamic SDL3::SDL3-static freetype m)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip -static-libgcc -Xlinker -export-dynamic SDL3::SDL3-static freetype m)
 endif ()
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${flags})
