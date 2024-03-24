@@ -49,13 +49,8 @@ if (NOT TARGET kuba_zip)
 endif()
 
 if (NOT TARGET miniaudio)
-    include(FetchContent)
-    FetchContent_Declare(
-            miniaudio_content
-            GIT_REPOSITORY https://github.com/mackron/miniaudio.git
-            GIT_TAG 0.11.21
-    )
-    FetchContent_MakeAvailable(miniaudio_content)
+    add_library(miniaudio INTERFACE thirdparty/miniaudio/miniaudio.h)
+    target_include_directories(miniaudio INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/miniaudio")
 endif()
 
 if (NOT TARGET stb_image)
