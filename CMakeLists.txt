@@ -15,7 +15,7 @@ else ()
             "-Wno-unused-variable" "-Wno-cast-function-type" "-Wno-unused-parameter" "-Wno-missing-field-initializers")
 endif ()
 
-file(GLOB_RECURSE SEIKA_SRC seika/*.c)
+file(GLOB_RECURSE SEIKA_SRC seika/*.c seika/*.h)
 add_library(${PROJECT_NAME} STATIC ${SEIKA_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
