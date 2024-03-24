@@ -5,6 +5,8 @@
 
 #include "seika/defines.h"
 
+// Experimental file that isn't in use...
+
 #define SKA_PROFILE_CODE(CodeBlock)                                   \
 do {                                                                 \
 clock_t start_time, end_time;                                        \
@@ -41,3 +43,32 @@ end_time = clock();                                                 \
  * );
  * printf("Time taken: %f seconds\n", cpu_time_taken);
  */
+
+
+typedef struct SkaBenchmarkItem {
+    f32 startTime;
+    f32 endTime;
+    f32 elapsedTime;
+    bool isRunning;
+} SkaBenchmarkItem;
+
+void se_benchmark_start(SkaBenchmarkItem* benchmarkItem) {
+    benchmarkItem->startTime = (f32)clock() / CLOCKS_PER_SEC;
+    benchmarkItem->endTime = 0.0f;
+    benchmarkItem->elapsedTime = 0.0f;
+    benchmarkItem->isRunning = true;
+}
+
+f32 se_benchmark_stop(SkaBenchmarkItem* benchmarkItem) {
+    benchmarkItem->endTime = (f32)clock() / CLOCKS_PER_SEC;
+    benchmarkItem->elapsedTime = benchmarkItem->endTime - benchmarkItem->startTime;
+    return benchmarkItem->elapsedTime;
+}
+
+/*
+// USAGE EXAMPLE
+SkaBenchmarkItem benchmarkItem;
+se_benchmark_start(&benchmarkItem);
+// DO STUFF ...
+se_logger_debug("elapsedTime = %f", se_benchmark_stop(&benchmarkItem));
+*/
