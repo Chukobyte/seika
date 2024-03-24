@@ -17,6 +17,7 @@ endif ()
 
 add_library(${PROJECT_NAME} STATIC
         seika/seika.c
+        seika/event.c
         seika/file_system.c
         seika/logger.c
         seika/platform.c

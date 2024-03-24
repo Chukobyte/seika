@@ -1,6 +1,7 @@
 #include <unity.h>
 
 #include "seika/memory.h"
+#include "seika/event.h"
 #include "seika/input/input.h"
 #include "seika/data_structures/hash_map.h"
 #include "seika/data_structures/spatial_hash_map.h"
@@ -38,7 +39,7 @@ int32 main(int32 argv, char** args) {
     RUN_TEST(seika_linked_list_test);
     RUN_TEST(seika_array2d_test);
     RUN_TEST(seika_asset_file_loader_test);
-//    RUN_TEST(seika_observer_test);
+    RUN_TEST(seika_observer_test);
     RUN_TEST(seika_curve_float_test);
 //    RUN_TEST(seika_shader_instance_test);
 //    RUN_TEST(seika_shader_file_parser_test);
@@ -338,46 +339,46 @@ void seika_asset_file_loader_test(void) {
     ska_asset_file_loader_finalize();
 }
 
-//// Observer Test
-//static bool hasObserved = false;
-//
-//void observer_func1(SESubjectNotifyPayload* payload) {
-//    hasObserved = true;
-//}
-//
-//void observer_func2(SESubjectNotifyPayload* payload) {
-//    const int dataValue = *(int*) payload->data;
-//    if (dataValue == 3) {
-//        hasObserved = true;
-//    }
-//}
-//
-//void seika_observer_test(void) {
-//    SEEvent* event = se_event_new();
-//    // Test 1 - Simple test with passing a NULL payload
-//    SEObserver* observer = se_observer_new(observer_func1);
-//    se_event_register_observer(event, observer);
-//    TEST_ASSERT_EQUAL_INT(1, event->observerCount);
-//    se_event_notify_observers(event, NULL);
-//    TEST_ASSERT(hasObserved);
-//    se_event_unregister_observer(event, observer);
-//    TEST_ASSERT_EQUAL_INT(0, event->observerCount);
-//    hasObserved = false;
-//
-//    // Test 2 - A slightly more complicated example filling out the payload
-//    se_observer_delete(observer);
-//    observer = se_observer_new(observer_func2);
-//    se_event_register_observer(event, observer);
-//    int dataValue = 3;
-//    se_event_notify_observers(event, &(SESubjectNotifyPayload) {
-//            .data = &dataValue
-//    });
-//    TEST_ASSERT(hasObserved);
-//
-//    // Clean up
-//    se_event_delete(event);
-//    se_observer_delete(observer);
-//}
+// Observer Test
+static bool hasObserved = false;
+
+void observer_func1(SkaSubjectNotifyPayload* payload) {
+    hasObserved = true;
+}
+
+void observer_func2(SkaSubjectNotifyPayload* payload) {
+    const int dataValue = *(int*) payload->data;
+    if (dataValue == 3) {
+        hasObserved = true;
+    }
+}
+
+void seika_observer_test(void) {
+    SkaEvent* event = ska_event_new();
+    // Test 1 - Simple test with passing a NULL payload
+    SkaObserver* observer = ska_observer_new(observer_func1);
+    ska_event_register_observer(event, observer);
+    TEST_ASSERT_EQUAL_INT(1, event->observerCount);
+    ska_event_notify_observers(event, NULL);
+    TEST_ASSERT(hasObserved);
+    ska_event_unregister_observer(event, observer);
+    TEST_ASSERT_EQUAL_INT(0, event->observerCount);
+    hasObserved = false;
+
+    // Test 2 - A slightly more complicated example filling out the payload
+    ska_observer_delete(observer);
+    observer = ska_observer_new(observer_func2);
+    ska_event_register_observer(event, observer);
+    int dataValue = 3;
+    ska_event_notify_observers(event, &(SkaSubjectNotifyPayload) {
+            .data = &dataValue
+    });
+    TEST_ASSERT(hasObserved);
+
+    // Clean up
+    ska_event_delete(event);
+    ska_observer_delete(observer);
+}
 
 void seika_curve_float_test(void) {
     SkaCurveFloat curve = { .controlPointCount = 0 };

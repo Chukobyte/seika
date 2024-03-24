@@ -209,7 +209,7 @@ void ska_ecs_system_event_entity_end(SkaEntity entity) {
 //    NodeComponent* nodeComponent = (NodeComponent*)ska_ecs_component_manager_get_component_unchecked(entity, CreComponentDataIndex_NODE);
 //    if (nodeComponent != NULL) {
 //        // Note: Node events should not be created during this time
-//        ska_event_notify_observers(&nodeComponent->onSceneTreeExit, &(SESubjectNotifyPayload) {
+//        ska_event_notify_observers(&nodeComponent->onSceneTreeExit, &(SkaSubjectNotifyPayload) {
 //                .data = &entity
 //        });
 //    }
@@ -219,7 +219,7 @@ void ska_ecs_system_event_entity_entered_scene(SkaEntity entity) {
     // Notify scene enter observers before calling it on systems
 //    NodeComponent* nodeComponent = (NodeComponent*) ska_ecs_component_manager_get_component_unchecked(entity, CreComponentDataIndex_NODE);
 //    if (nodeComponent != NULL) {
-//        ska_event_notify_observers(&nodeComponent->onSceneTreeEnter, &(SESubjectNotifyPayload) {
+//        ska_event_notify_observers(&nodeComponent->onSceneTreeEnter, &(SkaSubjectNotifyPayload) {
 //                .data = &entity
 //        });
 //    }
