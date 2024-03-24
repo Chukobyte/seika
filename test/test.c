@@ -406,17 +406,17 @@ void seika_curve_float_test(void) {
 
 //void seika_shader_instance_test(void) {
 //    // Shader instance param tests
-//    SEShaderInstance shaderInstance = { .shader = NULL, .paramMap = se_string_hash_map_create_default_capacity() };
+//    SkaShaderInstance shaderInstance = { .shader = NULL, .paramMap = se_string_hash_map_create_default_capacity() };
 //
-//    se_shader_instance_param_create_bool(&shaderInstance, "is_active", false);
-//    TEST_ASSERT_FALSE(se_shader_instance_param_get_bool(&shaderInstance, "is_active"));
-//    se_shader_instance_param_update_bool(&shaderInstance, "is_active", true);
-//    TEST_ASSERT_TRUE(se_shader_instance_param_get_bool(&shaderInstance, "is_active"));
+//    ska_shader_instance_param_create_bool(&shaderInstance, "is_active", false);
+//    TEST_ASSERT_FALSE(ska_shader_instance_param_get_bool(&shaderInstance, "is_active"));
+//    ska_shader_instance_param_update_bool(&shaderInstance, "is_active", true);
+//    TEST_ASSERT_TRUE(ska_shader_instance_param_get_bool(&shaderInstance, "is_active"));
 //
 //    // Clean up
 //    SE_STRING_HASH_MAP_FOR_EACH(shaderInstance.paramMap, iter) {
 //        StringHashMapNode* node = iter.pair;
-//        SEShaderParam* param = (SEShaderParam*) node->value;
+//        SkaShaderParam* param = (SkaShaderParam*) node->value;
 //        SE_MEM_FREE(param->name);
 //    }
 //    se_string_hash_map_destroy(shaderInstance.paramMap);
@@ -443,14 +443,14 @@ void seika_curve_float_test(void) {
 //            "    COLOR *= brightness;\n"
 //            "}\n"
 //            "\n";
-//    SEShaderFileParseResult result = se_shader_file_parser_parse_shader(shader);
+//    SkaShaderFileParseResult result = ska_shader_file_parser_parse_shader(shader);
 //    // Shouldn't be an error message
 //    const bool hasErrorMessage = strlen(result.errorMessage) > 0;
 //    if (hasErrorMessage) {
 //        printf("Shader parse error = '%s'\n", result.errorMessage);
 //    }
 //    TEST_ASSERT_FALSE(hasErrorMessage);
-//    se_shader_file_parse_clear_parse_result(&result);
+//    ska_shader_file_parse_clear_parse_result(&result);
 //}
 //
 //// ECS TEST

@@ -26,33 +26,33 @@
 //}
 //
 //// --- Texture --- //
-//SETexture* se_asset_manager_load_texture(const char* fileName, const char* key) {
+//SkaTexture* se_asset_manager_load_texture(const char* fileName, const char* key) {
 //    SE_ASSERT(texturesMap != NULL);
 //    SE_ASSERT_FMT(!se_string_hash_map_has(texturesMap, fileName), "Already loaded texture at file path '%'s!  Has key '%s'.", fileName, key);
-//    SETexture* texture = se_texture_create_texture(fileName);
-//    se_string_hash_map_add(texturesMap, key, texture, sizeof(SETexture));
+//    SkaTexture* texture = ska_texture_create_texture(fileName);
+//    se_string_hash_map_add(texturesMap, key, texture, sizeof(SkaTexture));
 //    SE_MEM_FREE(texture);
-//    texture = (SETexture*) se_string_hash_map_get(texturesMap, key);
+//    texture = (SkaTexture*) se_string_hash_map_get(texturesMap, key);
 //    return texture;
 //}
 //
-//SETexture* se_asset_manager_load_texture_ex(const char* fileName, const char* key, const char* wrap_s, const char* wrap_t, bool applyNearestNeighbor) {
+//SkaTexture* se_asset_manager_load_texture_ex(const char* fileName, const char* key, const char* wrap_s, const char* wrap_t, bool applyNearestNeighbor) {
 //    SE_ASSERT(texturesMap != NULL);
 //    SE_ASSERT_FMT(!se_string_hash_map_has(texturesMap, fileName), "Already loaded texture at file path '%'s!  Has key '%s'.", fileName, key);
-//    SETexture* texture = se_texture_create_texture_ex(
+//    SkaTexture* texture = ska_texture_create_texture2(
 //                             fileName,
-//                             se_texture_wrap_string_to_int(wrap_s),
-//                             se_texture_wrap_string_to_int(wrap_t),
+//                             ska_texture_wrap_string_to_int(wrap_s),
+//                             ska_texture_wrap_string_to_int(wrap_t),
 //                             applyNearestNeighbor
 //                         );
-//    se_string_hash_map_add(texturesMap, key, texture, sizeof(SETexture));
+//    se_string_hash_map_add(texturesMap, key, texture, sizeof(SkaTexture));
 //    SE_MEM_FREE(texture);
-//    texture = (SETexture*) se_string_hash_map_get(texturesMap, key);
+//    texture = (SkaTexture*) se_string_hash_map_get(texturesMap, key);
 //    return texture;
 //}
 //
-//SETexture* se_asset_manager_get_texture(const char* key) {
-//    return (SETexture*) se_string_hash_map_get(texturesMap, key);
+//SkaTexture* se_asset_manager_get_texture(const char* key) {
+//    return (SkaTexture*) se_string_hash_map_get(texturesMap, key);
 //}
 //
 //bool se_asset_manager_has_texture(const char* key) {
@@ -60,29 +60,29 @@
 //}
 //
 //// --- Font --- //
-//SEFont* se_asset_manager_load_font(const char* fileName, const char* key, int size, bool applyNearestNeighbor) {
+//SkaFont* se_asset_manager_load_font(const char* fileName, const char* key, int size, bool applyNearestNeighbor) {
 //    SE_ASSERT_FMT(!se_asset_manager_has_font(key), "Font key '%s' already exists!", key);
-//    SEFont* font = ska_font_create_font(fileName, size, applyNearestNeighbor);
+//    SkaFont* font = ska_font_create_font(fileName, size, applyNearestNeighbor);
 //    SE_ASSERT_FMT(font != NULL, "Failed to load font! file_name: '%s', key: '%s', size: '%d'", fileName, key, size);
-//    se_string_hash_map_add(fontMap, key, font, sizeof(SEFont));
+//    se_string_hash_map_add(fontMap, key, font, sizeof(SkaFont));
 //    SE_MEM_FREE(font);
-//    font = (SEFont*) se_string_hash_map_get(fontMap, key);
+//    font = (SkaFont*) se_string_hash_map_get(fontMap, key);
 //    return font;
 //}
 //
-//SEFont* se_asset_manager_load_font_from_memory(const char* key, void* buffer, size_t bufferSize, int size, bool applyNearestNeighbor) {
+//SkaFont* se_asset_manager_load_font_from_memory(const char* key, void* buffer, size_t bufferSize, int size, bool applyNearestNeighbor) {
 //    SE_ASSERT_FMT(!se_asset_manager_has_font(key), "Font key '%s' already exists!", key);
-//    SEFont* font = ska_font_create_font_from_memory(buffer, bufferSize, size, applyNearestNeighbor);
+//    SkaFont* font = ska_font_create_font_from_memory(buffer, bufferSize, size, applyNearestNeighbor);
 //    SE_ASSERT_FMT(font != NULL, "Failed to load font! key: '%s', size: '%d'", key, size);
-//    se_string_hash_map_add(fontMap, key, font, sizeof(SEFont));
+//    se_string_hash_map_add(fontMap, key, font, sizeof(SkaFont));
 //    SE_MEM_FREE(font);
-//    font = (SEFont*) se_string_hash_map_get(fontMap, key);
+//    font = (SkaFont*) se_string_hash_map_get(fontMap, key);
 //    return  font;
 //}
 //
 //
-//SEFont* se_asset_manager_get_font(const char* key) {
-//    return (SEFont*) se_string_hash_map_get(fontMap, key);
+//SkaFont* se_asset_manager_get_font(const char* key) {
+//    return (SkaFont*) se_string_hash_map_get(fontMap, key);
 //}
 //
 //bool se_asset_manager_has_font(const char* key) {

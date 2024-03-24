@@ -23,11 +23,6 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(seika)
 ```
 
-Seika uses vcpkg as its package manager, be sure to include this as an option when running cmake (replacing `$BASE_PATH` with the path that vcpkg exists within):
-```
--DCMAKE_TOOLCHAIN_FILE=$BASE_PATH\vcpkg\scripts\buildsystems\vcpkg.cmake
-```
-
 Make sure to link seika to whatever uses it with `target_link_libraries`.
 
 Example projects found [here](https://github.com/Chukobyte/seika-examples).
