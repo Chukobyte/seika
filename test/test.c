@@ -1,4 +1,5 @@
 #include <unity.h>
+#include <string.h>
 
 #include "seika/memory.h"
 #include "seika/event.h"
@@ -11,6 +12,8 @@
 #include "seika/ecs/ecs.h"
 #include "seika/math/curve_float.h"
 #include "seika/asset/asset_file_loader.h"
+#include "seika/rendering/shader/shader_instance.h"
+#include "seika/rendering/shader/shader_file_parser.h"
 
 #define RESOURCES_PATH "test/resources"
 #define RESOURCES_PACK_PATH "test/resources/test.pck"
@@ -41,8 +44,8 @@ int32 main(int32 argv, char** args) {
     RUN_TEST(seika_asset_file_loader_test);
     RUN_TEST(seika_observer_test);
     RUN_TEST(seika_curve_float_test);
-//    RUN_TEST(seika_shader_instance_test);
-//    RUN_TEST(seika_shader_file_parser_test);
+    RUN_TEST(seika_shader_instance_test);
+    RUN_TEST(seika_shader_file_parser_test);
     RUN_TEST(seika_ecs_test);
     return UNITY_END();
 }
@@ -404,56 +407,56 @@ void seika_curve_float_test(void) {
 //    printf("Time taken: %f seconds\n", cpu_time_used);
 }
 
-//void seika_shader_instance_test(void) {
-//    // Shader instance param tests
-//    SkaShaderInstance shaderInstance = { .shader = NULL, .paramMap = se_string_hash_map_create_default_capacity() };
-//
-//    ska_shader_instance_param_create_bool(&shaderInstance, "is_active", false);
-//    TEST_ASSERT_FALSE(ska_shader_instance_param_get_bool(&shaderInstance, "is_active"));
-//    ska_shader_instance_param_update_bool(&shaderInstance, "is_active", true);
-//    TEST_ASSERT_TRUE(ska_shader_instance_param_get_bool(&shaderInstance, "is_active"));
-//
-//    // Clean up
-//    SE_STRING_HASH_MAP_FOR_EACH(shaderInstance.paramMap, iter) {
-//        StringHashMapNode* node = iter.pair;
-//        SkaShaderParam* param = (SkaShaderParam*) node->value;
-//        SE_MEM_FREE(param->name);
-//    }
-//    se_string_hash_map_destroy(shaderInstance.paramMap);
-//}
-//
-//void seika_shader_file_parser_test(void) {
-//    char shader[] =
-//            "shader_type screen;\n"
-//            "\n"
-//            "uniform float time;\n"
-//            "uniform vec2 size;\n"
-//            "uniform float brightness = 1.0f;\n"
-//            "uniform int spriteCount = 1;\n"
-//            "\n"
-//            "vec3 testFunc() {\n"
-//            "    return vec3(1.0f);\n"
-//            "}\n"
-//            "\n"
-//            "void vertex() {\n"
-//            "    VERTEX.x += 0.1f;"
-//            "}\n"
-//            "\n"
-//            "void fragment() {\n"
-//            "    COLOR *= brightness;\n"
-//            "}\n"
-//            "\n";
-//    SkaShaderFileParseResult result = ska_shader_file_parser_parse_shader(shader);
-//    // Shouldn't be an error message
-//    const bool hasErrorMessage = strlen(result.errorMessage) > 0;
-//    if (hasErrorMessage) {
-//        printf("Shader parse error = '%s'\n", result.errorMessage);
-//    }
-//    TEST_ASSERT_FALSE(hasErrorMessage);
-//    ska_shader_file_parse_clear_parse_result(&result);
-//}
-//
-//// ECS TEST
+void seika_shader_instance_test(void) {
+    // Shader instance param tests
+    SkaShaderInstance shaderInstance = { .shader = NULL, .paramMap = ska_string_hash_map_create_default_capacity() };
+
+    ska_shader_instance_param_create_bool(&shaderInstance, "is_active", false);
+    TEST_ASSERT_FALSE(ska_shader_instance_param_get_bool(&shaderInstance, "is_active"));
+    ska_shader_instance_param_update_bool(&shaderInstance, "is_active", true);
+    TEST_ASSERT_TRUE(ska_shader_instance_param_get_bool(&shaderInstance, "is_active"));
+
+    // Clean up
+    SKA_STRING_HASH_MAP_FOR_EACH(shaderInstance.paramMap, iter) {
+        SkaStringHashMapNode* node = iter.pair;
+        SkaShaderParam* param = (SkaShaderParam*) node->value;
+        SKA_MEM_FREE(param->name);
+    }
+    ska_string_hash_map_destroy(shaderInstance.paramMap);
+}
+
+void seika_shader_file_parser_test(void) {
+    char shader[] =
+            "shader_type screen;\n"
+            "\n"
+            "uniform float time;\n"
+            "uniform vec2 size;\n"
+            "uniform float brightness = 1.0f;\n"
+            "uniform int spriteCount = 1;\n"
+            "\n"
+            "vec3 testFunc() {\n"
+            "    return vec3(1.0f);\n"
+            "}\n"
+            "\n"
+            "void vertex() {\n"
+            "    VERTEX.x += 0.1f;"
+            "}\n"
+            "\n"
+            "void fragment() {\n"
+            "    COLOR *= brightness;\n"
+            "}\n"
+            "\n";
+    SkaShaderFileParseResult result = ska_shader_file_parser_parse_shader(shader);
+    // Shouldn't be an error message
+    const bool hasErrorMessage = strlen(result.errorMessage) > 0;
+    if (hasErrorMessage) {
+        printf("Shader parse error = '%s'\n", result.errorMessage);
+    }
+    TEST_ASSERT_FALSE(hasErrorMessage);
+    ska_shader_file_parse_clear_parse_result(&result);
+}
+
+// ECS TEST
 typedef struct TestValueComponent {
     int32 value;
 } TestValueComponent;
