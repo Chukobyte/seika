@@ -41,16 +41,7 @@ typedef struct SkaInputState {
     SkaInputActionData inputActionData[SKA_INPUT_MAX_DEVICES][SKA_INPUT_MAX_INPUT_ACTIONS];
 } SkaInputState;
 
-#define DEFAULT_INPUT_STATE { \
-    .inputKeyState = {{0}},                   \
-    .prevAxisInputs = {0},                    \
-    .cleanupKeyStateJustPressed = {0},        \
-    .cleanupKeyStateJustReleased = {0},       \
-    .cleanupKeyStateJustPressedCount = 0,     \
-    .cleanupKeyStateJustReleasedCount = 0,    \
-    .inputActionHandleIndex = 0,              \
-    .inputActionData = {{0}}                  \
-}
+#define DEFAULT_INPUT_STATE {0}
 
 static SkaInputState inputState = DEFAULT_INPUT_STATE;
 
@@ -314,8 +305,8 @@ void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey k
             break;
         }
         case SkaInputTriggerType_DEVICE_ADDED:
-            break;
         case SkaInputTriggerType_DEVICE_REMOVED:
+        case SkaInputTriggerType_INVALID:
             break;
     }
 
@@ -462,7 +453,7 @@ void ska_input_new_frame() {
 
 void ska_input_reset_gamepad(SkaInputDeviceIndex deviceIndex) {
     SKA_INPUT_KEY_GAMEPAD_FOR_EACH(key) {
-        inputState.inputKeyState[deviceIndex][key] = (SkaInputKeyState){ .isPressed = false, .isJustPressed = false, .isJustReleased = false, .strength = 0.0f, .prevAxisValues = {0} };
+        inputState.inputKeyState[deviceIndex][key] = (SkaInputKeyState){0};
     }
 }
 

@@ -15,34 +15,8 @@ else ()
             "-Wno-unused-variable" "-Wno-cast-function-type" "-Wno-unused-parameter" "-Wno-missing-field-initializers")
 endif ()
 
-add_library(${PROJECT_NAME} STATIC
-        seika/seika.c
-        seika/event.c
-        seika/file_system.c
-        seika/logger.c
-        seika/platform.c
-        seika/string.c
-        seika/memory.c
-        seika/asset/asset_file_loader.c
-        seika/asset/asset_manager.c
-        seika/ecs/component.c
-        seika/ecs/entity.c
-        seika/ecs/ec_system.c
-        seika/ecs/ecs.c
-        seika/input/input.c
-        seika/math/curve_float.c
-        seika/math/math.c
-        seika/data_structures/array2d.c
-        seika/data_structures/array_list.c
-        seika/data_structures/array_utils.c
-        seika/data_structures/hash_map.c
-        seika/data_structures/hash_map_string.c
-        seika/data_structures/linked_list.c
-        seika/data_structures/queue.c
-        seika/data_structures/spatial_hash_map.c
-        seika/data_structures/tile_map.c
-        )
-
+file(GLOB_RECURSE SEIKA_SRC seika/*.c)
+add_library(${PROJECT_NAME} STATIC ${SEIKA_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 #--- Dependencies ---#
@@ -84,13 +58,11 @@ else()
 endif()
 
 if (SK_IS_MAIN)
-    # Test main
+    # Temp testing with main, move/update to seika-example repo later
     add_executable(${PROJECT_NAME}_app seika/main.c)
     target_link_libraries(${PROJECT_NAME}_app ${PROJECT_NAME})
 
     # Create seika test exe
-#    add_executable(${PROJECT_NAME}_test test/main.c)
-#    target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} unity)
     add_executable(${PROJECT_NAME}_test test/test.c)
     target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} unity)
 endif()
