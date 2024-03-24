@@ -26,6 +26,7 @@ add_library(${PROJECT_NAME} STATIC
         seika/ecs/ec_system.c
         seika/ecs/ecs.c
         seika/input/input.c
+        seika/math/curve_float.c
         seika/math/math.c
         seika/data_structures/array2d.c
         seika/data_structures/array_list.c

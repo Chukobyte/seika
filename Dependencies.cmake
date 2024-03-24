@@ -64,6 +64,7 @@ if (NOT TARGET stb_image)
 endif()
 
 if (NOT TARGET unity)
+    add_definitions(-DUNITY_INCLUDE_DOUBLE)
     include(FetchContent)
     FetchContent_Declare(
             unity_content

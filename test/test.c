@@ -8,6 +8,7 @@
 #include "seika/ecs/ec_system.h"
 #include "seika/ecs/ecs.h"
 #include "seika/memory.h"
+#include "seika/math/curve_float.h"
 
 #define RESOURCES_PATH "test/resources"
 #define RESOURCES_PACK_PATH "test/resources/test.pck"
@@ -37,7 +38,7 @@ int32 main(int32 argv, char** args) {
     RUN_TEST(seika_array2d_test);
 //    RUN_TEST(seika_asset_file_loader_test);
 //    RUN_TEST(seika_observer_test);
-//    RUN_TEST(seika_curve_float_test);
+    RUN_TEST(seika_curve_float_test);
 //    RUN_TEST(seika_shader_instance_test);
 //    RUN_TEST(seika_shader_file_parser_test);
     RUN_TEST(seika_ecs_test);
@@ -376,31 +377,31 @@ void seika_array2d_test(void) {
 //    se_event_delete(event);
 //    se_observer_delete(observer);
 //}
+
+void seika_curve_float_test(void) {
+    SkaCurveFloat curve = { .controlPointCount = 0 };
+    SkaCurveControlPoint point1 = { .x = 0.0, .y = 0.0, .tangentIn = 0.0, .tangentOut = 0.0 };
+    ska_curve_float_add_control_point(&curve, point1);
+    TEST_ASSERT_EQUAL_UINT(1, curve.controlPointCount);
+    TEST_ASSERT_EQUAL_DOUBLE(0.0, ska_curve_float_eval(&curve, 1.0));
+    SkaCurveControlPoint point2 = { .x = 1.0, .y = 1.0, .tangentIn = 0.0, .tangentOut = 0.0 };
+    ska_curve_float_add_control_point(&curve, point2);
+    TEST_ASSERT_EQUAL_DOUBLE(0.0, ska_curve_float_eval(&curve, 0.0));
+    TEST_ASSERT_EQUAL_DOUBLE(0.5, ska_curve_float_eval(&curve, 0.5));
+    TEST_ASSERT_EQUAL_DOUBLE(1.0, ska_curve_float_eval(&curve, 1.0));
+    ska_curve_float_remove_control_point(&curve, point2.x, point2.y);
+    TEST_ASSERT_EQUAL_UINT(1, curve.controlPointCount);
+
+    // TODO: Write performance tests
+//    SE_PROFILE_CODE(
+//        for (int32 i = 0; i < 10000000; i++) {}
+//    )
 //
-//void seika_curve_float_test(void) {
-//    SECurveFloat curve = { .controlPointCount = 0 };
-//    SECurveControlPoint point1 = { .x = 0.0, .y = 0.0, .tangentIn = 0.0, .tangentOut = 0.0 };
-//    se_curve_float_add_control_point(&curve, point1);
-//    TEST_ASSERT_EQUAL_UINT(1, curve.controlPointCount);
-//    TEST_ASSERT_EQUAL_DOUBLE(0.0, se_curve_float_eval(&curve, 1.0));
-//    SECurveControlPoint point2 = { .x = 1.0, .y = 1.0, .tangentIn = 0.0, .tangentOut = 0.0 };
-//    se_curve_float_add_control_point(&curve, point2);
-//    TEST_ASSERT_EQUAL_DOUBLE(0.0, se_curve_float_eval(&curve, 0.0));
-//    TEST_ASSERT_EQUAL_DOUBLE(0.5, se_curve_float_eval(&curve, 0.5));
-//    TEST_ASSERT_EQUAL_DOUBLE(1.0, se_curve_float_eval(&curve, 1.0));
-//    se_curve_float_remove_control_point(&curve, point2.x, point2.y);
-//    TEST_ASSERT_EQUAL_UINT(1, curve.controlPointCount);
-//
-//    // TODO: Write performance tests
-////    SE_PROFILE_CODE(
-////            for (int i = 0; i < 10000000; i++) {}
-////    )
-////
-////    double cpu_time_used;
-////    SE_PROFILE_CODE_WITH_VAR(cpu_time_used, for (int i = 0; i < 10000000; i++) {})
-////    printf("Time taken: %f seconds\n", cpu_time_used);
-//}
-//
+//    f64 cpu_time_used;
+//    SE_PROFILE_CODE_WITH_VAR(cpu_time_used, for (int32 i = 0; i < 10000000; i++) {})
+//    printf("Time taken: %f seconds\n", cpu_time_used);
+}
+
 //void seika_shader_instance_test(void) {
 //    // Shader instance param tests
 //    SEShaderInstance shaderInstance = { .shader = NULL, .paramMap = se_string_hash_map_create_default_capacity() };
