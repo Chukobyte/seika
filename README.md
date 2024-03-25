@@ -5,7 +5,32 @@
 [![ubuntu-gcc-build Actions Status](https://github.com/Chukobyte/seika/workflows/ubuntu-gcc-build/badge.svg)](https://github.com/Chukobyte/seika/actions)
 [![macosx-clang-build Actions Status](https://github.com/Chukobyte/seika/workflows/macosx-clang-build/badge.svg)](https://github.com/Chukobyte/seika/actions)
 
-A framework that can be used to make games.
+A framework for windows, macOS, and linux that can be used to make games.
+
+## Tech Stack
+
+- [C11](https://en.wikipedia.org/wiki/C_(programming_language))
+- [OpenGL 3.3](https://www.opengl.org/)
+- [SDL3](https://github.com/libsdl-org/SDL) - Window, input, and other misc uses
+- [clgm](https://github.com/recp/cglm) - Math
+- [miniaudio](https://github.com/mackron/miniaudio) - Audio
+- [freetype](https://github.com/freetype/freetype) - Font
+- [unity](https://github.com/ThrowTheSwitch/Unity) - Unit Tests
+- [zip](https://github.com/kuba--/zip) - Reading archives
+- [stb image](https://github.com/nothings/stb) - Image loading
+- [cJson](https://github.com/DaveGamble/cJSON) - Reading json files
+
+## Current Features
+
+- [x] 2D Sprite Renderer
+- [x] Font Renderer
+- [x] Customizable shaders (with custom langauge)
+- [x] Audio
+- [x] Networking (udp only for now)
+- [x] pthread wrapper and thread pool
+- [x] Math Library
+- [x] ECS
+- [x] Multiple data structures such as hashmap and array list (vector)
 
 ## How to include in a project
 

@@ -1,5 +1,6 @@
 include(FetchContent)
 
+# https://github.com/libsdl-org/SDL
 if (NOT TARGET SDL3::SDL3-static)
     set(SDL_STATIC ON)
     set(SDL_SHARED OFF)
@@ -12,11 +13,13 @@ if (NOT TARGET SDL3::SDL3-static)
     FetchContent_MakeAvailable(SDL_content)
 endif ()
 
+# https://github.com/Dav1dde/glad
 if (NOT TARGET glad)
     add_library(glad thirdparty/glad/glad.c)
     target_include_directories(glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 endif()
 
+# https://github.com/recp/cglm
 if (NOT TARGET cglm)
     set(CGLM_STATIC ON)
     set(CGLM_SHARED OFF)
@@ -29,6 +32,7 @@ if (NOT TARGET cglm)
     FetchContent_MakeAvailable(cglm_content)
 endif()
 
+# https://github.com/DaveGamble/cJSON
 if (NOT TARGET cjson)
     FetchContent_Declare(
             cjson_content
@@ -38,6 +42,7 @@ if (NOT TARGET cjson)
     FetchContent_MakeAvailable(cglm_content)
 endif()
 
+# https://github.com/kuba--/zip
 if (NOT TARGET kuba_zip)
     include(FetchContent)
     FetchContent_Declare(
@@ -48,16 +53,19 @@ if (NOT TARGET kuba_zip)
     FetchContent_MakeAvailable(kuba_zip_content)
 endif()
 
+# https://github.com/mackron/miniaudio
 if (NOT TARGET miniaudio)
     add_library(miniaudio INTERFACE thirdparty/miniaudio/miniaudio.h)
     target_include_directories(miniaudio INTERFACE "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/miniaudio")
 endif()
 
+# https://github.com/nothings/stb
 if (NOT TARGET stb_image)
     add_library(stb_image thirdparty/stb_image/stb_image.c)
     target_include_directories(stb_image PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 endif()
 
+# https://github.com/ThrowTheSwitch/Unity
 if (NOT TARGET unity)
     add_definitions(-DUNITY_INCLUDE_DOUBLE)
     include(FetchContent)
@@ -69,6 +77,7 @@ if (NOT TARGET unity)
     FetchContent_MakeAvailable(unity_content)
 endif()
 
+# https://github.com/freetype/freetype
 if (NOT TARGET freetype)
     include(FetchContent)
     FetchContent_Declare(
