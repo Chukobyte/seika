@@ -188,7 +188,7 @@ SkaInputKey ska_sdl_gamepad_axis_to_input_key(SDL_GamepadAxis axis) {
     }
 }
 
-static bool ska_sdl_load_gamepad_mappings() {
+bool ska_sdl_load_gamepad_mappings() {
     const int loadResult = SDL_AddGamepadMapping(SKA_GAMEPAD_DB_STR);
     return loadResult >= 0;
 }

@@ -101,6 +101,7 @@ void ska_update() {
             case SDL_EVENT_WINDOW_RESIZED: {
                 const Sint32 windowWidth = event.window.data1;
                 const Sint32 windowHeight = event.window.data2;
+                ska_renderer_update_window_size(windowWidth, windowHeight);
                 break;
             }
             default: {
@@ -114,6 +115,14 @@ void ska_update() {
     if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_ESCAPE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX)) {
         skaState.shutdownRequested = true;
     }
+}
+
+void ska_fixed_update(f32 deltaTime) {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+
+    static f32 globalTime = 0.0f;
+    globalTime += deltaTime;
+    ska_renderer_set_global_shader_param_time(globalTime);
 }
 
 bool ska_is_running() {
@@ -210,6 +219,10 @@ void ska_window_render() {
 bool ska_input_init() {
     SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
     if (SDL_InitSubSystem( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
+        return false;
+    }
+
+    if (!ska_sdl_load_gamepad_mappings()) {
         return false;
     }
 

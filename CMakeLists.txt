@@ -54,6 +54,8 @@ else()
 endif()
 
 if (SK_IS_MAIN)
+    add_subdirectory(examples)
+
     # Create seika test exe
     add_executable(${PROJECT_NAME}_test test/test.c)
     target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} unity)

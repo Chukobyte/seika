@@ -12,6 +12,7 @@ bool ska_init_all(const char* title, int32 windowWidth, int32 windowHeight, int3
 bool ska_init_all2(const char* title, int32 windowWidth, int32 windowHeight, int32 resolutionWidth, int32 resolutionHeight, uint32 audioWavSampleRate, bool maintainAspectRatio);
 void ska_shutdown_all();
 void ska_update();
+void ska_fixed_update(f32 deltaTime);
 bool ska_is_running();
 uint64 ska_get_ticks();
 void ska_delay(uint32 timeToWait);
