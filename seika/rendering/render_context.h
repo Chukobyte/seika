@@ -3,12 +3,14 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-typedef struct SERenderContext {
-    FT_Library freeTypeLibrary;
-    int windowWidth;
-    int windowHeight;
-} SERenderContext;
+#include "seika/defines.h"
 
-void se_render_context_initialize();
-void se_render_context_finalize();
-SERenderContext* se_render_context_get();
+typedef struct SkaRenderContext {
+    FT_Library freeTypeLibrary;
+    int32 windowWidth;
+    int32 windowHeight;
+} SkaRenderContext;
+
+void ska_render_context_initialize();
+void ska_render_context_finalize();
+SkaRenderContext* ska_render_context_get();

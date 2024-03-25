@@ -3,80 +3,80 @@
 #include <string.h>
 
 #include "shader_source.h"
-#include "../../utils/se_string_util.h"
-#include "../../memory/se_mem.h"
+#include "seika/string.h"
+#include "seika/memory.h"
 
 #define SHADER_FILE_PARSER_ERROR_RETURN(RESULT, SOURCE, MESSAGE) \
-strcpy((RESULT).errorMessage, (MESSAGE));                        \
-SE_MEM_FREE((SOURCE));                                           \
+ska_strcpy((RESULT).errorMessage, (MESSAGE));                        \
+SKA_MEM_FREE((SOURCE));                                           \
 return (RESULT);
 
 #define SHADER_FILE_PARSER_ERROR_FMT_RETURN(RESULT, SOURCE, FMT, ...) \
 sprintf((RESULT).errorMessage, (FMT), ##__VA_ARGS__);                 \
-SE_MEM_FREE((SOURCE));                                                \
+SKA_MEM_FREE((SOURCE));                                                \
 return (RESULT);
 
-char* shader_file_parse_data_get_full_uniforms_source(SEShaderFileParseData* parseData) {
+static char* shader_file_parse_data_get_full_uniforms_source(SkaShaderFileParseData* parseData) {
     if (parseData->uniformCount == 0) {
         return NULL;
     }
     char uniformsBuffer[1024];
     uniformsBuffer[0] = '\0';
     for (size_t i = 0; i < parseData->uniformCount; i++) {
-        strcat(uniformsBuffer, "uniform ");
+        ska_strcat(uniformsBuffer, "uniform ");
         switch (parseData->uniforms[i].type) {
-        case SEShaderParamType_BOOL: {
-            strcat(uniformsBuffer, "bool ");
+        case SkaShaderParamType_BOOL: {
+            ska_strcat(uniformsBuffer, "bool ");
             break;
         }
-        case SEShaderParamType_INT: {
-            strcat(uniformsBuffer, "int ");
+        case SkaShaderParamType_INT: {
+            ska_strcat(uniformsBuffer, "int ");
             break;
         }
-        case SEShaderParamType_FLOAT: {
-            strcat(uniformsBuffer, "float ");
+        case SkaShaderParamType_FLOAT: {
+            ska_strcat(uniformsBuffer, "float ");
             break;
         }
-        case SEShaderParamType_FLOAT2: {
-            strcat(uniformsBuffer, "vec2 ");
+        case SkaShaderParamType_FLOAT2: {
+            ska_strcat(uniformsBuffer, "vec2 ");
             break;
         }
-        case SEShaderParamType_FLOAT3: {
-            strcat(uniformsBuffer, "vec3 ");
+        case SkaShaderParamType_FLOAT3: {
+            ska_strcat(uniformsBuffer, "vec3 ");
             break;
         }
-        case SEShaderParamType_FLOAT4: {
-            strcat(uniformsBuffer, "vec4 ");
+        case SkaShaderParamType_FLOAT4: {
+            ska_strcat(uniformsBuffer, "vec4 ");
             break;
         }
         default:
             break;
         }
-        strcat(uniformsBuffer, parseData->uniforms[i].name);
-        strcat(uniformsBuffer, ";\n");
+        ska_strcat(uniformsBuffer, parseData->uniforms[i].name);
+        ska_strcat(uniformsBuffer, ";\n");
     }
-    return se_strdup(uniformsBuffer);
+    return ska_strdup(uniformsBuffer);
 }
 
-char* shader_file_parse_data_get_full_functions_source(SEShaderFileParseData* parseData) {
+char* shader_file_parse_data_get_full_functions_source(SkaShaderFileParseData* parseData) {
     if (parseData->functionCount == 0) {
         return NULL;
     }
     char functionsBuffer[4096];
     functionsBuffer[0] = '\0';
     for (size_t i = 0; i < parseData->functionCount; i++) {
-        strcat(functionsBuffer, parseData->functions[i].fullFunctionSource);
-        strcat(functionsBuffer, "\n");
+        ska_strcat(functionsBuffer, parseData->functions[i].fullFunctionSource);
+        ska_strcat(functionsBuffer, "\n");
     }
-    return se_strdup(functionsBuffer);
+    return ska_strdup(functionsBuffer);
 }
 
-void shader_file_parse_data_delete_internal_memory(SEShaderFileParseData* parseData) {
-    SE_MEM_FREE(parseData->fullVertexSource);
-    SE_MEM_FREE(parseData->fullFragmentSource);
+void shader_file_parse_data_delete_internal_memory(SkaShaderFileParseData* parseData) {
+    SKA_MEM_FREE(parseData->fullVertexSource);
+    SKA_MEM_FREE(parseData->fullFragmentSource);
     for (size_t i = 0; i < parseData->functionCount; i++) {
-        SE_MEM_FREE(parseData->functions[i].name);
-        SE_MEM_FREE(parseData->functions[i].fullFunctionSource);
+        SKA_MEM_FREE(parseData->functions[i].name);
+        SKA_MEM_FREE(parseData->functions[i].fullFunctionSource);
     }
 }
 
@@ -143,11 +143,11 @@ bool shader_file_find_next_uniform_default_value(char** shaderSource, char* toke
     return false;
 }
 
-SEShaderFileParserFunction shader_file_find_next_function(char** shaderSource, const char* functionReturnType) {
-    SEShaderFileParserFunction parsedFunction = { .name = NULL, .fullFunctionSource = NULL };
+SkaShaderFileParserFunction shader_file_find_next_function(char** shaderSource, const char* functionReturnType) {
+    SkaShaderFileParserFunction parsedFunction = { .name = NULL, .fullFunctionSource = NULL };
     char shaderFunctionBuffer[1024];
-    strcpy(shaderFunctionBuffer, functionReturnType);
-    strcat(shaderFunctionBuffer, " ");
+    ska_strcpy(shaderFunctionBuffer, functionReturnType);
+    ska_strcat(shaderFunctionBuffer, " ");
     size_t bufferIndex = strlen(shaderFunctionBuffer);
 
     // Get name first
@@ -182,8 +182,8 @@ SEShaderFileParserFunction shader_file_find_next_function(char** shaderSource, c
         }
     }
 
-    parsedFunction.name = se_strdup(shaderFunctionName);
-    parsedFunction.fullFunctionSource = se_strdup(shaderFunctionBuffer);
+    parsedFunction.name = ska_strdup(shaderFunctionName);
+    parsedFunction.fullFunctionSource = ska_strdup(shaderFunctionBuffer);
     return parsedFunction;
 }
 
@@ -191,7 +191,7 @@ SEShaderFileParserFunction shader_file_find_next_function(char** shaderSource, c
 char* shader_file_parse_function_body(const char* functionSource) {
     char shaderFunctionBuffer[1024];
     shaderFunctionBuffer[0] = '\0';
-    strcpy(shaderFunctionBuffer, functionSource);
+    ska_strcpy(shaderFunctionBuffer, functionSource);
     unsigned int functionBufferIndex = 0;
     char currentToken = shaderFunctionBuffer[functionBufferIndex];
     // Find beginning body
@@ -218,11 +218,11 @@ char* shader_file_parse_function_body(const char* functionSource) {
     functionBodyBuffer[functionBodyIndex - 1] = '\n';
     functionBodyBuffer[functionBodyIndex] = '\0';
 
-    return se_strdup(functionBodyBuffer);
+    return ska_strdup(functionBodyBuffer);
 }
 
 typedef struct ShaderFileParseVecParseResult {
-    SKAVector4 vector;
+    SkaVector4 vector;
     char errorMessage[64];
 } ShaderFileParseVecParseResult;
 
@@ -235,7 +235,7 @@ ShaderFileParseVecParseResult shader_file_parse_vec_default_value_token(const ch
     char currentFloat2Token = token[sourceTokenIndex];
     // TODO: Add more validation
     if (currentFloat2Token != '(') {
-        strcpy(result.errorMessage, "Didn't find '(' where expected for vec default value!");
+        ska_strcpy(result.errorMessage, "Didn't find '(' where expected for vec default value!");
         return result;
     }
 
@@ -297,18 +297,18 @@ typedef struct SEShaderFileParseBaseText {
     const char* fragment;
 } SEShaderFileParseBaseText;
 
-SEShaderFileParseBaseText shader_file_get_base_shader_text(SEShaderInstanceType shaderType) {
+SEShaderFileParseBaseText shader_file_get_base_shader_text(SkaShaderInstanceType shaderType) {
     switch (shaderType) {
-    case SEShaderInstanceType_SCREEN: {
+    case SkaShaderInstanceType_SCREEN: {
         return (SEShaderFileParseBaseText) {
-            .vertex = SE_OPENGL_SHADER_SOURCE_VERTEX_SCREEN,
-            .fragment = SE_OPENGL_SHADER_SOURCE_FRAGMENT_SCREEN
+            .vertex = SKA_OPENGL_SHADER_SOURCE_VERTEX_SCREEN,
+            .fragment = SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SCREEN
         };
     }
-    case SEShaderInstanceType_SPRITE: {
+    case SkaShaderInstanceType_SPRITE: {
         return (SEShaderFileParseBaseText) {
-            .vertex = SE_OPENGL_SHADER_SOURCE_VERTEX_SPRITE,
-            .fragment = SE_OPENGL_SHADER_SOURCE_FRAGMENT_SPRITE
+            .vertex = SKA_OPENGL_SHADER_SOURCE_VERTEX_SPRITE,
+            .fragment = SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SPRITE
         };
     }
     default:
@@ -320,14 +320,14 @@ SEShaderFileParseBaseText shader_file_get_base_shader_text(SEShaderInstanceType 
 }
 
 // TODO: Check to make sure memory is cleaned up on errors
-SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSource) {
-    SEShaderFileParseResult result = {.errorMessage = {0}};
-    char *originalSource = se_strdup(shaderSource);
+SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderSource) {
+    SkaShaderFileParseResult result = {.errorMessage = {0}};
+    char *originalSource = ska_strdup(shaderSource);
     char *currentSource = originalSource;
     char shaderToken[32];
     bool isSemicolonFound;
-    result.parseData = (SEShaderFileParseData) {
-        .shaderType = SEShaderInstanceType_INVALID,
+    result.parseData = (SkaShaderFileParseData) {
+        .shaderType = SkaShaderInstanceType_INVALID,
         .fullVertexSource = NULL,
         .fullFragmentSource = NULL, .vertexFunctionSource = NULL,
         .fragmentFunctionSource = NULL,
@@ -338,15 +338,14 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
     // Parse shader type
     shader_file_find_next_token(&currentSource, shaderToken, &isSemicolonFound);
     if (strcmp(shaderToken, "shader_type") != 0) {
-        SHADER_FILE_PARSER_ERROR_FMT_RETURN(result, originalSource, "Didn't find 'shader_type' first line!  Found '%s'",
-                                            shaderToken);
+        SHADER_FILE_PARSER_ERROR_FMT_RETURN(result, originalSource, "Didn't find 'shader_type' first line!  Found '%s'", shaderToken);
     }
     // Parse shader type value
     shader_file_find_next_token(&currentSource, shaderToken, &isSemicolonFound);
     if (strcmp(shaderToken, "screen") == 0) {
-        result.parseData.shaderType = SEShaderInstanceType_SCREEN;
+        result.parseData.shaderType = SkaShaderInstanceType_SCREEN;
     } else if (strcmp(shaderToken, "sprite") == 0) {
-        result.parseData.shaderType = SEShaderInstanceType_SPRITE;
+        result.parseData.shaderType = SkaShaderInstanceType_SPRITE;
     } else {
         SHADER_FILE_PARSER_ERROR_FMT_RETURN(result, originalSource, "Didn't find 'shader_type' value on first line, instead found '%s'!", shaderToken);
     }
@@ -356,32 +355,32 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
         // UNIFORM VARIABLE
         if (strcmp(shaderToken, "uniform") == 0) {
 //            printf("Parsing shader uniform variable\n");
-            SEShaderParam shaderUniform;
+            SkaShaderParam shaderUniform;
             // Parse uniform type
             char shaderUniformTypeName[32];
             shader_file_find_next_token(&currentSource, shaderUniformTypeName, &isSemicolonFound);
             if (strcmp(shaderUniformTypeName, "bool") == 0) {
-                shaderUniform.type = SEShaderParamType_BOOL;
+                shaderUniform.type = SkaShaderParamType_BOOL;
                 shaderUniform.value.boolValue = false;
             } else if (strcmp(shaderUniformTypeName, "int") == 0) {
-                shaderUniform.type = SEShaderParamType_INT;
+                shaderUniform.type = SkaShaderParamType_INT;
                 shaderUniform.value.intValue = 0;
             } else if (strcmp(shaderUniformTypeName, "float") == 0) {
-                shaderUniform.type = SEShaderParamType_FLOAT;
+                shaderUniform.type = SkaShaderParamType_FLOAT;
                 shaderUniform.value.floatValue = 0.0f;
             } else if (strcmp(shaderUniformTypeName, "vec2") == 0) {
-                shaderUniform.type = SEShaderParamType_FLOAT2;
-                shaderUniform.value.float2Value = (SKAVector2) {
+                shaderUniform.type = SkaShaderParamType_FLOAT2;
+                shaderUniform.value.float2Value = (SkaVector2) {
                     0.0f, 0.0f
                 };
             } else if (strcmp(shaderUniformTypeName, "vec3") == 0) {
-                shaderUniform.type = SEShaderParamType_FLOAT3;
-                shaderUniform.value.float3Value = (SKAVector3) {
+                shaderUniform.type = SkaShaderParamType_FLOAT3;
+                shaderUniform.value.float3Value = (SkaVector3) {
                     0.0f, 0.0f, 0.0f
                 };
             } else if (strcmp(shaderUniformTypeName, "vec4") == 0) {
-                shaderUniform.type = SEShaderParamType_FLOAT4;
-                shaderUniform.value.float4Value = (SKAVector4) {
+                shaderUniform.type = SkaShaderParamType_FLOAT4;
+                shaderUniform.value.float4Value = (SkaVector4) {
                     0.0f, 0.0f, 0.0f, 0.0f
                 };
             } else {
@@ -391,7 +390,7 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
             // Parse uniform name
             char shaderUniformName[32];
             shader_file_find_next_token(&currentSource, shaderUniformName, &isSemicolonFound);
-            shaderUniform.name = se_strdup(shaderUniformName);
+            shaderUniform.name = ska_strdup(shaderUniformName);
 //            printf("name = '%s'\n", shaderUniformName);
             // If we didn't find the semicolon, parse for default value
             if (!isSemicolonFound) {
@@ -409,12 +408,12 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
                 }
 //                printf("shader uniform default value = '%s'\n", shaderUniformDefaultValue);
                 switch (shaderUniform.type) {
-                case SEShaderParamType_BOOL: {
+                case SkaShaderParamType_BOOL: {
                     // xor to set to false if default value is either 'false' or '0'
                     shaderUniform.value.boolValue = !(strcmp(shaderUniformDefaultValue, "false") == 0 || strcmp(shaderUniformDefaultValue, "0") == 0);
                     break;
                 }
-                case SEShaderParamType_INT: {
+                case SkaShaderParamType_INT: {
                     char* endptr = NULL;
                     shaderUniform.value.intValue = (int) strtol(shaderUniformDefaultValue, &endptr, 10);
                     if (*endptr != '\0') {
@@ -422,24 +421,24 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
                     }
                     break;
                 }
-                case SEShaderParamType_FLOAT: {
+                case SkaShaderParamType_FLOAT: {
                     shaderUniform.value.floatValue = strtof(shaderUniformDefaultValue, NULL);
                     break;
                 }
-                case SEShaderParamType_FLOAT2: {
+                case SkaShaderParamType_FLOAT2: {
                     const ShaderFileParseVecParseResult vectorResult = shader_file_parse_vec_default_value_token(shaderUniformDefaultValue);
                     shaderUniform.value.float2Value.x = vectorResult.vector.x;
                     shaderUniform.value.float2Value.y = vectorResult.vector.y;
                     break;
                 }
-                case SEShaderParamType_FLOAT3: {
+                case SkaShaderParamType_FLOAT3: {
                     const ShaderFileParseVecParseResult vectorResult = shader_file_parse_vec_default_value_token(shaderUniformDefaultValue);
                     shaderUniform.value.float3Value.x = vectorResult.vector.x;
                     shaderUniform.value.float3Value.y = vectorResult.vector.y;
                     shaderUniform.value.float3Value.z = vectorResult.vector.z;
                     break;
                 }
-                case SEShaderParamType_FLOAT4: {
+                case SkaShaderParamType_FLOAT4: {
                     const ShaderFileParseVecParseResult vectorResult = shader_file_parse_vec_default_value_token(shaderUniformDefaultValue);
                     shaderUniform.value.float4Value.x = vectorResult.vector.x;
                     shaderUniform.value.float4Value.y = vectorResult.vector.y;
@@ -454,7 +453,7 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
             // Finally after all validation checks, add new uniform to array
             result.parseData.uniforms[result.parseData.uniformCount++] = shaderUniform;
         } else if (shader_file_is_function_return_type_token(shaderToken)) {
-            SEShaderFileParserFunction parsedFunction = shader_file_find_next_function(&currentSource, shaderToken);
+            SkaShaderFileParserFunction parsedFunction = shader_file_find_next_function(&currentSource, shaderToken);
             if (parsedFunction.name == NULL || parsedFunction.fullFunctionSource == NULL) {
                 SHADER_FILE_PARSER_ERROR_RETURN(result, originalSource, "Didn't successfully parse shader function!");
             }
@@ -463,12 +462,12 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
             // Check for vertex and fragment shader functions
             if (strcmp(parsedFunction.name, "vertex") == 0) {
                 result.parseData.vertexFunctionSource = shader_file_parse_function_body(parsedFunction.fullFunctionSource);
-                SE_MEM_FREE(parsedFunction.name);
-                SE_MEM_FREE(parsedFunction.fullFunctionSource);
+                SKA_MEM_FREE(parsedFunction.name);
+                SKA_MEM_FREE(parsedFunction.fullFunctionSource);
             } else if (strcmp(parsedFunction.name, "fragment") == 0) {
                 result.parseData.fragmentFunctionSource = shader_file_parse_function_body(parsedFunction.fullFunctionSource);
-                SE_MEM_FREE(parsedFunction.name);
-                SE_MEM_FREE(parsedFunction.fullFunctionSource);
+                SKA_MEM_FREE(parsedFunction.name);
+                SKA_MEM_FREE(parsedFunction.fullFunctionSource);
             } else {
                 // Add non vertex and fragment functions to our array
                 result.parseData.functions[result.parseData.functionCount++] = parsedFunction;
@@ -491,7 +490,7 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
     const SEShaderFileParseBaseText shaderBaseText = shader_file_get_base_shader_text(result.parseData.shaderType);
     char fullShaderBuffer[4096];
     // Create vertex source
-    strcpy(fullShaderBuffer, shaderBaseText.vertex);
+    ska_strcpy(fullShaderBuffer, shaderBaseText.vertex);
     if (result.parseData.vertexFunctionSource) {
         // Vertex uniforms
         char* foundUniformsToken = strstr(fullShaderBuffer, SHADER_UNIFORMS_REPLACE_TOKEN);
@@ -505,7 +504,7 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
                     foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH,
                     strlen(foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH) + 1);
             memcpy(foundUniformsToken, uniformsSource, uniformsReplaceLength);
-            SE_MEM_FREE(uniformsSource);
+            SKA_MEM_FREE(uniformsSource);
         }
         // Vertex functions
         char* foundFunctionsToken = strstr(fullShaderBuffer, SHADER_FUNCTIONS_REPLACE_TOKEN);
@@ -519,7 +518,7 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
                     foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH,
                     strlen(foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH) + 1);
             memcpy(foundFunctionsToken, functionsSource, functionsReplaceLength);
-            SE_MEM_FREE(functionsSource);
+            SKA_MEM_FREE(functionsSource);
         }
         // Vertex body
         char* foundVertexToken = strstr(fullShaderBuffer, SHADER_VERTEX_BODY_REPLACE_TOKEN);
@@ -533,10 +532,10 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
         memcpy(foundVertexToken, result.parseData.vertexFunctionSource, vertexBodyReplaceLength);
     }
 //        printf("FULL VERTEX SOURCE = \n%s\n", fullShaderBuffer);
-    result.parseData.fullVertexSource = se_strdup(fullShaderBuffer);
+    result.parseData.fullVertexSource = ska_strdup(fullShaderBuffer);
 
     // Create fragment source
-    strcpy(fullShaderBuffer, shaderBaseText.fragment);
+    ska_strcpy(fullShaderBuffer, shaderBaseText.fragment);
     if (result.parseData.fragmentFunctionSource) {
         // Fragment uniforms
         char* foundUniformsToken = strstr(fullShaderBuffer, SHADER_UNIFORMS_REPLACE_TOKEN);
@@ -550,7 +549,7 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
                     foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH,
                     strlen(foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH) + 1);
             memcpy(foundUniformsToken, uniformsSource, uniformsReplaceLength);
-            SE_MEM_FREE(uniformsSource);
+            SKA_MEM_FREE(uniformsSource);
         }
         // Fragment functions
         char* foundFunctionsToken = strstr(fullShaderBuffer, SHADER_FUNCTIONS_REPLACE_TOKEN);
@@ -564,7 +563,7 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
                     foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH,
                     strlen(foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH) + 1);
             memcpy(foundFunctionsToken, functionsSource, functionsReplaceLength);
-            SE_MEM_FREE(functionsSource);
+            SKA_MEM_FREE(functionsSource);
         }
         // Fragment body
         char* foundFragmentToken = strstr(fullShaderBuffer, SHADER_FRAGMENT_BODY_REPLACE_TOKEN);
@@ -578,31 +577,31 @@ SEShaderFileParseResult se_shader_file_parser_parse_shader(const char* shaderSou
         memcpy(foundFragmentToken, result.parseData.fragmentFunctionSource, fragmentBodyReplaceLength);
     }
 //        printf("FULL FRAGMENT SOURCE = \n%s\n", fullShaderBuffer);
-    result.parseData.fullFragmentSource = se_strdup(fullShaderBuffer);
+    result.parseData.fullFragmentSource = ska_strdup(fullShaderBuffer);
 
-    SE_MEM_FREE(originalSource);
+    SKA_MEM_FREE(originalSource);
 
     return result;
 }
 
-void se_shader_file_parse_clear_parse_result(SEShaderFileParseResult* result) {
+void ska_shader_file_parse_clear_parse_result(SkaShaderFileParseResult* result) {
     if (result->parseData.fragmentFunctionSource) {
-        SE_MEM_FREE(result->parseData.fragmentFunctionSource);
+        SKA_MEM_FREE(result->parseData.fragmentFunctionSource);
     }
     if (result->parseData.vertexFunctionSource) {
-        SE_MEM_FREE(result->parseData.vertexFunctionSource);
+        SKA_MEM_FREE(result->parseData.vertexFunctionSource);
     }
     if (result->parseData.fullVertexSource) {
-        SE_MEM_FREE(result->parseData.fullVertexSource);
+        SKA_MEM_FREE(result->parseData.fullVertexSource);
     }
     if (result->parseData.fullFragmentSource) {
-        SE_MEM_FREE(result->parseData.fullFragmentSource);
+        SKA_MEM_FREE(result->parseData.fullFragmentSource);
     }
     for (size_t i = 0; i < result->parseData.uniformCount; i++) {
-        SE_MEM_FREE(result->parseData.uniforms[i].name);
+        SKA_MEM_FREE(result->parseData.uniforms[i].name);
     }
     for (size_t i = 0; i < result->parseData.functionCount; i++) {
-        SE_MEM_FREE(result->parseData.functions[i].name);
-        SE_MEM_FREE(result->parseData.functions[i].fullFunctionSource);
+        SKA_MEM_FREE(result->parseData.functions[i].name);
+        SKA_MEM_FREE(result->parseData.functions[i].fullFunctionSource);
     }
 }

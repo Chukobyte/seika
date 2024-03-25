@@ -4,22 +4,22 @@
 
 #include <glad/glad.h>
 
-#include "../math/se_math.h"
+#include "seika/math/math.h"
 
-typedef struct SECharacter {
+typedef struct SkaFontCharacter {
     GLuint textureId;
-    SKAVector2 size;
-    SKAVector2 bearing;
-    unsigned int advance;
-} SECharacter;
+    SkaVector2 size;
+    SkaVector2 bearing;
+    uint32 advance;
+} SkaFontCharacter;
 
-typedef struct SEFont {
+typedef struct SkaFont {
     bool isValid;
     GLuint VAO;
     GLuint VBO;
-    int size;
-    SECharacter characters[128]; // First 128 of ASCII set
-} SEFont;
+    int32 size;
+    SkaFontCharacter characters[128]; // First 128 of ASCII set
+} SkaFont;
 
-SEFont* ska_font_create_font(const char* fileName, int size, bool applyNearestNeighbor);
-SEFont* ska_font_create_font_from_memory(void* buffer, size_t bufferSize, int size, bool applyNearestNeighbor);
+SkaFont* ska_font_create_font(const char* fileName, int32 size, bool applyNearestNeighbor);
+SkaFont* ska_font_create_font_from_memory(void* buffer, size_t bufferSize, int32 size, bool applyNearestNeighbor);

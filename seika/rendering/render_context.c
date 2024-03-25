@@ -2,22 +2,22 @@
 
 #include <stddef.h>
 
-#include "../memory/se_mem.h"
-#include "../utils/se_assert.h"
+#include "seika/memory.h"
+#include "seika/assert.h"
 
-static SERenderContext* renderContext = NULL;
+static SkaRenderContext* renderContext = NULL;
 
-void se_render_context_initialize() {
-    SE_ASSERT_FMT(renderContext == NULL, "Render context is already initialized!");
-    renderContext = SE_MEM_ALLOCATE(SERenderContext);
+void ska_render_context_initialize() {
+    SKA_ASSERT_FMT(renderContext == NULL, "Render context is already initialized!");
+    renderContext = SKA_MEM_ALLOCATE(SkaRenderContext);
 }
 
-void se_render_context_finalize() {
-    SE_ASSERT_FMT(renderContext != NULL, "Render context is not initialized!");
-    SE_MEM_FREE(renderContext);
+void ska_render_context_finalize() {
+    SKA_ASSERT_FMT(renderContext != NULL, "Render context is not initialized!");
+    SKA_MEM_FREE(renderContext);
 }
 
-SERenderContext* se_render_context_get() {
-    SE_ASSERT_FMT(renderContext != NULL, "Render context is not initialized!");
+SkaRenderContext* ska_render_context_get() {
+    SKA_ASSERT_FMT(renderContext != NULL, "Render context is not initialized!");
     return renderContext;
 }

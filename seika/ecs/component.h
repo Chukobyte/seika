@@ -10,7 +10,7 @@ extern "C" {
 #include "entity.h"
 
 #define SKA_ECS_MAX_COMPONENTS 32
-#define SKA_ECS_COMPONENT_TYPE_NONE (SkaComponentType)0
+#define SKA_ECS_COMPONENT_TYPE_NONE ((SkaComponentType)0)
 
 #define SKA_ECS_REGISTER_COMPONENT(ComponentType) \
 ska_ecs_component_register_type(#ComponentType, sizeof(ComponentType))
@@ -21,8 +21,8 @@ ska_ecs_component_get_type_info(#ComponentType, sizeof(ComponentType))
 #define SKA_ECS_COMPONENT_TYPE_FLAG(ComponentType) \
 ska_ecs_component_get_type_flag(#ComponentType, sizeof(ComponentType))
 
-typedef uint32_t SkaComponentIndex;
-typedef uint32_t SkaComponentType;
+typedef uint32 SkaComponentIndex;
+typedef uint32 SkaComponentType;
 
 typedef struct SkaComponentTypeInfo {
     char* name;

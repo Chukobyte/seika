@@ -9,26 +9,26 @@ extern "C" {
 #include "texture.h"
 #include "font.h"
 #include "shader/shader_instance.h"
-#include "../math/se_math.h"
+#include "seika/math/math.h"
 
-#define SE_RENDERER_MAX_Z_INDEX 200
+#define SKA_RENDERER_MAX_Z_INDEX 200
 
-typedef struct SKARendererTransform2D {
+typedef struct SkaRendererTransform2D {
     mat4 model;
-} SKARendererTransform2D;
+} SkaRendererTransform2D;
 
-void se_renderer_initialize(int inWindowWidth, int inWindowHeight, int inResolutionWidth, int inResolutionHeight, bool maintainAspectRatio);
-void se_renderer_finalize();
-void se_renderer_update_window_size(int windowWidth, int windowHeight);
-void se_renderer_set_sprite_shader_default_params(SEShader* shader);
-void ska_renderer_queue_sprite_draw(SETexture* texture, SKARect2 sourceRect, SKASize2D destSize, SKAColor color, bool flipH, bool flipV, const SKATransform2D* transform2D, int zIndex, SEShaderInstance* shaderInstance);
-void ska_renderer_queue_sprite_draw2(SETexture* texture, SKARect2 sourceRect, SKASize2D destSize, SKAColor color, bool flipH, bool flipV, mat4 trsMatrix, int zIndex, SEShaderInstance* shaderInstance);
-void se_renderer_queue_font_draw_call(SEFont* font, const char* text, float x, float y, float scale, SKAColor color, int zIndex);
-void se_renderer_process_and_flush_batches(const SKAColor* backgroundColor);
-void se_renderer_process_and_flush_batches_just_framebuffer(const SKAColor* backgroundColor);
+void ska_renderer_initialize(int32 inWindowWidth, int32 inWindowHeight, int32 inResolutionWidth, int32 inResolutionHeight, bool maintainAspectRatio);
+void ska_renderer_finalize();
+void ska_renderer_update_window_size(int32 windowWidth, int32 windowHeight);
+void ska_renderer_set_sprite_shader_default_params(SkaShader* shader);
+void ska_renderer_queue_sprite_draw(SkaTexture* texture, SkaRect2 sourceRect, SkaSize2D destSize, SkaColor color, bool flipH, bool flipV, const SkaTransform2D* transform2D, int32 zIndex, SkaShaderInstance* shaderInstance);
+void ska_renderer_queue_sprite_draw2(SkaTexture* texture, SkaRect2 sourceRect, SkaSize2D destSize, SkaColor color, bool flipH, bool flipV, mat4 trsMatrix, int32 zIndex, SkaShaderInstance* shaderInstance);
+void ska_renderer_queue_font_draw_call(SkaFont* font, const char* text, f32 x, f32 y, f32 scale, SkaColor color, int32 zIndex);
+void ska_renderer_process_and_flush_batches(const SkaColor *backgroundColor);
+void ska_renderer_process_and_flush_batches_just_framebuffer(const SkaColor *backgroundColor);
 
 // Shader params
-void se_renderer_set_global_shader_param_time(float timeValue);
+void ska_renderer_set_global_shader_param_time(f32 timeValue);
 
 #ifdef __cplusplus
 }

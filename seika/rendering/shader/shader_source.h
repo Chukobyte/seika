@@ -1,6 +1,6 @@
 #pragma once
 
-static const char* SE_OPENGL_SHADER_SOURCE_VERTEX_SPRITE =
+static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_SPRITE =
     "#version 330 core\n"
     "\n"
     "layout (location = 0) in float ID;\n"
@@ -32,7 +32,7 @@ static const char* SE_OPENGL_SHADER_SOURCE_VERTEX_SPRITE =
     "    gl_Position = CRE_PROJECTION * CRE_MODELS[CRE_SPRITE_INT_ID] * vec4(VERTEX, 0.0f, 1.0f);\n"
     "}\n";
 
-static const char* SE_OPENGL_SHADER_SOURCE_FRAGMENT_SPRITE =
+static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SPRITE =
     "#version 330 core\n"
     "\n"
     "in vec2 UV;\n"
@@ -63,7 +63,7 @@ static const char* SE_OPENGL_SHADER_SOURCE_FRAGMENT_SPRITE =
     "    //@@fragment()\n"
     "}\n";
 
-static const char* SE_OPENGL_SHADER_SOURCE_VERTEX_FONT =
+static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_FONT =
     "#version 330 core\n"
     "layout (location = 0) in vec4 vertex; // (pos, tex)\n"
     "\n"
@@ -76,7 +76,7 @@ static const char* SE_OPENGL_SHADER_SOURCE_VERTEX_FONT =
     "    texCoords = vertex.zw;\n"
     "}\n";
 
-static const char* SE_OPENGL_SHADER_SOURCE_FRAGMENT_FONT =
+static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_FONT =
     "#version 330 core\n"
     "in vec2 texCoords;\n"
     "out vec4 color;\n"
@@ -89,7 +89,7 @@ static const char* SE_OPENGL_SHADER_SOURCE_FRAGMENT_FONT =
     "    color = textColor * sampled;\n"
     "}\n";
 
-static const char* SE_OPENGL_SHADER_SOURCE_VERTEX_SCREEN =
+static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_SCREEN =
     "#version 330 core\n"
     "layout (location = 0) in vec2 CRE_VERTEX;\n"
     "layout (location = 1) in vec2 CRE_TEXTURE_COORDS;\n"
@@ -110,7 +110,7 @@ static const char* SE_OPENGL_SHADER_SOURCE_VERTEX_SCREEN =
     "    gl_Position = vec4(VERTEX, 0.0f, 1.0f);\n"
     "}\n";
 
-static const char* SE_OPENGL_SHADER_SOURCE_FRAGMENT_SCREEN =
+static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SCREEN =
     "#version 330 core\n"
     "out vec4 COLOR;\n"
     "\n"

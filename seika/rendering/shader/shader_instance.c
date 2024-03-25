@@ -3,195 +3,195 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include "../../memory/se_mem.h"
-#include "../../utils/logger.h"
-#include "../../utils/se_assert.h"
-#include "../../utils/se_string_util.h"
+#include "seika/memory.h"
+#include "seika/logger.h"
+#include "seika/string.h"
+#include "seika/assert.h"
 
-SEShaderInstance* se_shader_instance_create(const char* vertexSource, const char* fragmentSource) {
-    SEShader* shader = se_shader_compile_new_shader(vertexSource, fragmentSource);
+SkaShaderInstance* ska_shader_instance_create(const char* vertexSource, const char* fragmentSource) {
+    SkaShader* shader = ska_shader_compile_new_shader(vertexSource, fragmentSource);
     // Early out if shader fails to compile
     if (shader == NULL) {
         return NULL;
     }
-    SEShaderInstance* instance = SE_MEM_ALLOCATE(SEShaderInstance);
+    SkaShaderInstance* instance = SKA_MEM_ALLOCATE(SkaShaderInstance);
     instance->shader = shader;
-    instance->paramMap = se_string_hash_map_create_default_capacity();
+    instance->paramMap = ska_string_hash_map_create_default_capacity();
     instance->paramsDirty = true;
     return instance;
 }
 
-SEShaderInstance* se_shader_instance_create_from_shader(SEShader* shader) {
-    SE_ASSERT(shader != NULL);
-    SEShaderInstance* instance = SE_MEM_ALLOCATE(SEShaderInstance);
+SkaShaderInstance* ska_shader_instance_create_from_shader(SkaShader* shader) {
+    SKA_ASSERT(shader != NULL);
+    SkaShaderInstance* instance = SKA_MEM_ALLOCATE(SkaShaderInstance);
     instance->shader = shader;
-    instance->paramMap = se_string_hash_map_create_default_capacity();
+    instance->paramMap = ska_string_hash_map_create_default_capacity();
     instance->paramsDirty = true;
     return instance;
 }
 
-void se_shader_instance_destroy(SEShaderInstance* shaderInstance) {
-    SE_STRING_HASH_MAP_FOR_EACH(shaderInstance->paramMap, iter) {
-        StringHashMapNode* node = iter.pair;
-        SEShaderParam* param = (SEShaderParam*) node->value;
-        SE_MEM_FREE(param->name);
+void ska_shader_instance_destroy(SkaShaderInstance* shaderInstance) {
+    SKA_STRING_HASH_MAP_FOR_EACH(shaderInstance->paramMap, iter) {
+        SkaStringHashMapNode* node = iter.pair;
+        SkaShaderParam* param = (SkaShaderParam*)node->value;
+        SKA_MEM_FREE(param->name);
     }
-    se_string_hash_map_destroy(shaderInstance->paramMap);
-    se_shader_destroy(shaderInstance->shader);
-    SE_MEM_FREE(shaderInstance);
+    ska_string_hash_map_destroy(shaderInstance->paramMap);
+    ska_shader_destroy(shaderInstance->shader);
+    SKA_MEM_FREE(shaderInstance);
 }
 
 // Creation functions
-void se_shader_instance_param_create_from_copy(SEShaderInstance* shaderInstance, SEShaderParam* param) {
-    param->name = se_strdup(param->name);
+void ska_shader_instance_param_create_from_copy(SkaShaderInstance* shaderInstance, SkaShaderParam* param) {
+    param->name = ska_strdup(param->name);
     switch (param->type) {
-    case SEShaderParamType_BOOL: {
-        se_shader_instance_param_create_bool(shaderInstance, param->name, param->value.boolValue);
+    case SkaShaderParamType_BOOL: {
+        ska_shader_instance_param_create_bool(shaderInstance, param->name, param->value.boolValue);
         return;
     }
-    case SEShaderParamType_INT: {
-        se_shader_instance_param_create_int(shaderInstance, param->name, param->value.intValue);
+    case SkaShaderParamType_INT: {
+        ska_shader_instance_param_create_int(shaderInstance, param->name, param->value.intValue);
         return;
     }
-    case SEShaderParamType_FLOAT: {
-        se_shader_instance_param_create_float(shaderInstance, param->name, param->value.floatValue);
+    case SkaShaderParamType_FLOAT: {
+        ska_shader_instance_param_create_float(shaderInstance, param->name, param->value.floatValue);
         return;
     }
-    case SEShaderParamType_FLOAT2: {
-        se_shader_instance_param_create_float2(shaderInstance, param->name, param->value.float2Value);
+    case SkaShaderParamType_FLOAT2: {
+        ska_shader_instance_param_create_float2(shaderInstance, param->name, param->value.float2Value);
         return;
     }
-    case SEShaderParamType_FLOAT3: {
-        se_shader_instance_param_create_float3(shaderInstance, param->name, param->value.float3Value);
+    case SkaShaderParamType_FLOAT3: {
+        ska_shader_instance_param_create_float3(shaderInstance, param->name, param->value.float3Value);
         return;
     }
-    case SEShaderParamType_FLOAT4: {
-        se_shader_instance_param_create_float4(shaderInstance, param->name, param->value.float4Value);
+    case SkaShaderParamType_FLOAT4: {
+        ska_shader_instance_param_create_float4(shaderInstance, param->name, param->value.float4Value);
         return;
     }
     }
-    SE_ASSERT_FMT(false, "Failed to copy shader param with name '%s'", param->name);
+    SKA_ASSERT_FMT(false, "Failed to copy shader param with name '%s'", param->name);
 }
 
-SEShaderParam* se_shader_instance_param_create_bool(SEShaderInstance* shaderInstance, const char* name, bool value) {
-    SEShaderParam params = { .name = se_strdup(name), .type = SEShaderParamType_BOOL };
+SkaShaderParam* ska_shader_instance_param_create_bool(SkaShaderInstance* shaderInstance, const char* name, bool value) {
+    SkaShaderParam params = { .name = ska_strdup(name), .type = SkaShaderParamType_BOOL };
     params.value.boolValue = value;
-    se_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SEShaderParam));
-    return (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
+    ska_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SkaShaderParam));
+    return (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
 }
 
-SEShaderParam* se_shader_instance_param_create_int(SEShaderInstance* shaderInstance, const char* name, int value) {
-    SEShaderParam params = { .name = se_strdup(name), .type = SEShaderParamType_INT };
+SkaShaderParam* ska_shader_instance_param_create_int(SkaShaderInstance* shaderInstance, const char* name, int32 value) {
+    SkaShaderParam params = { .name = ska_strdup(name), .type = SkaShaderParamType_INT };
     params.value.intValue = value;
-    se_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SEShaderParam));
-    return (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
+    ska_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SkaShaderParam));
+    return (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
 }
 
-SEShaderParam* se_shader_instance_param_create_float(SEShaderInstance* shaderInstance, const char* name, float value) {
-    SEShaderParam params = { .name = se_strdup(name), .type = SEShaderParamType_FLOAT };
+SkaShaderParam* ska_shader_instance_param_create_float(SkaShaderInstance* shaderInstance, const char* name, f32 value) {
+    SkaShaderParam params = { .name = ska_strdup(name), .type = SkaShaderParamType_FLOAT };
     params.value.floatValue = value;
-    se_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SEShaderParam));
-    return (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
+    ska_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SkaShaderParam));
+    return (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
 }
 
-SEShaderParam* se_shader_instance_param_create_float2(SEShaderInstance* shaderInstance, const char* name, SKAVector2 value) {
-    SEShaderParam params = { .name = se_strdup(name), .type = SEShaderParamType_FLOAT2 };
+SkaShaderParam* ska_shader_instance_param_create_float2(SkaShaderInstance* shaderInstance, const char* name, SkaVector2 value) {
+    SkaShaderParam params = { .name = ska_strdup(name), .type = SkaShaderParamType_FLOAT2 };
     params.value.float2Value = value;
-    se_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SEShaderParam));
-    return (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
+    ska_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SkaShaderParam));
+    return (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
 }
 
-SEShaderParam* se_shader_instance_param_create_float3(SEShaderInstance* shaderInstance, const char* name, SKAVector3 value) {
-    SEShaderParam params = { .name = se_strdup(name), .type = SEShaderParamType_FLOAT3 };
+SkaShaderParam* ska_shader_instance_param_create_float3(SkaShaderInstance* shaderInstance, const char* name, SkaVector3 value) {
+    SkaShaderParam params = { .name = ska_strdup(name), .type = SkaShaderParamType_FLOAT3 };
     params.value.float3Value = value;
-    se_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SEShaderParam));
-    return (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
+    ska_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SkaShaderParam));
+    return (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
 }
 
-SEShaderParam* se_shader_instance_param_create_float4(SEShaderInstance* shaderInstance, const char* name, SKAVector4 value) {
-    SEShaderParam params = { .name = se_strdup(name), .type = SEShaderParamType_FLOAT4 };
+SkaShaderParam* ska_shader_instance_param_create_float4(SkaShaderInstance* shaderInstance, const char* name, SkaVector4 value) {
+    SkaShaderParam params = { .name = ska_strdup(name), .type = SkaShaderParamType_FLOAT4 };
     params.value.float4Value = value;
-    se_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SEShaderParam));
-    return (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
+    ska_string_hash_map_add(shaderInstance->paramMap, name, &params, sizeof(SkaShaderParam));
+    return (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
 }
 
 // Update functions
-void se_shader_instance_param_update_bool(SEShaderInstance* shaderInstance, const char* name, bool value) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_BOOL);
+void ska_shader_instance_param_update_bool(SkaShaderInstance* shaderInstance, const char* name, bool value) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_BOOL);
     param->value.boolValue = value;
     shaderInstance->paramsDirty = true;
 }
 
-void se_shader_instance_param_update_int(SEShaderInstance* shaderInstance, const char* name, int value) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_INT);
+void ska_shader_instance_param_update_int(SkaShaderInstance* shaderInstance, const char* name, int32 value) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_INT);
     param->value.intValue = value;
     shaderInstance->paramsDirty = true;
 }
 
-void se_shader_instance_param_update_float(SEShaderInstance* shaderInstance, const char* name, float value) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT_FMT(param != NULL, "Shader param for '%s' is null!", name);
-    SE_ASSERT(param->type == SEShaderParamType_FLOAT);
+void ska_shader_instance_param_update_float(SkaShaderInstance* shaderInstance, const char* name, f32 value) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT_FMT(param != NULL, "Shader param for '%s' is null!", name);
+    SKA_ASSERT(param->type == SkaShaderParamType_FLOAT);
     param->value.floatValue = value;
     shaderInstance->paramsDirty = true;
 }
 
-void se_shader_instance_param_update_float2(SEShaderInstance* shaderInstance, const char* name, SKAVector2 value) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_FLOAT2);
+void ska_shader_instance_param_update_float2(SkaShaderInstance* shaderInstance, const char* name, SkaVector2 value) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_FLOAT2);
     param->value.float2Value = value;
     shaderInstance->paramsDirty = true;
 }
 
-void se_shader_instance_param_update_float3(SEShaderInstance* shaderInstance, const char* name, SKAVector3 value) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_FLOAT3);
+void ska_shader_instance_param_update_float3(SkaShaderInstance* shaderInstance, const char* name, SkaVector3 value) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_FLOAT3);
     param->value.float3Value = value;
     shaderInstance->paramsDirty = true;
 }
 
-void se_shader_instance_param_update_float4(SEShaderInstance* shaderInstance, const char* name, SKAVector4 value) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_FLOAT4);
+void ska_shader_instance_param_update_float4(SkaShaderInstance* shaderInstance, const char* name, SkaVector4 value) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_FLOAT4);
     param->value.float4Value = value;
     shaderInstance->paramsDirty = true;
 }
 
 // Get functions
-bool se_shader_instance_param_get_bool(SEShaderInstance* shaderInstance, const char* name) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_BOOL);
+bool ska_shader_instance_param_get_bool(SkaShaderInstance* shaderInstance, const char* name) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_BOOL);
     return param->value.boolValue;
 }
 
-int se_shader_instance_param_get_int(SEShaderInstance* shaderInstance, const char* name) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_INT);
+int32 ska_shader_instance_param_get_int(SkaShaderInstance* shaderInstance, const char* name) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_INT);
     return param->value.intValue;
 }
 
-float se_shader_instance_param_get_float(SEShaderInstance* shaderInstance, const char* name) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_FLOAT);
+f32 ska_shader_instance_param_get_float(SkaShaderInstance* shaderInstance, const char* name) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_FLOAT);
     return param->value.floatValue;
 }
 
-SKAVector2 se_shader_instance_param_get_float2(SEShaderInstance* shaderInstance, const char* name) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_FLOAT2);
+SkaVector2 ska_shader_instance_param_get_float2(SkaShaderInstance* shaderInstance, const char* name) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_FLOAT2);
     return param->value.float2Value;
 }
 
-SKAVector3 se_shader_instance_param_get_float3(SEShaderInstance* shaderInstance, const char* name) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_FLOAT3);
+SkaVector3 ska_shader_instance_param_get_float3(SkaShaderInstance* shaderInstance, const char* name) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_FLOAT3);
     return param->value.float3Value;
 }
 
-SKAVector4 se_shader_instance_param_get_float4(SEShaderInstance* shaderInstance, const char* name) {
-    SEShaderParam* param = (SEShaderParam*) se_string_hash_map_get(shaderInstance->paramMap, name);
-    SE_ASSERT(param->type == SEShaderParamType_FLOAT4);
+SkaVector4 ska_shader_instance_param_get_float4(SkaShaderInstance* shaderInstance, const char* name) {
+    SkaShaderParam* param = (SkaShaderParam*)ska_string_hash_map_get(shaderInstance->paramMap, name);
+    SKA_ASSERT(param->type == SkaShaderParamType_FLOAT4);
     return param->value.float4Value;
 }

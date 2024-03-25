@@ -4,24 +4,25 @@
 extern "C" {
 #endif
 
-#include <stdint.h>
 #include <stdbool.h>
 
-#define SE_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE 44100
+#include "seika/defines.h"
 
-typedef struct SEAudioSource {
+#define SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE 44100
+
+typedef struct SkaAudioSource {
     const char* file_path;
-    double pitch;
-    int32_t channels;
-    int32_t sample_rate;
+    f64 pitch;
+    int32 channels;
+    int32 sample_rate;
     void* samples;
-    int32_t sample_count;
-} SEAudioSource;
+    int32 sample_count;
+} SkaAudioSource;
 
-void se_audio_print_audio_source(SEAudioSource* audioSource);
-void se_audio_set_wav_sample_rate(uint32_t wavSampleRate);
-uint32_t se_audio_get_wav_sample_rate();
-SEAudioSource* se_audio_load_audio_source_wav(const char* fileName);
+void ska_audio_print_audio_source(SkaAudioSource* audioSource);
+void ska_audio_set_wav_sample_rate(uint32 wavSampleRate);
+uint32 ska_audio_get_wav_sample_rate();
+SkaAudioSource* ska_audio_load_audio_source_wav(const char* fileName);
 
 #ifdef __cplusplus
 }

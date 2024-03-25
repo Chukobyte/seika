@@ -1,7 +1,8 @@
 #pragma once
 
 #include <stddef.h>
-#include <stdint.h>
+
+#include "seika/defines.h"
 
 // Entity is defined as a unsigned 32-bit integer
 
@@ -12,7 +13,7 @@
 
 #define SKA_NULL_ENTITY UINT32_MAX
 
-typedef uint32_t SkaEntity;
+typedef uint32 SkaEntity;
 
 void ska_ecs_entity_initialize();
 void ska_ecs_entity_finalize();

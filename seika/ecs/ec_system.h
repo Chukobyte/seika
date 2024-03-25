@@ -105,6 +105,6 @@ void ska_ecs_system_event_entity_entered_scene(SkaEntity entity);
 void ska_ecs_system_event_render_systems();
 void ska_ecs_system_event_pre_update_all_systems();
 void ska_ecs_system_event_post_update_all_systems();
-void ska_ecs_system_event_update_systems(float deltaTime);
-void ska_ecs_system_event_fixed_update_systems(float deltaTime);
+void ska_ecs_system_event_update_systems(f32 deltaTime);
+void ska_ecs_system_event_fixed_update_systems(f32 deltaTime);
 void ska_ecs_system_event_network_callback(const char* message);

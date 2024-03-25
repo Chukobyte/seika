@@ -4,21 +4,21 @@
 #include FT_FREETYPE_H
 
 #include "render_context.h"
-#include "../asset/asset_file_loader.h"
-#include "../memory/se_mem.h"
-#include "../utils/logger.h"
+#include "seika/logger.h"
+#include "seika/memory.h"
+#include "seika/asset/asset_file_loader.h"
 
 static bool ska_generate_new_font_face(const char* fileName, FT_Face* face);
-static void ska_initialize_font(FT_Face face, SEFont* font, bool applyNearestNeighbor);
+static void ska_initialize_font(FT_Face face, SkaFont* font, bool applyNearestNeighbor);
 
-SEFont* ska_font_create_font(const char* fileName, int size, bool applyNearestNeighbor) {
+SkaFont* ska_font_create_font(const char* fileName, int32 size, bool applyNearestNeighbor) {
     FT_Face face;
-    SEFont* font = SE_MEM_ALLOCATE(SEFont);
+    SkaFont* font = SKA_MEM_ALLOCATE(SkaFont);
     font->size = size;
 
     // Failed to create font, exit out early
     if (!ska_generate_new_font_face(fileName, &face)) {
-        se_logger_error("Freetype failed to load font '%s' with size '%d'!", fileName, size);
+        ska_logger_error("Freetype failed to load font '%s' with size '%d'!", fileName, size);
         font->isValid = false;
         FT_Done_Face(face);
         return font;
@@ -29,14 +29,14 @@ SEFont* ska_font_create_font(const char* fileName, int size, bool applyNearestNe
     return font;
 }
 
-SEFont* ska_font_create_font_from_memory(void* buffer, size_t bufferSize, int size, bool applyNearestNeighbor) {
+SkaFont* ska_font_create_font_from_memory(void* buffer, size_t bufferSize, int32 size, bool applyNearestNeighbor) {
     FT_Face face;
-    SEFont* font = SE_MEM_ALLOCATE(SEFont);
+    SkaFont* font = SKA_MEM_ALLOCATE(SkaFont);
     font->size = size;
 
     // Failed to create font, exit out early
-    if(FT_New_Memory_Face(se_render_context_get()->freeTypeLibrary, (unsigned char*)buffer, (FT_Long)bufferSize, 0, &face)) {
-        se_logger_error("Freetype failed to load font from memory!!");
+    if(FT_New_Memory_Face(ska_render_context_get()->freeTypeLibrary, (unsigned char*)buffer, (FT_Long)bufferSize, 0, &face)) {
+        ska_logger_error("Freetype failed to load font from memory!!");
         font->isValid = false;
         FT_Done_Face(face);
         return font;
@@ -48,10 +48,10 @@ SEFont* ska_font_create_font_from_memory(void* buffer, size_t bufferSize, int si
 }
 
 bool ska_generate_new_font_face(const char* fileName, FT_Face* face) {
-    if (sf_asset_file_loader_get_read_mode() == SEAssetFileLoaderReadMode_ARCHIVE) {
-        SEArchiveFileAsset fileAsset = sf_asset_file_loader_get_asset(fileName);
-        if (sf_asset_file_loader_is_asset_valid(&fileAsset)) {
-            if (FT_New_Memory_Face(se_render_context_get()->freeTypeLibrary, (unsigned char*) fileAsset.buffer, (FT_Long) fileAsset.bufferSize, 0, face)) {
+    if (ska_asset_file_loader_get_read_mode() == SkaAssetFileLoaderReadMode_ARCHIVE) {
+        SkaArchiveFileAsset fileAsset = ska_asset_file_loader_get_asset(fileName);
+        if (ska_asset_file_loader_is_asset_valid(&fileAsset)) {
+            if (FT_New_Memory_Face(ska_render_context_get()->freeTypeLibrary, (unsigned char*) fileAsset.buffer, (FT_Long) fileAsset.bufferSize, 0, face)) {
                 // Failed to create new face
                 return false;
             }
@@ -59,8 +59,8 @@ bool ska_generate_new_font_face(const char* fileName, FT_Face* face) {
             // Failed to load asset from archive
             return false;
         }
-    } else if (sf_asset_file_loader_get_read_mode() == SEAssetFileLoaderReadMode_DISK) {
-        if (FT_New_Face(se_render_context_get()->freeTypeLibrary, fileName, 0, face)) {
+    } else if (ska_asset_file_loader_get_read_mode() == SkaAssetFileLoaderReadMode_DISK) {
+        if (FT_New_Face(ska_render_context_get()->freeTypeLibrary, fileName, 0, face)) {
             // Failed to create new face
             return false;
         }
@@ -68,7 +68,7 @@ bool ska_generate_new_font_face(const char* fileName, FT_Face* face) {
     return true;
 }
 
-static void ska_initialize_font(FT_Face face, SEFont* font, bool applyNearestNeighbor) {
+static void ska_initialize_font(FT_Face face, SkaFont* font, bool applyNearestNeighbor) {
     // Set size to load glyphs, width set to 0 to dynamically adjust
     FT_Set_Pixel_Sizes(face, 0, font->size);
     // Disable byte alignment restriction
@@ -77,7 +77,7 @@ static void ska_initialize_font(FT_Face face, SEFont* font, bool applyNearestNei
     for (unsigned char c = 0; c < 128; c++) { // 'c++' ;-)
         // Load character glyph
         if (FT_Load_Char(face, c, FT_LOAD_RENDER)) {
-            se_logger_error("Freetype failed to load glyph '%u!", c);
+            ska_logger_error("Freetype failed to load glyph '%u!", c);
             continue;
         }
         // Generate texture
@@ -85,15 +85,15 @@ static void ska_initialize_font(FT_Face face, SEFont* font, bool applyNearestNei
         glGenTextures(1, &textTexture);
         glBindTexture(GL_TEXTURE_2D, textTexture);
         glTexImage2D(
-                GL_TEXTURE_2D,
-                0,
-                GL_RED,
-                (GLsizei) face->glyph->bitmap.width,
-                (GLsizei) face->glyph->bitmap.rows,
-                0,
-                GL_RED,
-                GL_UNSIGNED_BYTE,
-                face->glyph->bitmap.buffer
+            GL_TEXTURE_2D,
+            0,
+            GL_RED,
+            (GLsizei) face->glyph->bitmap.width,
+            (GLsizei) face->glyph->bitmap.rows,
+            0,
+            GL_RED,
+            GL_UNSIGNED_BYTE,
+            face->glyph->bitmap.buffer
         );
         // Texture wrap and filter options
         const GLint filterType = applyNearestNeighbor ? GL_NEAREST : GL_LINEAR;
@@ -102,10 +102,10 @@ static void ska_initialize_font(FT_Face face, SEFont* font, bool applyNearestNei
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filterType);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filterType);
         // Create character struct
-        SECharacter character = {
+        SkaFontCharacter character = {
                 .textureId = textTexture,
-                .size = { (float) face->glyph->bitmap.width, (float) face->glyph->bitmap.rows },
-                .bearing = { (float) face->glyph->bitmap_left, (float) face->glyph->bitmap_top },
+                .size = { (f32)face->glyph->bitmap.width, (f32)face->glyph->bitmap.rows },
+                .bearing = { (f32)face->glyph->bitmap_left, (f32)face->glyph->bitmap_top },
                 .advance = (GLuint) face->glyph->advance.x
         };
         font->characters[c] = character;

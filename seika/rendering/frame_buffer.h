@@ -6,28 +6,28 @@ extern "C" {
 
 #include <stdbool.h>
 
-#include "../math/se_math.h"
+#include "seika/math/math.h"
 
-bool se_frame_buffer_initialize(int inWindowWidth, int inWindowHeight, int inResolutionWidth, int inResolutionHeight);
-void se_frame_buffer_finalize();
-void se_frame_buffer_bind();
-void se_frame_buffer_unbind();
-unsigned int se_frame_buffer_get_color_buffer_texture();
-unsigned int se_frame_buffer_get_quad_vao();
-void se_frame_buffer_resize_texture(int newWidth, int newHeight);
-void se_frame_buffer_set_maintain_aspect_ratio(bool shouldMaintainAspectRatio);
+bool ska_frame_buffer_initialize(int32 inWindowWidth, int32 inWindowHeight, int32 inResolutionWidth, int32 inResolutionHeight);
+void ska_frame_buffer_finalize();
+void ska_frame_buffer_bind();
+void ska_frame_buffer_unbind();
+uint32 ska_frame_buffer_get_color_buffer_texture();
+uint32 ska_frame_buffer_get_quad_vao();
+void ska_frame_buffer_resize_texture(int32 newWidth, int32 newHeight);
+void ska_frame_buffer_set_maintain_aspect_ratio(bool shouldMaintainAspectRatio);
 
-struct SEShaderInstance* se_frame_buffer_get_screen_shader();
-void se_frame_buffer_set_screen_shader(struct SEShaderInstance* shaderInstance);
-void se_frame_buffer_reset_to_default_screen_shader();
+struct SkaShaderInstance* ska_frame_buffer_get_screen_shader();
+void ska_frame_buffer_set_screen_shader(struct SkaShaderInstance* shaderInstance);
+void ska_frame_buffer_reset_to_default_screen_shader();
 
-typedef struct FrameBufferViewportData {
-    SKAVector2i position;
-    SKASize2Di size;
-} FrameBufferViewportData;
+typedef struct SkaFrameBufferViewportData {
+    SkaVector2i position;
+    SkaSize2Di size;
+} SkaFrameBufferViewportData;
 
-FrameBufferViewportData se_frame_buffer_generate_viewport_data(int windowWidth, int windowHeight);
-FrameBufferViewportData* se_frame_buffer_get_cached_viewport_data();
+SkaFrameBufferViewportData ska_frame_buffer_generate_viewport_data(int32 windowWidth, int32 windowHeight);
+SkaFrameBufferViewportData* ska_frame_buffer_get_cached_viewport_data();
 
 #ifdef __cplusplus
 }

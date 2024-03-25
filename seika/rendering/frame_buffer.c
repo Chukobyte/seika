@@ -2,50 +2,50 @@
 
 #include "shader/shader.h"
 #include "shader/shader_instance.h"
-#include "../utils/logger.h"
-#include "../utils/se_assert.h"
 #include "shader/shader_source.h"
+#include "seika/logger.h"
+#include "seika/assert.h"
 
 GLuint frameBuffer = -1;
 GLuint textureColorBuffer = -1;
 GLuint rbo = -1;
 bool hasBeenInitialized = false;
 
-static SEShaderInstance defaultScreenShader;
-static SEShaderInstance* currentScreenShader = NULL;
+static SkaShaderInstance defaultScreenShader;
+static SkaShaderInstance* currentScreenShader = NULL;
 static GLuint screenVAO = -1;
 static GLuint screenVBO = -1;
 
-static int screenTextureWidth = 800;
-static int screenTextureHeight = 600;
-static int resolutionWidth = 800;
-static int resolutionHeight = 600;
-static FrameBufferViewportData cachedViewportData = { .position = { .x = 0, .y = 0 }, .size = { .w = 800, .h = 600 } };
+static int32 screenTextureWidth = 800;
+static int32 screenTextureHeight = 600;
+static int32 resolutionWidth = 800;
+static int32 resolutionHeight = 600;
+static SkaFrameBufferViewportData cachedViewportData = { .position = { .x = 0, .y = 0 }, .size = { .w = 800, .h = 600 } };
 static bool maintainAspectRatio = false;
 
-FrameBufferViewportData se_frame_buffer_generate_viewport_data(int windowWidth, int windowHeight) {
-    int framebufferWidth = windowWidth;
-    int framebufferHeight = windowHeight;
+SkaFrameBufferViewportData ska_frame_buffer_generate_viewport_data(int32 windowWidth, int32 windowHeight) {
+    int32 framebufferWidth = windowWidth;
+    int32 framebufferHeight = windowHeight;
 
-    const float game_aspect_ratio = (float)resolutionWidth / (float)resolutionHeight;
-    const float window_aspect_ratio = (float)windowWidth / (float)windowHeight;
+    const f32 game_aspect_ratio = (f32)resolutionWidth / (f32)resolutionHeight;
+    const f32 window_aspect_ratio = (f32)windowWidth / (f32)windowHeight;
 
     // Adjust the framebuffer width or height to match the window aspect ratio
     if (maintainAspectRatio && game_aspect_ratio != window_aspect_ratio) {
-        framebufferHeight = (int)(windowWidth / game_aspect_ratio);
+        framebufferHeight = (int32)((f32)windowWidth / game_aspect_ratio);
         if (framebufferHeight > windowHeight) {
             framebufferHeight = windowHeight;
-            framebufferWidth = (int)(windowHeight * game_aspect_ratio);
+            framebufferWidth = (int32)((f32)windowHeight * game_aspect_ratio);
         }
     }
 
     // Calculate the viewport dimensions
-    const int viewportX = (windowWidth - framebufferWidth) / 2;
-    const int viewportY = (windowHeight - framebufferHeight) / 2;
-    const int viewportWidth = framebufferWidth;
-    const int viewportHeight = framebufferHeight;
+    const int32 viewportX = (windowWidth - framebufferWidth) / 2;
+    const int32 viewportY = (windowHeight - framebufferHeight) / 2;
+    const int32 viewportWidth = framebufferWidth;
+    const int32 viewportHeight = framebufferHeight;
 
-    const FrameBufferViewportData data = {
+    const SkaFrameBufferViewportData data = {
         .position = { .x = viewportX, .y = viewportY },
         .size = { .w = viewportWidth, .h = viewportHeight }
     };
@@ -53,7 +53,7 @@ FrameBufferViewportData se_frame_buffer_generate_viewport_data(int windowWidth, 
     return data;
 }
 
-FrameBufferViewportData* se_frame_buffer_get_cached_viewport_data() {
+SkaFrameBufferViewportData* ska_frame_buffer_get_cached_viewport_data() {
     return &cachedViewportData;
 }
 
@@ -78,13 +78,13 @@ bool recreate_frame_buffer_object() {
     // Check if framebuffer is complete
     const bool success = glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE;
     if (!success) {
-        se_logger_error("Framebuffer is not complete!");
+        ska_logger_error("Framebuffer is not complete!");
     }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     return success;
 }
 
-bool se_frame_buffer_initialize(int inWindowWidth, int inWindowHeight, int inResolutionWidth, int inResolutionHeight) {
+bool ska_frame_buffer_initialize(int32 inWindowWidth, int32 inWindowHeight, int32 inResolutionWidth, int32 inResolutionHeight) {
     screenTextureWidth = inWindowWidth;
     screenTextureHeight = inWindowHeight;
     resolutionWidth = inResolutionWidth;
@@ -120,62 +120,62 @@ bool se_frame_buffer_initialize(int inWindowWidth, int inWindowHeight, int inRes
     bool success = recreate_frame_buffer_object();
 
     // compile shaders
-    SEShader* screenShader = se_shader_compile_new_shader(SE_OPENGL_SHADER_SOURCE_VERTEX_SCREEN,
-                             SE_OPENGL_SHADER_SOURCE_FRAGMENT_SCREEN);
-    defaultScreenShader = (SEShaderInstance) {
-        .shader = screenShader, .paramMap = se_string_hash_map_create_default_capacity()
+    SkaShader* screenShader = ska_shader_compile_new_shader(SKA_OPENGL_SHADER_SOURCE_VERTEX_SCREEN,
+                                                            SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SCREEN);
+    defaultScreenShader = (SkaShaderInstance) {
+        .shader = screenShader, .paramMap = ska_string_hash_map_create_default_capacity()
     };
-    se_frame_buffer_set_screen_shader(&defaultScreenShader);
-    se_frame_buffer_generate_viewport_data(inWindowWidth, inWindowHeight);
+    ska_frame_buffer_set_screen_shader(&defaultScreenShader);
+    ska_frame_buffer_generate_viewport_data(inWindowWidth, inWindowHeight);
 
     hasBeenInitialized = true;
     return success;
 }
 
-void se_frame_buffer_finalize() {
-    se_string_hash_map_destroy(defaultScreenShader.paramMap);
+void ska_frame_buffer_finalize() {
+    ska_string_hash_map_destroy(defaultScreenShader.paramMap);
     defaultScreenShader.paramMap = NULL;
     hasBeenInitialized = false;
 }
 
-void se_frame_buffer_bind() {
-    SE_ASSERT(hasBeenInitialized);
+void ska_frame_buffer_bind() {
+    SKA_ASSERT(hasBeenInitialized);
     glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
 }
 
-void se_frame_buffer_unbind() {
+void ska_frame_buffer_unbind() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-unsigned int se_frame_buffer_get_color_buffer_texture() {
+uint32 ska_frame_buffer_get_color_buffer_texture() {
     return textureColorBuffer;
 }
 
-unsigned int se_frame_buffer_get_quad_vao() {
+uint32 ska_frame_buffer_get_quad_vao() {
     return screenVAO;
 }
 
-void se_frame_buffer_resize_texture(int newWidth, int newHeight) {
+void ska_frame_buffer_resize_texture(int32 newWidth, int32 newHeight) {
     screenTextureWidth = newWidth;
     screenTextureHeight = newHeight;
     recreate_frame_buffer_object();
 }
 
-void se_frame_buffer_set_maintain_aspect_ratio(bool shouldMaintainAspectRatio) {
+void ska_frame_buffer_set_maintain_aspect_ratio(bool shouldMaintainAspectRatio) {
     maintainAspectRatio = shouldMaintainAspectRatio;
 }
 
-SEShaderInstance* se_frame_buffer_get_screen_shader() {
+SkaShaderInstance* ska_frame_buffer_get_screen_shader() {
     return currentScreenShader;
 }
 
-void se_frame_buffer_set_screen_shader(SEShaderInstance* shaderInstance) {
-    SE_ASSERT_FMT(shaderInstance != NULL, "Trying to set screen shader to NULL!");
+void ska_frame_buffer_set_screen_shader(struct SkaShaderInstance *shaderInstance) {
+    SKA_ASSERT_FMT(shaderInstance != NULL, "Trying to set screen shader to NULL!");
     currentScreenShader = shaderInstance;
-    se_shader_use(currentScreenShader->shader);
-    se_shader_set_int(currentScreenShader->shader, "TEXTURE", 0);
+    ska_shader_use(currentScreenShader->shader);
+    ska_shader_set_int(currentScreenShader->shader, "TEXTURE", 0);
 }
 
-void se_frame_buffer_reset_to_default_screen_shader() {
+void ska_frame_buffer_reset_to_default_screen_shader() {
     currentScreenShader = &defaultScreenShader;
 }

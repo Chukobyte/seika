@@ -1,8 +1,8 @@
 #pragma once
 
-#include <stdint.h>
+#include "seika/defines.h"
 
-#define SE_SHADER_INSTANCE_MAX_INSTANCES 100
-#define SE_SHADER_INSTANCE_INVALID_ID (SE_SHADER_INSTANCE_MAX_INSTANCES + 1)
+#define SKA_SHADER_INSTANCE_MAX_INSTANCES 100
+#define SKA_SHADER_INSTANCE_INVALID_ID (SKA_SHADER_INSTANCE_MAX_INSTANCES + 1)
 
-typedef uint32_t SEShaderInstanceId;
+typedef uint32 SkaShaderInstanceId;

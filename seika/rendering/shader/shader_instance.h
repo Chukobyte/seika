@@ -7,67 +7,66 @@
  */
 
 #include "shader.h"
-
-#include "../../data_structures/se_hash_map_string.h"
+#include "seika/data_structures/hash_map_string.h"
 
 // Shader Param - Shader instance representation of uniform parameters
-typedef enum SEShaderParamType {
-    SEShaderParamType_BOOL = 0,
-    SEShaderParamType_INT = 1,
-    SEShaderParamType_FLOAT = 2,
-    SEShaderParamType_FLOAT2 = 3,
-    SEShaderParamType_FLOAT3 = 4,
-    SEShaderParamType_FLOAT4 = 5,
-} SEShaderParamType;
+typedef enum SkaShaderParamType {
+    SkaShaderParamType_BOOL = 0,
+    SkaShaderParamType_INT = 1,
+    SkaShaderParamType_FLOAT = 2,
+    SkaShaderParamType_FLOAT2 = 3,
+    SkaShaderParamType_FLOAT3 = 4,
+    SkaShaderParamType_FLOAT4 = 5,
+} SkaShaderParamType;
 
-typedef struct SEShaderParam {
+typedef struct SkaShaderParam {
     char* name;
-    SEShaderParamType type;
+    SkaShaderParamType type;
     union {
         bool boolValue;
-        int intValue;
-        float floatValue;
-        SKAVector2 float2Value;
-        SKAVector3 float3Value;
-        SKAVector4 float4Value;
+        int32 intValue;
+        f32 floatValue;
+        SkaVector2 float2Value;
+        SkaVector3 float3Value;
+        SkaVector4 float4Value;
     } value;
-} SEShaderParam;
+} SkaShaderParam;
 
 // Shader Instance
-typedef enum SEShaderInstanceType {
-    SEShaderInstanceType_INVALID = -1,
-    SEShaderInstanceType_SCREEN = 0,
-    SEShaderInstanceType_SPRITE = 1,
-} SEShaderInstanceType;
+typedef enum SkaShaderInstanceType {
+    SkaShaderInstanceType_INVALID = -1,
+    SkaShaderInstanceType_SCREEN = 0,
+    SkaShaderInstanceType_SPRITE = 1,
+} SkaShaderInstanceType;
 
-typedef struct SEShaderInstance {
-    SEShader* shader;
-    SEStringHashMap* paramMap;
+typedef struct SkaShaderInstance {
+    SkaShader* shader;
+    SkaStringHashMap* paramMap;
     bool paramsDirty;
-} SEShaderInstance;
+} SkaShaderInstance;
 
-SEShaderInstance* se_shader_instance_create(const char* vertexSource, const char* fragmentSource);
-SEShaderInstance* se_shader_instance_create_from_shader(SEShader* shader);
-void se_shader_instance_destroy(SEShaderInstance* shaderInstance);
+SkaShaderInstance* ska_shader_instance_create(const char* vertexSource, const char* fragmentSource);
+SkaShaderInstance* ska_shader_instance_create_from_shader(SkaShader* shader);
+void ska_shader_instance_destroy(SkaShaderInstance* shaderInstance);
 
-void se_shader_instance_param_create_from_copy(SEShaderInstance* shaderInstance, SEShaderParam* param);
-SEShaderParam* se_shader_instance_param_create_bool(SEShaderInstance* shaderInstance, const char* name, bool value);
-SEShaderParam* se_shader_instance_param_create_int(SEShaderInstance* shaderInstance, const char* name, int value);
-SEShaderParam* se_shader_instance_param_create_float(SEShaderInstance* shaderInstance, const char* name, float value);
-SEShaderParam* se_shader_instance_param_create_float2(SEShaderInstance* shaderInstance, const char* name, SKAVector2 value);
-SEShaderParam* se_shader_instance_param_create_float3(SEShaderInstance* shaderInstance, const char* name, SKAVector3 value);
-SEShaderParam* se_shader_instance_param_create_float4(SEShaderInstance* shaderInstance, const char* name, SKAVector4 value);
+void ska_shader_instance_param_create_from_copy(SkaShaderInstance* shaderInstance, SkaShaderParam* param);
+SkaShaderParam* ska_shader_instance_param_create_bool(SkaShaderInstance* shaderInstance, const char* name, bool value);
+SkaShaderParam* ska_shader_instance_param_create_int(SkaShaderInstance* shaderInstance, const char* name, int32 value);
+SkaShaderParam* ska_shader_instance_param_create_float(SkaShaderInstance* shaderInstance, const char* name, f32 value);
+SkaShaderParam* ska_shader_instance_param_create_float2(SkaShaderInstance* shaderInstance, const char* name, SkaVector2 value);
+SkaShaderParam* ska_shader_instance_param_create_float3(SkaShaderInstance* shaderInstance, const char* name, SkaVector3 value);
+SkaShaderParam* ska_shader_instance_param_create_float4(SkaShaderInstance* shaderInstance, const char* name, SkaVector4 value);
 
-void se_shader_instance_param_update_bool(SEShaderInstance* shaderInstance, const char* name, bool value);
-void se_shader_instance_param_update_int(SEShaderInstance* shaderInstance, const char* name, int value);
-void se_shader_instance_param_update_float(SEShaderInstance* shaderInstance, const char* name, float value);
-void se_shader_instance_param_update_float2(SEShaderInstance* shaderInstance, const char* name, SKAVector2 value);
-void se_shader_instance_param_update_float3(SEShaderInstance* shaderInstance, const char* name, SKAVector3 value);
-void se_shader_instance_param_update_float4(SEShaderInstance* shaderInstance, const char* name, SKAVector4 value);
+void ska_shader_instance_param_update_bool(SkaShaderInstance* shaderInstance, const char* name, bool value);
+void ska_shader_instance_param_update_int(SkaShaderInstance* shaderInstance, const char* name, int32 value);
+void ska_shader_instance_param_update_float(SkaShaderInstance* shaderInstance, const char* name, f32 value);
+void ska_shader_instance_param_update_float2(SkaShaderInstance* shaderInstance, const char* name, SkaVector2 value);
+void ska_shader_instance_param_update_float3(SkaShaderInstance* shaderInstance, const char* name, SkaVector3 value);
+void ska_shader_instance_param_update_float4(SkaShaderInstance* shaderInstance, const char* name, SkaVector4 value);
 
-bool se_shader_instance_param_get_bool(SEShaderInstance* shaderInstance, const char* name);
-int se_shader_instance_param_get_int(SEShaderInstance* shaderInstance, const char* name);
-float se_shader_instance_param_get_float(SEShaderInstance* shaderInstance, const char* name);
-SKAVector2 se_shader_instance_param_get_float2(SEShaderInstance* shaderInstance, const char* name);
-SKAVector3 se_shader_instance_param_get_float3(SEShaderInstance* shaderInstance, const char* name);
-SKAVector4 se_shader_instance_param_get_float4(SEShaderInstance* shaderInstance, const char* name);
+bool ska_shader_instance_param_get_bool(SkaShaderInstance* shaderInstance, const char* name);
+int32 ska_shader_instance_param_get_int(SkaShaderInstance* shaderInstance, const char* name);
+f32 ska_shader_instance_param_get_float(SkaShaderInstance* shaderInstance, const char* name);
+SkaVector2 ska_shader_instance_param_get_float2(SkaShaderInstance* shaderInstance, const char* name);
+SkaVector3 ska_shader_instance_param_get_float3(SkaShaderInstance* shaderInstance, const char* name);
+SkaVector4 ska_shader_instance_param_get_float4(SkaShaderInstance* shaderInstance, const char* name);

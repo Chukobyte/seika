@@ -2,81 +2,167 @@
 
 #include <time.h>
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <glad/glad.h>
 
-#include "input/input.h"
-#include "utils/logger.h"
-#include "utils/se_assert.h"
-#include "rendering/renderer.h"
-#include "audio/audio.h"
-#include "audio/audio_manager.h"
-#include "asset/asset_file_loader.h"
-#include "asset/asset_manager.h"
+#include "flag_utils.h"
+#include "logger.h"
+#include "input/sdl_input.h"
+#include "seika/assert.h"
+#include "seika/rendering/renderer.h"
+#include "seika/audio/audio_manager.h"
 
-bool initialize_sdl();
-bool initialize_rendering(const char* title, int windowWidth, int windowHeight, int resolutionWidth, int resolutionHeight, bool maintainAspectRatio);
-bool initialize_audio(uint32_t wavSampleRate);
-bool initialize_input();
+#define SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE 44100
+#define SKA_WINDOW_DEFAULT_MAINTAIN_ASPECT_RATIO false
+
+typedef enum SkaSystemFlag {
+    SkaSystemFlag_NONE = 0,
+    SkaSystemFlag_CORE = 1 << 0,
+    SkaSystemFlag_WINDOW = 2 << 0,
+    SkaSystemFlag_INPUT = 3 << 0,
+    SkaSystemFlag_AUDIO = 4 << 0,
+    SkaSystemFlag_ALL = SkaSystemFlag_CORE | SkaSystemFlag_WINDOW | SkaSystemFlag_INPUT | SkaSystemFlag_AUDIO,
+} SkaSystemFlag;
+
+typedef struct SkaState {
+    SkaSystemFlag runningSystems;
+    bool shutdownRequested;
+} SkaState;
+
+static SkaState skaState = { .runningSystems = SkaSystemFlag_NONE, .shutdownRequested = false };
 
 static SDL_Window* window = NULL;
-static SDL_GLContext openGlContext;
-static bool isRunning = false;
+static SDL_GLContext openGlContext = NULL;
 
-bool sf_initialize_simple(const char* title, int windowWidth, int windowHeight) {
-    return sf_initialize(title, windowWidth, windowHeight, windowWidth, windowHeight, SE_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE, false);
-}
-
-bool sf_initialize(const char* title,
-                   int windowWidth,
-                   int windowHeight,
-                   int resolutionWidth,
-                   int resolutionHeight,
-                   uint32_t audioWavSampleRate,
-                   bool maintainAspectRatio) {
-    if (isRunning) {
+bool ska_init() {
+    if (SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems)) {
         return false;
     }
 
     // Set random seed
     srand((int)time(NULL));
 
-    // Initialize sub systems
-    sf_asset_file_loader_initialize();
-
-    if (!initialize_sdl()) {
-        se_logger_error("Failed to initialize sdl!");
-        return false;
-    }
-    if (!initialize_rendering(title, windowWidth, windowHeight, resolutionWidth, resolutionHeight, maintainAspectRatio)) {
-        se_logger_error("Failed to initialize rendering!");
-        return false;
-    }
-    if (!initialize_audio(audioWavSampleRate)) {
-        se_logger_error("Failed to initialize audio!");
-        return false;
-    }
-    if (!initialize_input()) {
-        se_logger_error("Failed to initialize input!");
+    if (SDL_Init(0) != 0) {
         return false;
     }
 
-    se_asset_manager_initialize();
+    SKA_ADD_FLAGS(skaState.runningSystems, SkaSystemFlag_CORE);
+    return true;
+}
 
-    isRunning = true;
+void ska_shutdown() {
+    if (SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems)) {
+        SDL_Quit();
+        SKA_REMOVE_FLAGS(skaState.runningSystems, SkaSystemFlag_CORE);
+    }
+}
+
+bool ska_init_all(const char* title, int32 windowWidth, int32 windowHeight, int32 resolutionWidth, int32 resolutionHeight) {
+    return ska_init_all2(title, windowWidth, windowHeight, resolutionWidth, resolutionHeight, SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE, SKA_WINDOW_DEFAULT_MAINTAIN_ASPECT_RATIO);
+}
+
+bool ska_init_all2(const char* title, int32 windowWidth, int32 windowHeight, int32 resolutionWidth, int32 resolutionHeight, uint32 audioWavSampleRate, bool maintainAspectRatio) {
+    if (!ska_init()) {
+        return false;
+    }
+
+    if (!ska_window_init2(title, windowWidth, windowHeight, resolutionWidth, resolutionHeight, maintainAspectRatio)) {
+        return false;
+    }
+
+    if (!ska_input_init()) {
+        return false;
+    }
+
+    if (!ska_audio_init2(audioWavSampleRate)) {
+        return false;
+    }
 
     return true;
 }
 
-bool initialize_sdl() {
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_JOYSTICK | SDL_INIT_GAMECONTROLLER ) != 0) {
-        se_logger_error("Failed to initialize SDL!  Error: '%s'", SDL_GetError());
-        return false;
-    }
-    return true;
+
+void ska_shutdown_all() {
+    ska_window_shutdown();
+    ska_input_shutdown();
+    ska_audio_shutdown();
+    ska_shutdown();
 }
 
-bool initialize_rendering(const char* title, int windowWidth, int windowHeight, int resolutionWidth, int resolutionHeight, bool maintainAspectRatio) {
+void ska_update() {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+    ska_input_new_frame();
+
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        switch(event.type) {
+            case SDL_EVENT_QUIT:
+                skaState.shutdownRequested = true;
+                break;
+            case SDL_EVENT_WINDOW_RESIZED: {
+                const Sint32 windowWidth = event.window.data1;
+                const Sint32 windowHeight = event.window.data2;
+                ska_renderer_update_window_size(windowWidth, windowHeight);
+                break;
+            }
+            default: {
+                ska_sdl_process_event(event);
+                break;
+            }
+        }
+    }
+    ska_sdl_process_axis_events();
+
+    if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_ESCAPE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX)) {
+        skaState.shutdownRequested = true;
+    }
+}
+
+void ska_fixed_update(f32 deltaTime) {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+
+    static f32 globalTime = 0.0f;
+    globalTime += deltaTime;
+    ska_renderer_set_global_shader_param_time(globalTime);
+}
+
+bool ska_is_running() {
+    return !skaState.shutdownRequested;
+}
+
+uint64 ska_get_ticks() {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+    return SDL_GetTicks();
+}
+
+void ska_delay(uint32 timeToWait) {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+    SDL_Delay(timeToWait);
+}
+
+bool ska_set_vsync_enabled(bool enabled) {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+    return SDL_GL_SetSwapInterval((int)enabled) == 0;
+}
+
+bool ska_print_errors() {
+    return ska_logger_internal_print_queue();
+}
+
+bool ska_window_init(const char* title, int32 windowWidth, int32 windowHeight) {
+    return ska_window_init2(title, windowWidth, windowHeight, windowWidth, windowHeight, SKA_WINDOW_DEFAULT_MAINTAIN_ASPECT_RATIO);
+}
+
+bool ska_window_init2(const char* title, int32 windowWidth, int32 windowHeight, int32 resolutionWidth, int32 resolutionHeight, bool maintainAspectRatio) {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+    if (SKA_HAS_FLAG(SkaSystemFlag_WINDOW, skaState.runningSystems)) {
+        return false;
+    }
+
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        return false;
+    }
+
     // OpenGL attributes
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -87,21 +173,14 @@ bool initialize_rendering(const char* title, int windowWidth, int windowHeight, 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 
     // Create window
-    const SDL_WindowFlags windowFlags = (SDL_WindowFlags)(
-                                            SDL_WINDOW_OPENGL
-                                            | SDL_WINDOW_RESIZABLE
-                                            | SDL_WINDOW_ALLOW_HIGHDPI
-                                        );
+    const uint32 windowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
     window = SDL_CreateWindow(
-                 title,
-                 SDL_WINDOWPOS_CENTERED,
-                 SDL_WINDOWPOS_CENTERED,
-                 windowWidth,
-                 windowHeight,
-                 windowFlags
-             );
+            title,
+            windowWidth,
+            windowHeight,
+            windowFlags
+    );
     if (!window) {
-        se_logger_error("Failed to create window!  SDL error: '%s'", SDL_GetError());
         return false;
     }
 
@@ -110,90 +189,65 @@ bool initialize_rendering(const char* title, int windowWidth, int windowHeight, 
 
     // Initialize Glad
     if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress)) {
-        se_logger_error("Couldn't initialize glad!");
         return false;
     }
 
-    se_renderer_initialize(windowWidth, windowHeight, resolutionWidth, resolutionHeight, maintainAspectRatio);
+    // Initialize rendering
+    ska_renderer_initialize(windowWidth, windowHeight, resolutionWidth, resolutionHeight, maintainAspectRatio);
+
+    SKA_ADD_FLAGS(skaState.runningSystems, SkaSystemFlag_WINDOW);
     return true;
 }
 
-bool initialize_audio(uint32_t wavSampleRate) {
-    return se_audio_manager_init(wavSampleRate);
-}
-
-bool initialize_input() {
-    if (!se_input_initialize()) {
-        return false;
-    }
-    return true;
-}
-
-void sf_fixed_update(float deltaTime) {
-    static float globalTime = 0.0f;
-    globalTime += deltaTime;
-    se_renderer_set_global_shader_param_time(globalTime);
-}
-
-void sf_process_inputs() {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        switch(event.type) {
-        case SDL_QUIT:
-            isRunning = false;
-            break;
-        case SDL_WINDOWEVENT:
-            switch (event.window.event) {
-            case SDL_WINDOWEVENT_RESIZED:
-            case SDL_WINDOWEVENT_SIZE_CHANGED: {
-                const Sint32 windowWidth = event.window.data1;
-                const Sint32 windowHeight = event.window.data2;
-                se_renderer_update_window_size(windowWidth, windowHeight);
-                break;
-            }
-            }
-            break;
-        default:
-            break;
-        }
-        se_input_process(event);
+void ska_window_shutdown() {
+    if (SKA_HAS_FLAG(SkaSystemFlag_WINDOW, skaState.runningSystems)) {
+        SDL_GL_DeleteContext(openGlContext);
+        SDL_DestroyWindow(window);
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        SKA_REMOVE_FLAGS(skaState.runningSystems, SkaSystemFlag_WINDOW);
     }
 }
 
-void sf_render() {
-    static const SKAColor backgroundColor = {33.0f / 255.0f, 33.0f / 255.0f, 33.0f / 255.0f, 1.0f };
-    se_renderer_process_and_flush_batches(&backgroundColor);
+void ska_window_render() {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_WINDOW, skaState.runningSystems));
 
-    // TODO: Pass window to renderer and swap there?
+    static const SkaColor backgroundColor = {33.0f / 255.0f, 33.0f / 255.0f, 33.0f / 255.0f, 1.0f };
+    ska_renderer_process_and_flush_batches(&backgroundColor);
+
     SDL_GL_SwapWindow(window);
 }
 
-bool sf_is_running() {
-    return isRunning;
+bool ska_input_init() {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+    if (SDL_InitSubSystem( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
+        return false;
+    }
+
+    if (!ska_sdl_load_gamepad_mappings()) {
+        return false;
+    }
+
+    return true;
 }
 
-uint32_t sf_get_ticks() {
-    return SDL_GetTicks();
+void ska_input_shutdown() {
+    if (SKA_HAS_FLAG(SkaSystemFlag_INPUT, skaState.runningSystems)) {
+        SKA_REMOVE_FLAGS(skaState.runningSystems, SkaSystemFlag_INPUT);
+        SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD);
+    }
 }
 
-bool sf_set_vsync_enabled(bool enabled) {
-    return SDL_GL_SetSwapInterval((int)enabled) == 0;
+bool ska_audio_init() {
+    return ska_audio_init2(SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE);
 }
 
-void sf_delay(uint32_t timeToWait) {
-    SDL_Delay(timeToWait);
+bool ska_audio_init2(uint32 audioWavSampleRate) {
+    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
+    return ska_audio_manager_init(audioWavSampleRate);
 }
 
-void sf_shutdown() {
-    if (isRunning) {
-        SDL_DestroyWindow(window);
-        SDL_GL_DeleteContext(openGlContext);
-        SDL_Quit();
-        se_renderer_finalize();
-        se_audio_manager_finalize();
-        se_input_finalize();
-        se_asset_manager_finalize();
-        sf_asset_file_loader_finalize();
-        isRunning = false;
+void ska_audio_shutdown() {
+    if (SKA_HAS_FLAG(SkaSystemFlag_AUDIO, skaState.runningSystems)) {
+        SKA_REMOVE_FLAGS(skaState.runningSystems, SkaSystemFlag_AUDIO);
     }
 }

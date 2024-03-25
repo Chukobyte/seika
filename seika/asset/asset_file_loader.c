@@ -1,31 +1,30 @@
 #include "asset_file_loader.h"
 
 #include <stb_image/stb_image.h>
-#include <kuba_zip/zip.h>
+#include <zip.h>
 
-#include "../data_structures/se_hash_map_string.h"
-#include "../memory/se_mem.h"
-#include "../utils/se_file_system_utils.h"
-#include "../utils/se_string_util.h"
+#include "seika/string.h"
+#include "seika/file_system.h"
+#include "seika/memory.h"
 
-SEAssetFileLoaderReadMode globalReadMode = SEAssetFileLoaderReadMode_DISK;
+SkaAssetFileLoaderReadMode globalReadMode = SkaAssetFileLoaderReadMode_DISK;
 struct zip_t* packageArchive = NULL;
 
-void clear_package_archive() {
+static void clear_package_archive() {
     if (packageArchive != NULL) {
         zip_entry_close(packageArchive);
         packageArchive = NULL;
     }
 }
 
-void sf_asset_file_loader_initialize() {}
+void ska_asset_file_loader_initialize() {}
 
-void sf_asset_file_loader_finalize() {
+void ska_asset_file_loader_finalize() {
     clear_package_archive();
 }
 
-bool sf_asset_file_loader_load_archive(const char* filePath) {
-    if (se_fs_does_file_exist(filePath)) {
+bool ska_asset_file_loader_load_archive(const char* filePath) {
+    if (ska_fs_does_file_exist(filePath)) {
         clear_package_archive();
         packageArchive = zip_open(filePath, 0, 'r');
         return true;
@@ -33,71 +32,71 @@ bool sf_asset_file_loader_load_archive(const char* filePath) {
     return false;
 }
 
-void sf_asset_file_loader_set_read_mode(SEAssetFileLoaderReadMode readMode) {
+void ska_asset_file_loader_set_read_mode(SkaAssetFileLoaderReadMode readMode) {
     globalReadMode = readMode;
 }
 
-SEAssetFileLoaderReadMode sf_asset_file_loader_get_read_mode() {
+SkaAssetFileLoaderReadMode ska_asset_file_loader_get_read_mode() {
     return globalReadMode;
 }
 
-SEArchiveFileAsset sf_asset_file_loader_get_asset(const char* path) {
+SkaArchiveFileAsset ska_asset_file_loader_get_asset(const char* path) {
     void* fileBuffer = NULL;
     size_t fileBufferSize;
     zip_entry_open(packageArchive, path);
     {
         zip_entry_read(packageArchive, &fileBuffer, &fileBufferSize);
     }
-    return (SEArchiveFileAsset) {
+    return (SkaArchiveFileAsset) {
         .buffer = fileBuffer,
         .bufferSize = fileBufferSize
     };
 }
 
-SEArchiveFileAsset sf_asset_file_loader_load_asset_from_disk(const char* path) {
-    SEArchiveFileAsset asset = { NULL, 0 };
-    if (se_fs_does_file_exist(path)) {
-        asset.buffer = se_fs_read_file_contents(path, &asset.bufferSize);
+SkaArchiveFileAsset ska_asset_file_loader_load_asset_from_disk(const char* path) {
+    SkaArchiveFileAsset asset = {NULL, 0 };
+    if (ska_fs_does_file_exist(path)) {
+        asset.buffer = ska_fs_read_file_contents(path, &asset.bufferSize);
     }
     return asset;
 }
 
-bool sf_asset_file_loader_is_asset_valid(SEArchiveFileAsset* fileAsset) {
+bool ska_asset_file_loader_is_asset_valid(SkaArchiveFileAsset* fileAsset) {
     return fileAsset != NULL && fileAsset->buffer != NULL;
 }
 
-SEAssetFileImageData* sf_asset_file_loader_load_image_data(const char* filePath) {
-    SEAssetFileImageData* imageData = NULL;
+SkaAssetFileImageData* ska_asset_file_loader_load_image_data(const char* filePath) {
+    SkaAssetFileImageData* imageData = NULL;
     stbi_set_flip_vertically_on_load(false);
-    if (globalReadMode == SEAssetFileLoaderReadMode_DISK) {
-        imageData = SE_MEM_ALLOCATE(SEAssetFileImageData);
+    if (globalReadMode == SkaAssetFileLoaderReadMode_DISK) {
+        imageData = SKA_MEM_ALLOCATE(SkaAssetFileImageData);
         imageData->data = stbi_load(filePath, &imageData->width, &imageData->height, &imageData->nrChannels, 0);
-    } else if (globalReadMode == SEAssetFileLoaderReadMode_ARCHIVE) {
-        SEArchiveFileAsset fileAsset = sf_asset_file_loader_get_asset(filePath);
-        if (sf_asset_file_loader_is_asset_valid(&fileAsset)) {
-            imageData = SE_MEM_ALLOCATE(SEAssetFileImageData);
-            imageData->data = stbi_load_from_memory(fileAsset.buffer, (int) fileAsset.bufferSize, &imageData->width, &imageData->height, &imageData->nrChannels, 0);
+    } else if (globalReadMode == SkaAssetFileLoaderReadMode_ARCHIVE) {
+        SkaArchiveFileAsset fileAsset = ska_asset_file_loader_get_asset(filePath);
+        if (ska_asset_file_loader_is_asset_valid(&fileAsset)) {
+            imageData = SKA_MEM_ALLOCATE(SkaAssetFileImageData);
+            imageData->data = stbi_load_from_memory(fileAsset.buffer, (int32)fileAsset.bufferSize, &imageData->width, &imageData->height, &imageData->nrChannels, 0);
         }
     }
     return imageData;
 }
 
-void sf_asset_file_loader_free_image_data(SEAssetFileImageData* data) {
+void ska_asset_file_loader_free_image_data(SkaAssetFileImageData* data) {
     stbi_image_free(data->data);
-    SE_MEM_FREE(data);
+    SKA_MEM_FREE(data);
 }
 
-char* sf_asset_file_loader_read_file_contents_as_string(const char* filePath, size_t* size) {
+char* ska_asset_file_loader_read_file_contents_as_string(const char* filePath, size_t* size) {
     char* fileString = NULL;
     size_t len = 0;
-    if (globalReadMode == SEAssetFileLoaderReadMode_DISK) {
-        if (se_fs_does_file_exist(filePath)) {
-            fileString = se_fs_read_file_contents(filePath, &len);
+    if (globalReadMode == SkaAssetFileLoaderReadMode_DISK) {
+        if (ska_fs_does_file_exist(filePath)) {
+            fileString = ska_fs_read_file_contents(filePath, &len);
         }
-    } else if (globalReadMode == SEAssetFileLoaderReadMode_ARCHIVE) {
-        SEArchiveFileAsset fileAsset = sf_asset_file_loader_get_asset(filePath);
-        if (sf_asset_file_loader_is_asset_valid(&fileAsset)) {
-            fileString = se_strdup_from_memory(fileAsset.buffer, fileAsset.bufferSize);
+    } else if (globalReadMode == SkaAssetFileLoaderReadMode_ARCHIVE) {
+        SkaArchiveFileAsset fileAsset = ska_asset_file_loader_get_asset(filePath);
+        if (ska_asset_file_loader_is_asset_valid(&fileAsset)) {
+            fileString = ska_strdup_from_memory(fileAsset.buffer, fileAsset.bufferSize);
             len = fileAsset.bufferSize;
         }
     }
@@ -107,18 +106,18 @@ char* sf_asset_file_loader_read_file_contents_as_string(const char* filePath, si
     return fileString;
 }
 
-char* sf_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, size_t* size) {
+char* ska_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, size_t* size) {
     char* fileString = NULL;
     size_t len = 0;
-    if (globalReadMode == SEAssetFileLoaderReadMode_DISK) {
-        if (se_fs_does_file_exist(filePath)) {
-            fileString = se_fs_read_file_contents_without_raw(filePath, &len);
+    if (globalReadMode == SkaAssetFileLoaderReadMode_DISK) {
+        if (ska_fs_does_file_exist(filePath)) {
+            fileString = ska_fs_read_file_contents_without_raw(filePath, &len);
         }
-    } else if (globalReadMode == SEAssetFileLoaderReadMode_ARCHIVE) {
-        SEArchiveFileAsset fileAsset = sf_asset_file_loader_get_asset(filePath);
-        if (sf_asset_file_loader_is_asset_valid(&fileAsset)) {
-            fileString = se_strdup_from_memory(fileAsset.buffer, fileAsset.bufferSize);
-            se_str_remove_char(fileString, '\r');
+    } else if (globalReadMode == SkaAssetFileLoaderReadMode_ARCHIVE) {
+        SkaArchiveFileAsset fileAsset = ska_asset_file_loader_get_asset(filePath);
+        if (ska_asset_file_loader_is_asset_valid(&fileAsset)) {
+            fileString = ska_strdup_from_memory(fileAsset.buffer, fileAsset.bufferSize);
+            ska_str_remove_char(fileString, '\r');
             len = fileAsset.bufferSize;
         }
     }

@@ -7,39 +7,39 @@ extern "C" {
 #include <stddef.h>
 #include <stdbool.h>
 
-#include <glad/glad.h>
+#include "seika/defines.h"
 
-typedef enum SEAssetFileLoaderReadMode {
-    SEAssetFileLoaderReadMode_DISK,
-    SEAssetFileLoaderReadMode_ARCHIVE,
-} SEAssetFileLoaderReadMode;
+typedef enum SkaAssetFileLoaderReadMode {
+    SkaAssetFileLoaderReadMode_DISK,
+    SkaAssetFileLoaderReadMode_ARCHIVE,
+} SkaAssetFileLoaderReadMode;
 
-typedef struct SEArchiveFileAsset {
+typedef struct SkaArchiveFileAsset {
     void* buffer;
     size_t bufferSize;
-} SEArchiveFileAsset;
+} SkaArchiveFileAsset;
 
-typedef struct SEAssetFileImageData {
+typedef struct SkaAssetFileImageData {
     unsigned char* data;
-    GLsizei width;
-    GLsizei height;
-    int nrChannels;
-} SEAssetFileImageData;
+    int32 width;
+    int32 height;
+    int32 nrChannels;
+} SkaAssetFileImageData;
 
-void sf_asset_file_loader_initialize();
-void sf_asset_file_loader_finalize();
-bool sf_asset_file_loader_load_archive(const char* filePath);
-void sf_asset_file_loader_set_read_mode(SEAssetFileLoaderReadMode readMode);
-SEAssetFileLoaderReadMode sf_asset_file_loader_get_read_mode();
-SEArchiveFileAsset sf_asset_file_loader_get_asset(const char* path);
-SEArchiveFileAsset sf_asset_file_loader_load_asset_from_disk(const char* path);
-bool sf_asset_file_loader_is_asset_valid(SEArchiveFileAsset* fileAsset);
+void ska_asset_file_loader_initialize();
+void ska_asset_file_loader_finalize();
+bool ska_asset_file_loader_load_archive(const char* filePath);
+void ska_asset_file_loader_set_read_mode(SkaAssetFileLoaderReadMode readMode);
+SkaAssetFileLoaderReadMode ska_asset_file_loader_get_read_mode();
+SkaArchiveFileAsset ska_asset_file_loader_get_asset(const char* path);
+SkaArchiveFileAsset ska_asset_file_loader_load_asset_from_disk(const char* path);
+bool ska_asset_file_loader_is_asset_valid(SkaArchiveFileAsset* fileAsset);
 
 // Asset loading types
-SEAssetFileImageData* sf_asset_file_loader_load_image_data(const char* filePath);
-void sf_asset_file_loader_free_image_data(SEAssetFileImageData* data);
-char* sf_asset_file_loader_read_file_contents_as_string(const char* filePath, size_t* size);
-char* sf_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, size_t* size);
+SkaAssetFileImageData* ska_asset_file_loader_load_image_data(const char* filePath);
+void ska_asset_file_loader_free_image_data(SkaAssetFileImageData* data);
+char* ska_asset_file_loader_read_file_contents_as_string(const char* filePath, size_t* size);
+char* ska_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, size_t* size);
 
 #ifdef __cplusplus
 }
