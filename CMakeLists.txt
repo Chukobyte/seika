@@ -45,8 +45,6 @@ if (IS_CI_BUILD STREQUAL "false")
             ${PROJECT_SOURCE_DIR}/test
             $<TARGET_FILE_DIR:${PROJECT_NAME}>/test
             )
-
-    add_subdirectory(examples)
 endif()
 
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")

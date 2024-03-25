@@ -10,6 +10,7 @@
 #include "input/sdl_input.h"
 #include "seika/assert.h"
 #include "seika/rendering/renderer.h"
+#include "seika/audio/audio_manager.h"
 
 #define SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE 44100
 #define SKA_WINDOW_DEFAULT_MAINTAIN_ASPECT_RATIO false
@@ -236,17 +237,13 @@ void ska_input_shutdown() {
     }
 }
 
-void ska_input_update() {
-    SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_INPUT, skaState.runningSystems));
-}
-
 bool ska_audio_init() {
     return ska_audio_init2(SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE);
 }
 
 bool ska_audio_init2(uint32 audioWavSampleRate) {
     SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
-    return true;
+    return ska_audio_manager_init(audioWavSampleRate);
 }
 
 void ska_audio_shutdown() {

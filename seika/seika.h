@@ -26,7 +26,6 @@ void ska_window_render();
 
 bool ska_input_init();
 void ska_input_shutdown();
-void ska_input_update();
 
 bool ska_audio_init();
 bool ska_audio_init2(uint32 audioWavSampleRate);
