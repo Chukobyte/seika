@@ -54,4 +54,43 @@ Make sure to link seika to the target with `target_link_libraries`.
 target_link_libraries(${PROJECT_NAME} seika)
 ```
 
+## Example
+
+A simple example of creating a window and querying for inputs.
+
+```c
+#include <stdio.h>
+
+#include <seika/seika.h>
+#include <seika/input/input.h>
+
+int main(int argv, char** args) {
+    ska_init_all("Simple Window", 800, 600, 800, 600);
+
+    while (ska_is_running()) {
+        ska_update();
+
+        if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_ESCAPE, 0)) {
+            break;
+        }
+
+        if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_SPACE, 0)) {
+            printf("space just pressed\n");
+        }
+        if (ska_input_is_key_pressed(SkaInputKey_KEYBOARD_SPACE, 0)) {
+            printf("space pressed\n");
+        }
+        if (ska_input_is_key_just_released(SkaInputKey_KEYBOARD_SPACE, 0)) {
+            printf("space just released\n");
+        }
+
+        ska_window_render();
+    }
+
+    ska_shutdown_all();
+
+    return 0;
+}
+```
+
 Example projects found [here](https://github.com/Chukobyte/seika-examples).
