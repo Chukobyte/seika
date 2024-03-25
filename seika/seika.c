@@ -9,6 +9,7 @@
 #include "logger.h"
 #include "input/sdl_input.h"
 #include "seika/assert.h"
+#include "seika/rendering/renderer.h"
 
 #define SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE 44100
 #define SKA_WINDOW_DEFAULT_MAINTAIN_ASPECT_RATIO false
@@ -181,6 +182,9 @@ bool ska_window_init2(const char* title, int32 windowWidth, int32 windowHeight, 
         return false;
     }
 
+    // Initialize rendering
+    ska_renderer_initialize(windowWidth, windowHeight, resolutionWidth, resolutionHeight, maintainAspectRatio);
+
     SKA_ADD_FLAGS(skaState.runningSystems, SkaSystemFlag_WINDOW);
     return true;
 }
@@ -197,8 +201,8 @@ void ska_window_shutdown() {
 void ska_window_render() {
     SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_WINDOW, skaState.runningSystems));
 
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    static const SkaColor backgroundColor = {33.0f / 255.0f, 33.0f / 255.0f, 33.0f / 255.0f, 1.0f };
+    ska_renderer_process_and_flush_batches(&backgroundColor);
 
     SDL_GL_SwapWindow(window);
 }

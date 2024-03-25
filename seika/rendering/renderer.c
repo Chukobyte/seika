@@ -248,7 +248,7 @@ static void ska_renderer_flush_batches() {
     SKA_STATIC_ARRAY_EMPTY(active_render_layer_items_indices);
 }
 
-void ska_renderer_process_and_flush_batches(const SkaColor *backgroundColor) {
+void ska_renderer_process_and_flush_batches(const SkaColor* backgroundColor) {
 #ifdef SKA_RENDER_TO_FRAMEBUFFER
     ska_frame_buffer_bind();
 #endif
