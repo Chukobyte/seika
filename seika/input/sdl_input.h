@@ -208,6 +208,12 @@ void ska_sdl_process_event(SDL_Event event) {
 
     switch (event.type) {
         // Mouse
+        case SDL_EVENT_MOUSE_MOTION: {
+            SkaMouse* mouse = ska_input_get_mouse();
+            mouse->position = (SkaVector2){ .x = (f32)event.motion.x, .y = (f32)event.motion.y };
+            break;
+        }
+
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
         case SDL_EVENT_MOUSE_BUTTON_UP: {
             inputEvent.sourceType = SkaInputSourceType_MOUSE;

@@ -44,6 +44,7 @@ typedef struct SkaInputState {
 #define DEFAULT_INPUT_STATE {0}
 
 static SkaInputState inputState = DEFAULT_INPUT_STATE;
+static SkaMouse globalMouse = {0};
 
 static SkaInputKey get_key_from_2d_axis_key(SkaInputKey axis2DKey, SkaAxisInputValues* axisInputValues, f32 axisValue);
 static void set_prev_input_axis_value(SkaInputKey key, SkaAxisInputValues* axisInputValues, f32 axisValue);
@@ -338,6 +339,10 @@ SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex devic
     const SkaInputKeyState* xKeyState = &inputState.inputKeyState[deviceIndex][axisKeys.x];
     const SkaInputKeyState* yKeyState = &inputState.inputKeyState[deviceIndex][axisKeys.y];
     return (SkaVector2) { .x = xKeyState->strength, .y = yKeyState->strength };
+}
+
+SkaMouse* ska_input_get_mouse() {
+    return &globalMouse;
 }
 
 // Input Action

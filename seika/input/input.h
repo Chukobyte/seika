@@ -227,6 +227,10 @@ typedef enum SkaInputAxis {
     SkaInputAxis_RIGHT,
 } SkaInputAxis;
 
+typedef struct SkaMouse {
+    SkaVector2 position;
+} SkaMouse;
+
 typedef struct SkaInputEvent {
     SkaInputSourceType sourceType;
     SkaInputInteractionStatus interactionStatus;
@@ -264,6 +268,8 @@ bool ska_input_is_key_just_pressed(SkaInputKey key, SkaInputDeviceIndex deviceIn
 bool ska_input_is_key_just_released(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
 f32 ska_input_get_key_strength(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
 SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex deviceIndex);
+
+SkaMouse* ska_input_get_mouse();
 
 // Input Action
 SkaInputActionHandle ska_input_add_input_action(const char* actionName, const SkaInputActionValue* actionValues, SkaInputDeviceIndex deviceIndex);
