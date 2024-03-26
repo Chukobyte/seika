@@ -347,20 +347,25 @@ SkaMouse* ska_input_get_mouse() {
 
 // Input Action
 SkaInputActionHandle ska_input_add_input_action(const char* actionName, const SkaInputActionValue* actionValues, SkaInputDeviceIndex deviceIndex) {
-    SKA_ASSERT(inputState.inputActionHandleIndex + 1 < SKA_INPUT_MAX_INPUT_ACTIONS);
-    const SkaInputActionHandle newHandle = inputState.inputActionHandleIndex++;
-    SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][newHandle];
-    actionData->handle = newHandle;
-    actionData->action.name = ska_strdup(actionName);
-    actionData->action.actionValuesCount = 0;
+    SkaInputActionHandle actionHandle = ska_input_find_input_action_handle(actionName, deviceIndex);
+    if (actionHandle == SKA_INPUT_INVALID_INPUT_ACTION_HANDLE) {
+        SKA_ASSERT(inputState.inputActionHandleIndex + 1 < SKA_INPUT_MAX_INPUT_ACTIONS);
+        actionHandle = inputState.inputActionHandleIndex++;
+        SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][actionHandle];
+        actionData->handle = actionHandle;
+        actionData->action.name = ska_strdup(actionName);
+        actionData->action.actionValuesCount = 0;
+    }
+
+    SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][actionHandle];
     for (size_t i = 0; i < SKA_INPUT_MAX_INPUT_ACTION_VALUES; i++) {
         if (actionValues[i].key == SkaInputKey_INVALID) {
             break;
         }
-        actionData->action.actionValues[i] = actionValues[i];
-        actionData->action.actionValuesCount++;
+        SKA_ASSERT(actionData->action.actionValuesCount + 1 < SKA_INPUT_MAX_INPUT_ACTION_VALUES);
+        actionData->action.actionValues[actionData->action.actionValuesCount++] = actionValues[i];
     }
-    return newHandle;
+    return actionHandle;
 }
 
 SkaInputAction* ska_input_get_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
