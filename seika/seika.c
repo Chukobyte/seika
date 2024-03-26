@@ -130,9 +130,9 @@ bool ska_is_running() {
     return !skaState.shutdownRequested;
 }
 
-uint64 ska_get_ticks() {
+uint32 ska_get_ticks() {
     SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_CORE, skaState.runningSystems));
-    return SDL_GetTicks();
+    return (uint32)SDL_GetTicks();
 }
 
 void ska_delay(uint32 timeToWait) {

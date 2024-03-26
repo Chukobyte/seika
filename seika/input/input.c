@@ -368,7 +368,7 @@ SkaInputActionHandle ska_input_add_input_action(const char* actionName, const Sk
 
     SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][actionHandle];
     for (size_t i = 0; i < SKA_INPUT_MAX_INPUT_ACTION_VALUES; i++) {
-        if (actionValues[i].key == SkaInputKey_INVALID) {
+        if (!actionValues[i].key) {
             break;
         }
         SKA_ASSERT(actionData->action.actionValuesCount + 1 < SKA_INPUT_MAX_INPUT_ACTION_VALUES);

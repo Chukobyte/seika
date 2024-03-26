@@ -14,7 +14,7 @@ void ska_shutdown_all();
 void ska_update();
 void ska_fixed_update(f32 deltaTime);
 bool ska_is_running();
-uint64 ska_get_ticks();
+uint32 ska_get_ticks();
 void ska_delay(uint32 timeToWait);
 bool ska_set_vsync_enabled(bool enabled);
 bool ska_print_errors();
