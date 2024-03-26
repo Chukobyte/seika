@@ -169,9 +169,9 @@ f64 ska_math_map_to_unit_double(f64 input, f64 inputMin, f64 inputMax);
 f32 ska_math_signf(f32 value);
 SkaVector2 ska_math_signvec2(SkaVector2* value);
 int32 ska_math_clamp_int(int32 value, int32 min, int32 max);
-f32 ska_math_clamp_f32(f32 value, f32 min, f32 max);
-bool ska_math_is_almost_equal_f32(f32 v1, f32 v2, f32 epsilon);
-bool ska_math_is_almost_equal_f32_default(f32 v1, f32 v2);
+f32 ska_math_clamp_float(f32 value, f32 min, f32 max);
+bool ska_math_is_almost_equal_float(f32 v1, f32 v2, f32 epsilon);
+bool ska_math_is_almost_equal_float_default(f32 v1, f32 v2);
 bool ska_math_is_almost_equal_double(f64 v1, f64 v2, f64 epsilon);
 bool ska_math_is_almost_equal_double_default(f64 v1, f64 v2);
 
