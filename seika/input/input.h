@@ -251,6 +251,7 @@ typedef struct SkaInputAction {
 } SkaInputAction;
 
 const char* ska_input_key_to_string(SkaInputKey key);
+SkaInputKey ska_input_string_to_key(const char* keyName);
 
 bool ska_input_is_keyboard_key(SkaInputKey key);
 bool ska_input_is_mouse_key(SkaInputKey key);

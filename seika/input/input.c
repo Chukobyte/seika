@@ -210,6 +210,15 @@ const char* ska_input_key_to_string(SkaInputKey key) {
     return keyNames[key];
 }
 
+SkaInputKey ska_input_string_to_key(const char* keyName) {
+    for (SkaInputKey key = 0; key < SkaInputKey_NUMBER_OF_KEYS; ++key) {
+        if (strcmp(keyName, ska_input_key_to_string(key)) == 0) {
+            return key;
+        }
+    }
+    return SkaInputKey_INVALID; // Return invalid if not found
+}
+
 bool ska_input_is_keyboard_key(SkaInputKey key) {
     return key >= SKA_INPUT_KEY_KEYBOARD_ENUM_START && key <= SKA_INPUT_KEY_KEYBOARD_ENUM_END;
 }

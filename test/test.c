@@ -62,6 +62,11 @@ void seika_input_test(void) {
         TEST_ASSERT_TRUE(ska_input_is_mouse_key(key));
     }
 
+    const char* backspaceKeyName = ska_input_key_to_string(SkaInputKey_KEYBOARD_BACKSPACE);
+    const SkaInputKey backSpaceKey = ska_input_string_to_key(backspaceKeyName);
+    TEST_ASSERT_EQUAL_STRING("Backspace", backspaceKeyName);
+    TEST_ASSERT_EQUAL_INT(SkaInputKey_KEYBOARD_BACKSPACE, backSpaceKey);
+
     TEST_MESSAGE("Testing events");
     ska_input_register_input_event3(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_BACKSPACE, SkaInputTriggerType_PRESSED);
     TEST_ASSERT_TRUE(ska_input_is_key_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
