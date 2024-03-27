@@ -11,6 +11,7 @@
 #include "seika/assert.h"
 #include "seika/rendering/renderer.h"
 #include "seika/audio/audio_manager.h"
+#include "seika/asset/asset_manager.h"
 
 #define SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE 44100
 #define SKA_WINDOW_DEFAULT_MAINTAIN_ASPECT_RATIO false
@@ -78,6 +79,8 @@ bool ska_init_all2(const char* title, int32 windowWidth, int32 windowHeight, int
         return false;
     }
 
+    ska_asset_manager_initialize();
+
     return true;
 }
 
@@ -86,6 +89,7 @@ void ska_shutdown_all() {
     ska_window_shutdown();
     ska_input_shutdown();
     ska_audio_shutdown();
+    ska_asset_manager_finalize();
     ska_shutdown();
 }
 
