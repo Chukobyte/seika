@@ -18,7 +18,6 @@ A framework for windows, macOS, and linux that can be used to make games.
 - [unity](https://github.com/ThrowTheSwitch/Unity) - Unit Tests
 - [zip](https://github.com/kuba--/zip) - Reading archives
 - [stb image](https://github.com/nothings/stb) - Image loading
-- [cJson](https://github.com/DaveGamble/cJSON) - Reading json files
 
 ## Current Features
 
@@ -28,7 +27,6 @@ A framework for windows, macOS, and linux that can be used to make games.
 - [x] Audio
 - [x] Networking (udp only for now)
 - [x] pthread wrapper and thread pool
-- [x] Math Library
 - [x] ECS
 - [x] Multiple data structures such as hashmap and array list (vector)
 

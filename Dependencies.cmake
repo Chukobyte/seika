@@ -32,16 +32,6 @@ if (NOT TARGET cglm)
     FetchContent_MakeAvailable(cglm_content)
 endif()
 
-# https://github.com/DaveGamble/cJSON
-if (NOT TARGET cjson)
-    FetchContent_Declare(
-            cjson_content
-            GIT_REPOSITORY https://github.com/DaveGamble/cJSON.git
-            GIT_TAG v1.7.17
-    )
-    FetchContent_MakeAvailable(cglm_content)
-endif()
-
 # https://github.com/kuba--/zip
 if (NOT TARGET kuba_zip)
     include(FetchContent)
