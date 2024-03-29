@@ -15,7 +15,7 @@ endif ()
 
 # https://github.com/Dav1dde/glad
 if (NOT TARGET glad)
-    add_library(glad thirdparty/glad/glad.c)
+    add_library(glad STATIC thirdparty/glad/glad.c)
     target_include_directories(glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 endif()
 
@@ -51,7 +51,7 @@ endif()
 
 # https://github.com/nothings/stb
 if (NOT TARGET stb_image)
-    add_library(stb_image thirdparty/stb_image/stb_image.c)
+    add_library(stb_image STATIC thirdparty/stb_image/stb_image.c)
     target_include_directories(stb_image PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 endif()
 
