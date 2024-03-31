@@ -1,9 +1,13 @@
 include(FetchContent)
 
+if (NOT DEFINED SEIKA_STATIC_LIB)
+    set(SEIKA_STATIC_LIB "Make seika and dependent libs static" ON)
+endif ()
+
 # https://github.com/libsdl-org/SDL
 if (NOT TARGET SDL3::SDL3-static)
-    set(SDL_STATIC ON)
-    set(SDL_SHARED OFF)
+    set(SDL_STATIC ${SEIKA_STATIC_LIB})
+    set(SDL_SHARED NOT ${SEIKA_STATIC_LIB})
 
     FetchContent_Declare(
             SDL_content
@@ -15,14 +19,18 @@ endif ()
 
 # https://github.com/Dav1dde/glad
 if (NOT TARGET glad)
-    add_library(glad STATIC thirdparty/glad/glad.c)
+    if (SEIKA_STATIC_LIB)
+        add_library(glad STATIC thirdparty/glad/glad.c)
+    else ()
+        add_library(glad thirdparty/glad/glad.c)
+    endif ()
     target_include_directories(glad PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 endif()
 
 # https://github.com/recp/cglm
 if (NOT TARGET cglm)
-    set(CGLM_STATIC ON)
-    set(CGLM_SHARED OFF)
+    set(CGLM_STATIC ${SEIKA_STATIC_LIB})
+    set(CGLM_SHARED NOT ${SEIKA_STATIC_LIB})
 
     FetchContent_Declare(
             cglm_content
@@ -51,14 +59,18 @@ endif()
 
 # https://github.com/nothings/stb
 if (NOT TARGET stb_image)
-    add_library(stb_image STATIC thirdparty/stb_image/stb_image.c)
+    if (SEIKA_STATIC_LIB)
+        add_library(stb_image STATIC thirdparty/stb_image/stb_image.c)
+    else ()
+        add_library(stb_image thirdparty/stb_image/stb_image.c)
+    endif ()
     target_include_directories(stb_image PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/thirdparty")
 endif()
 
 # https://github.com/ThrowTheSwitch/Unity
 if (NOT TARGET unity)
     add_definitions(-DUNITY_INCLUDE_DOUBLE)
-    include(FetchContent)
+
     FetchContent_Declare(
             unity_content
             GIT_REPOSITORY https://github.com/ThrowTheSwitch/Unity.git
@@ -69,7 +81,8 @@ endif()
 
 # https://github.com/freetype/freetype
 if (NOT TARGET freetype)
-    include(FetchContent)
+    set(BUILD_SHARED_LIBS NOT ${SEIKA_STATIC_LIB})
+
     FetchContent_Declare(
             freetype_content
             GIT_REPOSITORY https://github.com/freetype/freetype.git
