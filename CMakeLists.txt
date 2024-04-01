@@ -4,6 +4,10 @@ set(CMAKE_C_STANDARD 11)
 
 project(seika C)
 
+if (NOT DEFINED SEIKA_STATIC_LIB)
+    set(SEIKA_STATIC_LIB "Make seika and dependent libs static" ON)
+endif ()
+
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     list(APPEND flags "/W3" "/Zc:preprocessor")
 elseif (APPLE)
@@ -23,16 +27,25 @@ include(Dependencies.cmake)
 
 #--- Link ---#
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio SDL3::SDL3-static freetype Ws2_32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio ${SDL3_LIBRARY} freetype Ws2_32)
 elseif (WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio -lmingw32 -static-libgcc SDL3::SDL3-static freetype -lws2_32)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio -lmingw32 -static-libgcc ${SDL3_LIBRARY} freetype -lws2_32)
 elseif (APPLE)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio -Xlinker SDL3::SDL3-static freetype m)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio -Xlinker ${SDL3_LIBRARY} freetype m)
 else ()
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio -static-libgcc -Xlinker -export-dynamic SDL3::SDL3-static freetype m)
+    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio -static-libgcc -Xlinker -export-dynamic ${SDL3_LIBRARY} freetype m)
 endif ()
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${flags})
+
+if (NOT SEIKA_STATIC_LIB)
+    # SDL
+    file(GLOB SDL3_DLLS "${CMAKE_BINARY_DIR}/_deps/sdl_content-build/*.dll")
+    install(FILES ${SDL3_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
+    # Freetype
+    file(GLOB FREETYPE_DLLS "${CMAKE_BINARY_DIR}/_deps/freetype_content-build/*.dll")
+    install(FILES ${FREETYPE_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
+endif ()
 
 # Copy directories over that are needed to test
 if (NOT DEFINED IS_CI_BUILD)

@@ -317,14 +317,13 @@ void ska_sdl_process_axis_events() {
             } else {
                 *hasStoppedAxisMotion = false;
             }
-            const f32 axisValueNormalized = ska_math_map_to_range((f32) axisValue, (f32) INT16_MIN, (f32) INT16_MAX,
-                                                                  -1.0f, 1.0f);
+            const f32 axisValueNormalized = ska_math_map_to_range((f32) axisValue, (f32) INT16_MIN, (f32) INT16_MAX,-1.0f, 1.0f);
             const SkaSDLInputEvent inputEvent = {
-                    .sourceType = SkaInputSourceType_GAMEPAD,
-                    .triggerType = triggerType,
-                    .deviceIndex = i,
-                    .key = ska_sdl_gamepad_axis_to_input_key(axis),
-                    .axisMotionValue = axisValueNormalized
+                .sourceType = SkaInputSourceType_GAMEPAD,
+                .triggerType = triggerType,
+                .deviceIndex = (SkaInputDeviceIndex)i,
+                .key = ska_sdl_gamepad_axis_to_input_key(axis),
+                .axisMotionValue = axisValueNormalized
             };
             ska_sdl_notify_input_event(&inputEvent);
         }

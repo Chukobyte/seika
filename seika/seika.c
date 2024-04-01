@@ -116,10 +116,6 @@ void ska_update() {
         }
     }
     ska_sdl_process_axis_events();
-
-    if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_ESCAPE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX)) {
-        skaState.shutdownRequested = true;
-    }
 }
 
 void ska_fixed_update(f32 deltaTime) {

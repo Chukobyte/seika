@@ -1,9 +1,5 @@
 include(FetchContent)
 
-if (NOT DEFINED SEIKA_STATIC_LIB)
-    set(SEIKA_STATIC_LIB "Make seika and dependent libs static" ON)
-endif ()
-
 # https://github.com/libsdl-org/SDL
 if (NOT TARGET SDL3::SDL3-static)
     set(SDL_STATIC ${SEIKA_STATIC_LIB})
@@ -15,6 +11,12 @@ if (NOT TARGET SDL3::SDL3-static)
             GIT_TAG cacac6cc341d5856d1857bdcf7390551eed54865
     )
     FetchContent_MakeAvailable(SDL_content)
+
+    if (SEIKA_STATIC_LIB)
+        SET(SDL3_LIBRARY SDL3::SDL3-static)
+    else ()
+        SET(SDL3_LIBRARY SDL3::SDL3)
+    endif ()
 endif ()
 
 # https://github.com/Dav1dde/glad
