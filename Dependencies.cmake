@@ -81,7 +81,9 @@ endif()
 
 # https://github.com/freetype/freetype
 if (NOT TARGET freetype)
-    set(BUILD_SHARED_LIBS NOT ${SEIKA_STATIC_LIB})
+    if (NOT SEIKA_STATIC_LIB)
+        set(BUILD_SHARED_LIBS ON)
+    endif ()
 
     FetchContent_Declare(
             freetype_content
