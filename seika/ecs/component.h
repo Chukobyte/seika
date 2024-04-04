@@ -28,15 +28,15 @@ typedef struct SkaComponentTypeInfo {
     char* name;
     SkaComponentType type;
     SkaComponentIndex index;
-    size_t size;
+    usize size;
 } SkaComponentTypeInfo;
 
 
 
-const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, size_t componentSize);
-const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, size_t componentSize);
+const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, usize componentSize);
+const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, usize componentSize);
 const SkaComponentTypeInfo* ska_ecs_component_find_type_info(const char* name);
-SkaComponentType ska_ecs_component_get_type_flag(const char* name, size_t componentSize);
+SkaComponentType ska_ecs_component_get_type_flag(const char* name, usize componentSize);
 
 // --- Component Manager --- //
 void ska_ecs_component_manager_initialize();

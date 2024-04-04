@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdbool.h>
+#include "defines.h"
 
 #define SKA_MAX_OBSERVERS 8
 
@@ -21,7 +20,7 @@ void ska_observer_delete(SkaObserver* observer);
 
 // A subscribable event
 typedef struct SkaEvent {
-    size_t observerCount;
+    usize observerCount;
     SkaObserver* observers[SKA_MAX_OBSERVERS];
 } SkaEvent;
 

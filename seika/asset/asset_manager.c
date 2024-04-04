@@ -68,7 +68,7 @@ SkaFont* ska_asset_manager_load_font(const char* fileName, const char* key, int 
     return font;
 }
 
-SkaFont* ska_asset_manager_load_font_from_memory(const char* key, void* buffer, size_t bufferSize, int size, bool applyNearestNeighbor) {
+SkaFont* ska_asset_manager_load_font_from_memory(const char* key, void* buffer, usize bufferSize, int size, bool applyNearestNeighbor) {
     SKA_ASSERT_FMT(!ska_asset_manager_has_font(key), "Font key '%s' already exists!", key);
     SkaFont* font = ska_font_create_font_from_memory(buffer, bufferSize, size, applyNearestNeighbor);
     SKA_ASSERT_FMT(font != NULL, "Failed to load font! key: '%s', size: '%d'", key, size);

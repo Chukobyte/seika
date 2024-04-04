@@ -79,19 +79,19 @@ typedef struct FontBatchItem {
     SkaColor color;
 } FontBatchItem;
 
-void renderer_batching_draw_sprites(SpriteBatchItem items[], size_t spriteCount);
+void renderer_batching_draw_sprites(SpriteBatchItem items[], usize spriteCount);
 
 // Render Layer - Arranges draw order by z index
 typedef struct RenderTextureLayer {
     SpriteBatchItem spriteBatchItems[SKA_RENDER_LAYER_BATCH_ITEM_MAX];
-    size_t spriteBatchItemCount;
+    usize spriteBatchItemCount;
 } RenderTextureLayer;
 
 typedef struct RenderLayer {
     RenderTextureLayer renderTextureLayers[SKA_RENDER_TEXTURE_LAYER_TEXTURE_MAX];
     FontBatchItem fontBatchItems[SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX];
-    size_t renderTextureLayerCount;
-    size_t fontBatchItemCount;
+    usize renderTextureLayerCount;
+    usize fontBatchItemCount;
 } RenderLayer;
 
 SKA_STATIC_ARRAY_CREATE(RenderLayer, SKA_RENDERER_MAX_Z_INDEX, render_layer_items);
@@ -116,10 +116,10 @@ void ska_renderer_initialize(int32 inWindowWidth, int32 inWindowHeight, int32 in
     ska_frame_buffer_set_maintain_aspect_ratio(maintainAspectRatio);
 #endif
     // Set initial data for render layer
-    for (size_t i = 0; i < SKA_RENDERER_MAX_Z_INDEX; i++) {
+    for (usize i = 0; i < SKA_RENDERER_MAX_Z_INDEX; i++) {
         render_layer_items[i].renderTextureLayerCount = 0;
         render_layer_items[i].fontBatchItemCount = 0;
-        for (size_t j = 0; j < SKA_RENDER_TEXTURE_LAYER_TEXTURE_MAX; j++) {
+        for (usize j = 0; j < SKA_RENDER_TEXTURE_LAYER_TEXTURE_MAX; j++) {
             render_layer_items[i].renderTextureLayers[j].spriteBatchItemCount = 0;
         }
     }
@@ -155,9 +155,9 @@ void ska_renderer_update_window_size(int32 windowWidth, int32 windowHeight) {
 }
 
 static inline void update_active_render_layer_index(int32 zIndex) {
-    const size_t sizeBefore = SKA_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
+    const usize sizeBefore = SKA_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
     SKA_STATIC_ARRAY_ADD_IF_UNIQUE(active_render_layer_items_indices, zIndex);
-    const size_t sizeAfter = SKA_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
+    const usize sizeAfter = SKA_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
     if (sizeBefore != sizeAfter) {
         SKA_STATIC_ARRAY_SORT_INT(active_render_layer_items_indices);
     }
@@ -166,8 +166,8 @@ static inline void update_active_render_layer_index(int32 zIndex) {
 static inline void ska_renderer_queue_sprite_draw_call(SpriteBatchItem* item, int32 zIndex) {
     const int32 arrayZIndex = ska_math_clamp_int(zIndex + SKA_RENDERER_MAX_Z_INDEX / 2, 0, SKA_RENDERER_MAX_Z_INDEX - 1);
     // Get texture layer index for render texture
-    size_t textureLayerIndex = render_layer_items[arrayZIndex].renderTextureLayerCount;
-    for (size_t i = 0; i < render_layer_items[arrayZIndex].renderTextureLayerCount; i++) {
+    usize textureLayerIndex = render_layer_items[arrayZIndex].renderTextureLayerCount;
+    for (usize i = 0; i < render_layer_items[arrayZIndex].renderTextureLayerCount; i++) {
         if (item->texture == render_layer_items[arrayZIndex].renderTextureLayers[i].spriteBatchItems[0].texture && item->shaderInstance == render_layer_items[arrayZIndex].renderTextureLayers[i].spriteBatchItems[0].shaderInstance) {
             textureLayerIndex = i;
             break;
@@ -221,17 +221,17 @@ void ska_renderer_queue_font_draw_call(SkaFont* font, const char* text, f32 x, f
 }
 
 static void ska_renderer_flush_batches() {
-    for (size_t i = 0; i < active_render_layer_items_indices_count; i++) {
-        const size_t layerIndex = active_render_layer_items_indices[i];
+    for (usize i = 0; i < active_render_layer_items_indices_count; i++) {
+        const usize layerIndex = active_render_layer_items_indices[i];
         // Sprite
-        for (size_t renderTextureIndex = 0; renderTextureIndex < render_layer_items[layerIndex].renderTextureLayerCount; renderTextureIndex++) {
+        for (usize renderTextureIndex = 0; renderTextureIndex < render_layer_items[layerIndex].renderTextureLayerCount; renderTextureIndex++) {
             RenderTextureLayer* renderTextureLayer = &render_layer_items[layerIndex].renderTextureLayers[renderTextureIndex];
             renderer_batching_draw_sprites(renderTextureLayer->spriteBatchItems, renderTextureLayer->spriteBatchItemCount);
             renderTextureLayer->spriteBatchItemCount = 0;
         }
         render_layer_items[layerIndex].renderTextureLayerCount = 0;
         // Font
-        for (size_t fontIndex = 0; fontIndex < render_layer_items[layerIndex].fontBatchItemCount; fontIndex++) {
+        for (usize fontIndex = 0; fontIndex < render_layer_items[layerIndex].fontBatchItemCount; fontIndex++) {
             font_renderer_draw_text(
                 render_layer_items[layerIndex].fontBatchItems[fontIndex].font,
                 render_layer_items[layerIndex].fontBatchItems[fontIndex].text,
@@ -361,7 +361,7 @@ void sprite_renderer_update_resolution() {
     glm_ortho(0.0f, resolutionWidth, resolutionHeight, 0.0f, -1.0f, 1.0f, spriteProjection);
 }
 
-void renderer_batching_draw_sprites(SpriteBatchItem items[], size_t spriteCount) {
+void renderer_batching_draw_sprites(SpriteBatchItem items[], usize spriteCount) {
 #define MAX_SPRITE_COUNT 2000
 #define NUMBER_OF_VERTICES 6
 #define VERTEX_BUFFER_SIZE (VERTS_STRIDE * NUMBER_OF_VERTICES * MAX_SPRITE_COUNT)
@@ -380,7 +380,7 @@ void renderer_batching_draw_sprites(SpriteBatchItem items[], size_t spriteCount)
     SkaTexture* texture = items[0].texture;
 
     GLfloat verts[VERTEX_BUFFER_SIZE];
-    for (size_t i = 0; i < spriteCount; i++) {
+    for (usize i = 0; i < spriteCount; i++) {
         if (items[i].shaderInstance != NULL) {
             ska_shader_use(items[i].shaderInstance->shader);
             renderer_set_shader_instance_params(items[i].shaderInstance);
@@ -476,8 +476,8 @@ void font_renderer_draw_text(const SkaFont* font, const char* text, f32 x, f32 y
 
     // Iterate through all characters
     char* c = (char*) &text[0];
-    const size_t textLength = strlen(text);
-    for (size_t i = 0; i < textLength; i++) {
+    const usize textLength = strlen(text);
+    for (usize i = 0; i < textLength; i++) {
         SkaFontCharacter ch = font->characters[(int32) *c];
         const f32 xPos = x + (ch.bearing.x * currentScale.x);
         const f32 yPos = -y - (ch.size.y - ch.bearing.y) * currentScale.x; // Invert Y because orthographic projection is flipped

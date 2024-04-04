@@ -41,7 +41,7 @@ bool ska_event_unregister_observer(SkaEvent* event, SkaObserver* observer) {
 }
 
 void ska_event_notify_observers(SkaEvent* event, SkaSubjectNotifyPayload* payload) {
-    for (size_t i = 0; i < event->observerCount; i++) {
+    for (usize i = 0; i < event->observerCount; i++) {
         event->observers[i]->on_notify(payload);
     }
 }

@@ -11,12 +11,12 @@
 // Contains the object id for a particular grid space
 typedef struct SkaSpatialHashMapGridSpace {
     unsigned int entities[SKA_SPATIAL_HASH_GRID_SPACE_ENTITY_LIMIT];
-    size_t entityCount;
+    usize entityCount;
 } SkaSpatialHashMapGridSpace;
 
 // Contains all grid spaces an object is assigned to
 typedef struct SkaSpatialHashMapGridSpacesHandle {
-    size_t gridSpaceCount;
+    usize gridSpaceCount;
     SkaRect2 collisionRect;
     SkaSpatialHashMapGridSpace* gridSpaces[4];
 } SkaSpatialHashMapGridSpacesHandle;
@@ -31,7 +31,7 @@ typedef struct SkaSpatialHashMap {
 } SkaSpatialHashMap;
 
 typedef struct SkaSpatialHashMapCollisionResult {
-    size_t collisionCount;
+    usize collisionCount;
     unsigned int collisions[SKA_SPATIAL_HASH_GRID_MAX_COLLISIONS];
 } SkaSpatialHashMapCollisionResult;
 

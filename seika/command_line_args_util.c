@@ -8,13 +8,13 @@
 
 static SkaStringHashMap* ska_cmd_line_args_get_key_to_arg_def_map(SKACmdLineArgDef* argDefs) {
     SkaStringHashMap* keyToArgDefMap = ska_string_hash_map_create_default_capacity();
-    for (size_t i = 0; i < 999999999; i++) {
+    for (usize i = 0; i < 999999999; i++) {
         if (argDefs[i].id == NULL) {
             break;
         }
 
         SKACmdLineArgDef* argDef = &argDefs[i];
-        for (size_t argIndex = 0; argIndex < SKA_COMMAND_LINE_ARGS_KEY_LIMIT; argIndex++) {
+        for (usize argIndex = 0; argIndex < SKA_COMMAND_LINE_ARGS_KEY_LIMIT; argIndex++) {
             const char* argKey = argDef->keys[argIndex];
             if (!argKey) {
                 break;
@@ -28,9 +28,9 @@ static SkaStringHashMap* ska_cmd_line_args_get_key_to_arg_def_map(SKACmdLineArgD
 }
 
 SKACmdLineArgKeyResult* ska_cmd_line_args_util_find_or_add_key_result(const SKACmdLineArgDef* argDef, SKACmdLineArgResult* result) {
-    for (size_t i = 0; i < result->keyResultCount; i++) {
+    for (usize i = 0; i < result->keyResultCount; i++) {
         SKACmdLineArgKeyResult* keyResult = &result->keyResults[i];
-        for (size_t j = 0; j < SKA_COMMAND_LINE_ARGS_KEY_LIMIT; j++) {
+        for (usize j = 0; j < SKA_COMMAND_LINE_ARGS_KEY_LIMIT; j++) {
             if (!argDef->keys[j]) {
                 break;
             }
@@ -72,11 +72,11 @@ SKACmdLineArgResult ska_cmd_line_args_util_parse(int32 argv, char** args, SKACmd
 }
 
 void ska_cmd_line_args_util_print_results(const SKACmdLineArgResult* result) {
-    for (size_t i = 0; i < result->keyResultCount; i++) {
+    for (usize i = 0; i < result->keyResultCount; i++) {
         const SKACmdLineArgKeyResult* keyResult = &result->keyResults[i];
         printf("---------------------------------------------------------------\n");
         printf("Key Id: '%s'\n", keyResult->id);
-        for (size_t valueIndex = 0; valueIndex < keyResult->valueCount; valueIndex++) {
+        for (usize valueIndex = 0; valueIndex < keyResult->valueCount; valueIndex++) {
             printf("Value: '%s'\n", keyResult->values[valueIndex]);
         }
         printf("---------------------------------------------------------------\n");

@@ -2,7 +2,7 @@
 
 #include "seika/memory.h"
 
-SkaQueue* ska_queue_create(size_t capacity, uint32 invalidValue) {
+SkaQueue* ska_queue_create(usize capacity, uint32 invalidValue) {
     SkaQueue* queue = SKA_MEM_ALLOCATE(SkaQueue);
     queue->capacity = capacity;
     queue->invalidValue = invalidValue;

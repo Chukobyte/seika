@@ -11,7 +11,7 @@ static inline SkaLinkedListNode* linked_list_create_node(SkaLinkedList* list, vo
 static inline void* linked_list_duplicate_node_value(SkaLinkedList* list, SkaLinkedListNode* node);
 
 // Public functions
-SkaLinkedList* ska_linked_list_create(size_t valueSize) {
+SkaLinkedList* ska_linked_list_create(usize valueSize) {
     SkaLinkedList* list = SKA_MEM_ALLOCATE(SkaLinkedList);
     list->valueSize = valueSize;
     return list;
@@ -48,7 +48,7 @@ void ska_linked_list_prepend(SkaLinkedList* list, void* value) {
     list->size++;
 }
 
-void ska_linked_list_insert(SkaLinkedList* list, void* value, size_t index) {
+void ska_linked_list_insert(SkaLinkedList* list, void* value, usize index) {
     SKA_ASSERT(list != NULL);
     SKA_ASSERT(value != NULL);
     // Check if at beginning or end of list, then just call those functions if so...
@@ -63,7 +63,7 @@ void ska_linked_list_insert(SkaLinkedList* list, void* value, size_t index) {
         return;
     }
     // Now we know it's at the middle of the list, iterate through nodes
-    size_t nodeIndex = 1;
+    usize nodeIndex = 1;
     SkaLinkedListNode* prevNode = list->head;
     SkaLinkedListNode* currentIndexNode = list->head->next; // Get the next value since the head exists and was checked
     while (currentIndexNode != NULL) {
@@ -81,9 +81,9 @@ void ska_linked_list_insert(SkaLinkedList* list, void* value, size_t index) {
     SKA_ASSERT_FMT(false, "Error with inserting into array list!");
 }
 
-void* ska_linked_list_get(SkaLinkedList* list, size_t index) {
+void* ska_linked_list_get(SkaLinkedList* list, usize index) {
     if (index < list->size) {
-        size_t nodeIndex = 0;
+        usize nodeIndex = 0;
         SkaLinkedListNode* node = list->head;
         while (node != NULL) {
             if (index == nodeIndex) {
@@ -104,7 +104,7 @@ void* ska_linked_list_get_back(SkaLinkedList* list) {
     return list->tail->value;
 }
 
-void* ska_linked_list_pop(SkaLinkedList* list, size_t index) {
+void* ska_linked_list_pop(SkaLinkedList* list, usize index) {
     if (list->size > 0 && index < list->size) {
         if (index == 0) {
             return ska_linked_list_pop_front(list);
@@ -113,7 +113,7 @@ void* ska_linked_list_pop(SkaLinkedList* list, size_t index) {
         }
 
         // Search for node
-        size_t nodeIndex = 1;
+        usize nodeIndex = 1;
         SkaLinkedListNode* nodeBeforePopped = list->head->next;
         while (nodeBeforePopped != NULL) {
             if (index - 1 == nodeIndex) {

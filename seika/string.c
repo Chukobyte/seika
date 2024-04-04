@@ -11,7 +11,7 @@
 #endif
 
 char* ska_strdup(const char* string) {
-    const size_t string_length = strlen(string) + 1;
+    const usize string_length = strlen(string) + 1;
     char* new_string = (char*)SKA_MEM_ALLOCATE_SIZE(string_length);
 
     if (new_string == NULL) {
@@ -21,7 +21,7 @@ char* ska_strdup(const char* string) {
     return strcpy(new_string, string);
 }
 
-char* ska_strdup_from_memory(void* data, size_t size) {
+char* ska_strdup_from_memory(void* data, usize size) {
     char* newString = (char*)SKA_MEM_ALLOCATE_SIZE(size + 1);
     memcpy(newString, data, size);
     newString[size] = '\0';
@@ -32,7 +32,7 @@ void ska_strcpy(char* destination, const char* source) {
     strcpy(destination, source);
 }
 
-bool ska_strncpy(char* destination, size_t sizeInBytes, const char* source, size_t maxCount) {
+bool ska_strncpy(char* destination, usize sizeInBytes, const char* source, usize maxCount) {
 #if defined(WIN32) || defined(WIN64)
     if (strncpy_s(destination, sizeInBytes, source, maxCount) != 0) {
         return false;
@@ -50,7 +50,7 @@ void ska_strcat(char* destination, const char* source) {
     strcat(destination, source);
 }
 
-void ska_strncat(char* destination, const char* source, size_t sizeInBytes) {
+void ska_strncat(char* destination, const char* source, usize sizeInBytes) {
     strncat(destination, source, sizeInBytes);
 }
 
@@ -77,11 +77,11 @@ char* ska_str_to_lower_and_underscore_whitespace(char* str) {
     return str;
 }
 
-unsigned char* ska_str_convert_string_to_unsigned_char(const char* value, size_t* outSize) {
-    const size_t stringLength = strlen(value);
+unsigned char* ska_str_convert_string_to_unsigned_char(const char* value, usize* outSize) {
+    const usize stringLength = strlen(value);
     *outSize = stringLength + 1;
     unsigned char* returnValue = (unsigned char*)SKA_MEM_ALLOCATE_SIZE(*outSize);
-    for (size_t i = 0; i < stringLength; i++) {
+    for (usize i = 0; i < stringLength; i++) {
         returnValue[i] = (unsigned char)value[i];
     }
     returnValue[stringLength] = '\0';
@@ -106,8 +106,8 @@ char* ska_str_trim(const char* value, char delimiter) {
     return newStr;
 }
 
-void ska_str_trim_by_size(const char* value, char* output, size_t size) {
-    for (size_t i = 0; i < size; i++) {
+void ska_str_trim_by_size(const char* value, char* output, usize size) {
+    for (usize i = 0; i < size; i++) {
         output[i] = value[i];
     }
     output[size] = '\0';

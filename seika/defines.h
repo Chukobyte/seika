@@ -4,10 +4,13 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
 
 #include "version_info.h"
+
+typedef size_t usize;
 
 typedef int16_t int16;
 typedef int32_t int32;

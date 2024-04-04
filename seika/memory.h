@@ -1,10 +1,10 @@
 #pragma once
 
-#include <stdlib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#include "defines.h"
 
 #define SKA_MEM_ALLOCATE(DataType)             \
 (DataType*) ska_mem_allocate(sizeof(DataType))
@@ -21,9 +21,9 @@ ska_mem_allocate_c(Blocks, Size)
 #define SKA_MEM_FREE(Memory)             \
 ska_mem_free(Memory)
 
-void* ska_mem_allocate(size_t size);
-void* ska_mem_allocate_c(size_t blocks, size_t size);
-void* ska_mem_reallocate(void* memory, size_t size);
+void* ska_mem_allocate(usize size);
+void* ska_mem_allocate_c(usize blocks, usize size);
+void* ska_mem_reallocate(void* memory, usize size);
 void ska_mem_free(void* memory);
 
 #ifdef __cplusplus

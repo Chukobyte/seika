@@ -4,7 +4,7 @@
 
 static SkaQueue* entityIdQueue = NULL;
 static SkaEntity entityIdCounter = 0;
-static size_t activeEntityCount = 0;
+static usize activeEntityCount = 0;
 
 void ska_ecs_entity_initialize() {
     SKA_ASSERT(entityIdQueue == NULL);
@@ -38,6 +38,6 @@ void ska_ecs_entity_return(SkaEntity entity) {
     activeEntityCount--;
 }
 
-size_t ska_ecs_entity_get_active_count() {
+usize ska_ecs_entity_get_active_count() {
     return activeEntityCount;
 }

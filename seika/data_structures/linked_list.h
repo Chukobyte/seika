@@ -1,7 +1,6 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdbool.h>
+#include "seika/defines.h"
 
 #define SKA_LINKED_LIST_FOR_EACH(list, element) for((element) = (list)->head; (element) != NULL; (element) = (element)->next)
 
@@ -16,14 +15,14 @@ typedef struct SkaLinkedListNode {
 
 // Generic array list, use 'ska_linked_list_create' to allocate on the heap
 typedef struct SkaLinkedList {
-    size_t valueSize;
-    size_t size;
+    usize valueSize;
+    usize size;
     SkaLinkedListNode* head;
     SkaLinkedListNode* tail;
 } SkaLinkedList;
 
 // Will create a new array list with all it's element values set to the passed in 'valueSize'
-SkaLinkedList* ska_linked_list_create(size_t valueSize);
+SkaLinkedList* ska_linked_list_create(usize valueSize);
 // Will complete destroy the array list freeing up all its memory
 void ska_linked_list_destroy(SkaLinkedList* list);
 
@@ -32,17 +31,17 @@ void ska_linked_list_append(SkaLinkedList* list, void* value);
 // Adds an item at the beginning of the list
 void ska_linked_list_prepend(SkaLinkedList* list, void* value);
 // Inserts an item at the specified index
-void ska_linked_list_insert(SkaLinkedList* list, void* value, size_t index);
+void ska_linked_list_insert(SkaLinkedList* list, void* value, usize index);
 
 // Returns an item from the list from specified index
-void* ska_linked_list_get(SkaLinkedList* list, size_t index);
+void* ska_linked_list_get(SkaLinkedList* list, usize index);
 // Same as 'ska_linked_list_get' but returns item from index 0
 void* ska_linked_list_get_front(SkaLinkedList* list);
 // Same as 'ska_linked_list_get' but returns item from index (size - 1)
 void* ska_linked_list_get_back(SkaLinkedList* list);
 
 // Removes and item and returns from the list from specified index, caller needs to manage memory
-void* ska_linked_list_pop(SkaLinkedList* list, size_t index);
+void* ska_linked_list_pop(SkaLinkedList* list, usize index);
 // Same as 'ska_linked_list_pop' but removes and item from index 0, caller needs to manage memory
 void* ska_linked_list_pop_front(SkaLinkedList* list);
 // Same as 'ska_linked_list_pop' but removes and item from index (size - 1), caller needs to manage memory

@@ -94,7 +94,7 @@ SkaShaderInstanceId ska_shader_cache_create_instance_and_add(const char* shaderP
         return SKA_SHADER_INSTANCE_INVALID_ID;
     }
     SkaShaderInstance* shaderInstance = ska_shader_instance_create_from_shader(newShader);
-    for (size_t i = 0; i < cacheItem->parseResult.parseData.uniformCount; i++) {
+    for (usize i = 0; i < cacheItem->parseResult.parseData.uniformCount; i++) {
         ska_shader_instance_param_create_from_copy(shaderInstance, &cacheItem->parseResult.parseData.uniforms[i]);
     }
     SkaShaderInstanceId newId = ska_shader_cache_add_instance(shaderInstance);

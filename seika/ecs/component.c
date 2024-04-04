@@ -11,7 +11,7 @@
 static SkaComponentIndex globalComponentIndex = 0;
 static SkaStringHashMap* componentNameToTypeMap = NULL;
 
-const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, size_t componentSize) {
+const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, usize componentSize) {
     SKA_ASSERT_FMT(globalComponentIndex + 1 < SKA_ECS_MAX_COMPONENTS, "Over the maximum allowed components which are '%d'", SKA_ECS_MAX_COMPONENTS);
     // Check if component already exists and return that index if it does
     const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)ska_string_hash_map_find(componentNameToTypeMap, name);
@@ -30,7 +30,7 @@ const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, si
     return ska_ecs_component_get_type_info(name, componentSize);
 }
 
-const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, size_t componentSize) {
+const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, usize componentSize) {
     const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)ska_string_hash_map_find(componentNameToTypeMap, name);
     SKA_ASSERT(typeInfo);
     SKA_ASSERT(typeInfo->size == componentSize);
@@ -42,7 +42,7 @@ const SkaComponentTypeInfo* ska_ecs_component_find_type_info(const char* name) {
     return typeInfo;
 }
 
-SkaComponentType ska_ecs_component_get_type_flag(const char* name, size_t componentSize) {
+SkaComponentType ska_ecs_component_get_type_flag(const char* name, usize componentSize) {
     const SkaComponentTypeInfo* typeInfo = ska_ecs_component_get_type_info(name, componentSize);
     return typeInfo->type;
 }
@@ -84,7 +84,7 @@ static void component_array_remove_component(ComponentArray* componentArray, Ska
 }
 
 static void component_array_remove_all_components(ComponentArray* componentArray) {
-    for (size_t i = 0; i < SKA_ECS_MAX_COMPONENTS; i++) {
+    for (usize i = 0; i < SKA_ECS_MAX_COMPONENTS; i++) {
         component_array_remove_component(componentArray, (SkaComponentIndex)i);
     }
 }

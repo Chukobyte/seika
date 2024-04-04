@@ -15,8 +15,8 @@ extern "C" {
 #define SKA_HASH_MAP_FOR_EACH(HASH_MAP, ITER_NAME) \
 for (SkaHashMapIterator ITER_NAME = ska_hash_map_iter_create(HASH_MAP); ska_hash_map_iter_is_valid(HASH_MAP, &(ITER_NAME)); ska_hash_map_iter_advance(HASH_MAP, &(ITER_NAME)))
 
-typedef size_t (*SkaHashFunc) (void*, size_t);
-typedef int32 (*SkaCompareFunc) (void*, void*, size_t);
+typedef usize (*SkaHashFunc) (void*, usize);
+typedef int32 (*SkaCompareFunc) (void*, void*, usize);
 
 typedef struct SkaHashMapNode {
     struct SkaHashMapNode* next;
@@ -25,24 +25,24 @@ typedef struct SkaHashMapNode {
 } SkaHashMapNode;
 
 typedef struct SkaHashMap {
-    size_t keySize;
-    size_t valueSize;
-    size_t capacity;
-    size_t size;
+    usize keySize;
+    usize valueSize;
+    usize capacity;
+    usize size;
     SkaHashFunc hashFunc;
     SkaCompareFunc compareFunc;
     SkaHashMapNode** nodes;
 } SkaHashMap;
 
 typedef struct SkaHashMapIterator {
-    size_t count;
-    size_t end;
-    size_t index;
+    usize count;
+    usize end;
+    usize index;
     SkaHashMapNode* pair;
 } SkaHashMapIterator;
 
 // Generic hash map methods
-SkaHashMap* ska_hash_map_create(size_t keySize, size_t valueSize, size_t capacity);
+SkaHashMap* ska_hash_map_create(usize keySize, usize valueSize, usize capacity);
 bool ska_hash_map_destroy(SkaHashMap* hashMap);
 bool ska_hash_map_add(SkaHashMap* hashMap, void* key, void* value);
 void* ska_hash_map_get(SkaHashMap* hashMap, void* key);

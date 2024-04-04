@@ -16,7 +16,7 @@ typedef enum SkaAssetFileLoaderReadMode {
 
 typedef struct SkaArchiveFileAsset {
     void* buffer;
-    size_t bufferSize;
+    usize bufferSize;
 } SkaArchiveFileAsset;
 
 typedef struct SkaAssetFileImageData {
@@ -38,8 +38,8 @@ bool ska_asset_file_loader_is_asset_valid(SkaArchiveFileAsset* fileAsset);
 // Asset loading types
 SkaAssetFileImageData* ska_asset_file_loader_load_image_data(const char* filePath);
 void ska_asset_file_loader_free_image_data(SkaAssetFileImageData* data);
-char* ska_asset_file_loader_read_file_contents_as_string(const char* filePath, size_t* size);
-char* ska_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, size_t* size);
+char* ska_asset_file_loader_read_file_contents_as_string(const char* filePath, usize* size);
+char* ska_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, usize* size);
 
 #ifdef __cplusplus
 }

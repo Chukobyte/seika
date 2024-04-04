@@ -34,8 +34,8 @@ typedef struct SkaInputState {
 
     SkaInputStateCleanup cleanupKeyStateJustPressed[SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE];
     SkaInputStateCleanup cleanupKeyStateJustReleased[SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE];
-    size_t cleanupKeyStateJustPressedCount;
-    size_t cleanupKeyStateJustReleasedCount;
+    usize cleanupKeyStateJustPressedCount;
+    usize cleanupKeyStateJustReleasedCount;
 
     SkaInputActionHandle inputActionHandleIndex;
     SkaInputActionData inputActionData[SKA_INPUT_MAX_DEVICES][SKA_INPUT_MAX_INPUT_ACTIONS];
@@ -367,7 +367,7 @@ SkaInputActionHandle ska_input_add_input_action(const char* actionName, const Sk
     }
 
     SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][actionHandle];
-    for (size_t i = 0; i < SKA_INPUT_MAX_INPUT_ACTION_VALUES; i++) {
+    for (usize i = 0; i < SKA_INPUT_MAX_INPUT_ACTION_VALUES; i++) {
         if (!actionValues[i].key) {
             break;
         }
@@ -412,7 +412,7 @@ SkaInputActionHandle ska_input_find_input_action_handle(const char* actionName, 
 
 bool ska_input_is_input_action_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
     const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    for (size_t i = 0; i < actionData->action.actionValuesCount; i++) {
+    for (usize i = 0; i < actionData->action.actionValuesCount; i++) {
         const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
         if (ska_input_is_key_pressed(actionValue->key, deviceIndex)) {
             return true;
@@ -423,7 +423,7 @@ bool ska_input_is_input_action_pressed(SkaInputActionHandle handle, SkaInputDevi
 
 bool ska_input_is_input_action_just_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
     const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    for (size_t i = 0; i < actionData->action.actionValuesCount; i++) {
+    for (usize i = 0; i < actionData->action.actionValuesCount; i++) {
         const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
         if (ska_input_is_key_just_pressed(actionValue->key, deviceIndex)) {
             return true;
@@ -434,7 +434,7 @@ bool ska_input_is_input_action_just_pressed(SkaInputActionHandle handle, SkaInpu
 
 bool ska_input_is_input_action_just_released(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
     const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    for (size_t i = 0; i < actionData->action.actionValuesCount; i++) {
+    for (usize i = 0; i < actionData->action.actionValuesCount; i++) {
         const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
         if (ska_input_is_key_just_released(actionValue->key, deviceIndex)) {
             return true;
@@ -445,7 +445,7 @@ bool ska_input_is_input_action_just_released(SkaInputActionHandle handle, SkaInp
 
 f32 ska_input_get_input_action_strength(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
     const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    for (size_t i = 0; i < actionData->action.actionValuesCount; i++) {
+    for (usize i = 0; i < actionData->action.actionValuesCount; i++) {
         const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
         const f32 keyStrength = ska_input_get_key_strength(actionValue->key, deviceIndex);
         if (keyStrength >= actionValue->strengthThreshold) {
@@ -456,12 +456,12 @@ f32 ska_input_get_input_action_strength(SkaInputActionHandle handle, SkaInputDev
 }
 
 void ska_input_new_frame() {
-    for (size_t i = 0; i < inputState.cleanupKeyStateJustPressedCount; i++) {
+    for (usize i = 0; i < inputState.cleanupKeyStateJustPressedCount; i++) {
         const SkaInputStateCleanup* stateCleanup = &inputState.cleanupKeyStateJustPressed[i];
         SkaInputKeyState* keyState = &inputState.inputKeyState[stateCleanup->deviceIndex][stateCleanup->key];
         keyState->isJustPressed = false;
     }
-    for (size_t i = 0; i < inputState.cleanupKeyStateJustReleasedCount; i++) {
+    for (usize i = 0; i < inputState.cleanupKeyStateJustReleasedCount; i++) {
         const SkaInputStateCleanup* stateCleanup = &inputState.cleanupKeyStateJustReleased[i];
         SkaInputKeyState* keyState = &inputState.inputKeyState[stateCleanup->deviceIndex][stateCleanup->key];
         keyState->isJustReleased = false;

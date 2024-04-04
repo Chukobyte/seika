@@ -32,7 +32,7 @@
 
 #define CHAR_ARRAY_MAX_BUFFER_SIZE 256
 
-void ska_fs_get_cwd_array(char* array, size_t size) {
+void ska_fs_get_cwd_array(char* array, usize size) {
     if (getcwd(array, (int) size) != NULL) {
         return;
     }
@@ -69,7 +69,7 @@ void ska_fs_print_cwd() {
     }
 }
 
-size_t ska_fs_get_file_size(const char* filePath) {
+usize ska_fs_get_file_size(const char* filePath) {
 #ifdef _WIN32
     HANDLE hFile = CreateFile(filePath, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE) {
@@ -85,11 +85,11 @@ size_t ska_fs_get_file_size(const char* filePath) {
     }
 
     CloseHandle(hFile);
-    return (size_t) size.QuadPart;
+    return (usize) size.QuadPart;
 #else
     struct stat st;
     stat(filePath, &st);
-    return (size_t) st.st_size;
+    return (usize) st.st_size;
 #endif
 }
 
@@ -103,10 +103,10 @@ bool ska_fs_write_to_file(const char* filePath, const char* contents) {
     return false;
 }
 
-char* ska_fs_read_file_contents(const char* filePath, size_t* sz) {
+char* ska_fs_read_file_contents(const char* filePath, usize* sz) {
     char* buffer = NULL;
     FILE* fp = fopen(filePath, "rb");
-    size_t readSize = 0;
+    usize readSize = 0;
     if (fp) {
         readSize = ska_fs_get_file_size(filePath);
         // Update buffer
@@ -123,16 +123,16 @@ char* ska_fs_read_file_contents(const char* filePath, size_t* sz) {
     return buffer;
 }
 
-char* ska_fs_read_file_contents_without_raw(const char* filePath, size_t* sz) {
+char* ska_fs_read_file_contents_without_raw(const char* filePath, usize* sz) {
     char* buffer = NULL;
     FILE* fp = fopen(filePath, "r");
-    size_t readSize = 0;
+    usize readSize = 0;
     if (fp) {
         readSize = ska_fs_get_file_size(filePath);
         // Update buffer
         buffer = (char*)SKA_MEM_ALLOCATE_SIZE(readSize + 1);
         if (buffer != NULL) {
-            size_t bytesRead = 0;
+            usize bytesRead = 0;
             while (bytesRead < readSize) {
                 const int maxCount = (int)(readSize - bytesRead + 1);
                 if (fgets(buffer + bytesRead, maxCount, fp) == NULL) {

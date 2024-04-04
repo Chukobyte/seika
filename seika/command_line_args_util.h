@@ -19,12 +19,12 @@ typedef struct SKACmdLineArgDef {
 typedef struct SKACmdLineArgKeyResult {
     const char* id;
     const char* values[SKA_COMMAND_LINE_ARGS_RETURN_VALUES_LIMIT];
-    size_t valueCount;
+    usize valueCount;
 } SKACmdLineArgKeyResult;
 
 typedef struct SKACmdLineArgResult {
     SKACmdLineArgKeyResult keyResults[SKA_COMMAND_LINE_ARGS_RETURN_LIMIT];
-    size_t keyResultCount;
+    usize keyResultCount;
 } SKACmdLineArgResult;
 
 SKACmdLineArgResult ska_cmd_line_args_util_parse(int32 argv, char** args, SKACmdLineArgDef* argDefs);

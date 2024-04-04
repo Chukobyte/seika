@@ -30,7 +30,7 @@ typedef struct SkaAudioInstance {
 
 typedef struct SkaAudioInstances {
     SkaAudioInstance* instances[SKA_MAX_AUDIO_INSTANCES];
-    size_t count;
+    usize count;
 } SkaAudioInstances;
 
 static SkaAudioInstances* audio_instances = NULL;
@@ -102,7 +102,7 @@ void ska_audio_manager_play_sound(const char* filePath, bool loops) {
 
 void ska_audio_manager_stop_sound(const char* filePath) {
     pthread_mutex_lock(&audio_mutex);
-    for (size_t i = 0; i < audio_instances->count; i++) {
+    for (usize i = 0; i < audio_instances->count; i++) {
         SkaAudioInstance* audioInst = audio_instances->instances[i];
         if (strcmp(audioInst->source->file_path, filePath) == 0) {
             audioInst->is_playing = false;
@@ -120,8 +120,8 @@ void audio_data_callback(ma_device* device, void* output, const void* input, ma_
 
     pthread_mutex_lock(&audio_mutex);
     memset(output, 0, frame_count * device->playback.channels * ma_get_bytes_per_sample(device->playback.format));
-    size_t removedInstances = 0;
-    for (size_t i = 0; i < audio_instances->count; i++) {
+    usize removedInstances = 0;
+    for (usize i = 0; i < audio_instances->count; i++) {
         SkaAudioInstance* audioInst = audio_instances->instances[i];
         SKA_ASSERT_FMT(audioInst != NULL, "audio instance with index %zu is null!", i);
         if (!audioInst->is_playing) {
@@ -180,15 +180,15 @@ void audio_data_callback(ma_device* device, void* output, const void* input, ma_
     // Reshuffle array and update count if data sources have been removed
     if (removedInstances > 0) {
         static SkaAudioInstance* tempAudioInstances[SKA_MAX_AUDIO_INSTANCES];
-        size_t newCount = 0;
+        usize newCount = 0;
         // Place non-null instances in temp array
-        for (size_t i = 0; i < audio_instances->count; i++) {
+        for (usize i = 0; i < audio_instances->count; i++) {
             if (audio_instances->instances[i] != NULL) {
                 tempAudioInstances[newCount++] = audio_instances->instances[i];
             }
         }
         // Now fill up regular array
-        for (size_t i = 0; i < newCount; i++) {
+        for (usize i = 0; i < newCount; i++) {
             audio_instances->instances[i] = tempAudioInstances[i];
         }
         audio_instances->count = newCount;

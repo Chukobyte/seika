@@ -11,8 +11,8 @@
 
 static SkaLogLevel currentLogLevel = SkaLogLevel_ERROR;
 static char* queuedLogMessages[SKA_LOGGER_MAX_QUEUED_MESSAGES];
-static size_t queuedLogMessagesCount = 0;
-static size_t queuedLogMessagesIndex = 0;
+static usize queuedLogMessagesCount = 0;
+static usize queuedLogMessagesIndex = 0;
 
 void ska_logger_set_level(SkaLogLevel level) {
     currentLogLevel = level;
@@ -96,7 +96,7 @@ void ska_logger_internal_queue_message(const char* fmt, ...) {
         ska_strncat(str, "\n", (sizeof(str) - strlen(str) - 1) );
         vsnprintf(str, sizeof(str), str, args);
 
-        size_t currentIndex;
+        usize currentIndex;
         if (queuedLogMessagesIndex + 1 >= SKA_LOGGER_MAX_QUEUED_MESSAGES) {
             queuedLogMessagesIndex = 0;
             currentIndex = 0;
@@ -113,7 +113,7 @@ void ska_logger_internal_queue_message(const char* fmt, ...) {
 
 bool ska_logger_internal_print_queue() {
     if (queuedLogMessagesCount > 0) {
-        for (size_t i = 0; i < queuedLogMessagesCount; i++) {
+        for (usize i = 0; i < queuedLogMessagesCount; i++) {
             ska_logger_message(queuedLogMessages[i]);
             SKA_MEM_FREE(queuedLogMessages[i]);
             queuedLogMessages[i] = NULL;

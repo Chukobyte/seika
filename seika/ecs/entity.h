@@ -21,4 +21,4 @@ void ska_ecs_entity_finalize();
 SkaEntity ska_ecs_entity_create();
 // Push entity to the queue
 void ska_ecs_entity_return(SkaEntity entity);
-size_t ska_ecs_entity_get_active_count();
+usize ska_ecs_entity_get_active_count();

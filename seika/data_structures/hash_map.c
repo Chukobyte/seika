@@ -5,19 +5,19 @@
 #include "seika/memory.h"
 #include "seika/assert.h"
 
-static size_t se_default_hash(void* raw_key, size_t key_size);
-static int32 se_default_compare(void* first_key, void* second_key, size_t key_size);
+static usize se_default_hash(void* raw_key, usize key_size);
+static int32 se_default_compare(void* first_key, void* second_key, usize key_size);
 
 static SkaHashMapNode* hash_map_create_node(SkaHashMap* hashMap, void* key, void* value, SkaHashMapNode* next);
 static void hash_map_destroy_node(SkaHashMapNode* node);
 
-static bool hash_map_push_front(SkaHashMap* hashMap, size_t index, void* key, void* value);
+static bool hash_map_push_front(SkaHashMap* hashMap, usize index, void* key, void* value);
 static void hash_map_grow_if_needed(SkaHashMap* hashMap);
 static void hash_map_shrink_if_needed(SkaHashMap* hashMap);
-static void hash_map_allocate(SkaHashMap* hashMap, size_t capacity);
-static void hash_map_resize(SkaHashMap* hashMap, size_t capacity);
+static void hash_map_allocate(SkaHashMap* hashMap, usize capacity);
+static void hash_map_resize(SkaHashMap* hashMap, usize capacity);
 
-SkaHashMap* ska_hash_map_create(size_t keySize, size_t valueSize, size_t capacity) {
+SkaHashMap* ska_hash_map_create(usize keySize, usize valueSize, usize capacity) {
     SkaHashMap* map = (SkaHashMap*) SKA_MEM_ALLOCATE_SIZE(sizeof(SkaHashMap));
     map->keySize = keySize;
     map->valueSize = valueSize;
@@ -41,7 +41,7 @@ SkaHashMapNode* hash_map_create_node(SkaHashMap* hashMap, void* key, void* value
 bool ska_hash_map_destroy(SkaHashMap* hashMap) {
     SkaHashMapNode* node = NULL;
     SkaHashMapNode* next = NULL;
-    for (size_t chain = 0; chain < hashMap->capacity; chain++) {
+    for (usize chain = 0; chain < hashMap->capacity; chain++) {
         node = hashMap->nodes[chain];
         while (node != NULL) {
             next = node->next;
@@ -55,7 +55,7 @@ bool ska_hash_map_destroy(SkaHashMap* hashMap) {
     return true;
 }
 
-bool hash_map_push_front(SkaHashMap* hashMap, size_t index, void* key, void* value) {
+bool hash_map_push_front(SkaHashMap* hashMap, usize index, void* key, void* value) {
     hashMap->nodes[index] = hash_map_create_node(hashMap, key, value, hashMap->nodes[index]);
     return hashMap->nodes[index] != NULL;
 }
@@ -67,7 +67,7 @@ bool ska_hash_map_add(SkaHashMap* hashMap, void* key, void* value) {
 
     hash_map_grow_if_needed(hashMap);
 
-    size_t index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
+    usize index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
     if (ska_hash_map_has(hashMap, key)) {
         SkaHashMapNode* node = hashMap->nodes[index];
         memcpy(node->value, value, hashMap->valueSize);
@@ -85,7 +85,7 @@ bool ska_hash_map_add(SkaHashMap* hashMap, void* key, void* value) {
 
 bool ska_hash_map_has(SkaHashMap* hashMap, void* key) {
     SKA_ASSERT(hashMap != NULL);
-    size_t index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
+    usize index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
     for (SkaHashMapNode* node = hashMap->nodes[index]; node; node = node->next) {
         if (hashMap->compareFunc(key, node->key, hashMap->keySize) == 0) {
             return true;
@@ -96,7 +96,7 @@ bool ska_hash_map_has(SkaHashMap* hashMap, void* key) {
 
 void* ska_hash_map_get(SkaHashMap* hashMap, void* key) {
     SKA_ASSERT(hashMap != NULL);
-    size_t index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
+    usize index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
     for (SkaHashMapNode* node = hashMap->nodes[index]; node; node = node->next) {
         if (hashMap->compareFunc(key, node->key, hashMap->keySize) == 0) {
             return node->value;
@@ -109,7 +109,7 @@ bool ska_hash_map_erase(SkaHashMap* hashMap, void* key) {
     SKA_ASSERT(hashMap != NULL);
     SKA_ASSERT(key != NULL);
 
-    size_t index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
+    usize index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
     SkaHashMapNode* node = hashMap->nodes[index];
     for (SkaHashMapNode* previous = NULL; node; previous = node, node = node->next) {
         if (hashMap->compareFunc(key, node->key, hashMap->keySize) == 0) {
@@ -140,25 +140,25 @@ void hash_map_grow_if_needed(SkaHashMap* hashMap) {
 
 void hash_map_shrink_if_needed(SkaHashMap* hashMap) {
     SKA_ASSERT_FMT(hashMap->size <= hashMap->capacity, "Hashmap size '%d' is bigger than its capacity '%d'!", hashMap->size, hashMap->capacity);
-    size_t shrinkCapacity = (size_t) ((float) hashMap->capacity * SKA_HASH_MAP_SHRINK_THRESHOLD);
+    usize shrinkCapacity = (usize) ((float) hashMap->capacity * SKA_HASH_MAP_SHRINK_THRESHOLD);
     if (hashMap->size == shrinkCapacity) {
         hash_map_resize(hashMap, shrinkCapacity);
     }
 }
 
-void hash_map_allocate(SkaHashMap* hashMap, size_t capacity) {
+void hash_map_allocate(SkaHashMap* hashMap, usize capacity) {
     hashMap->nodes = (SkaHashMapNode**)SKA_MEM_ALLOCATE_SIZE(capacity * sizeof(SkaHashMapNode*));
     memset(hashMap->nodes, 0, capacity * sizeof(SkaHashMapNode*));
 
     hashMap->capacity = capacity;
 }
 
-void hash_map_rehash(SkaHashMap* hashMap, SkaHashMapNode** oldNode, size_t oldCapacity) {
-    for (size_t chain = 0; chain < oldCapacity; chain++) {
+void hash_map_rehash(SkaHashMap* hashMap, SkaHashMapNode** oldNode, usize oldCapacity) {
+    for (usize chain = 0; chain < oldCapacity; chain++) {
         for (SkaHashMapNode* node = oldNode[chain]; node != NULL;) {
             SkaHashMapNode* next = node->next;
 
-            size_t newIndex = hashMap->hashFunc(node->key, hashMap->keySize) % hashMap->capacity;
+            usize newIndex = hashMap->hashFunc(node->key, hashMap->keySize) % hashMap->capacity;
             node->next = hashMap->nodes[newIndex];
             hashMap->nodes[newIndex] = node;
 
@@ -167,7 +167,7 @@ void hash_map_rehash(SkaHashMap* hashMap, SkaHashMapNode** oldNode, size_t oldCa
     }
 }
 
-void hash_map_resize(SkaHashMap* hashMap, size_t capacity) {
+void hash_map_resize(SkaHashMap* hashMap, usize capacity) {
     if (capacity < SKA_HASH_MAP_MIN_CAPACITY) {
         if (hashMap->capacity > SKA_HASH_MAP_MIN_CAPACITY) {
             capacity = SKA_HASH_MAP_MIN_CAPACITY;
@@ -178,7 +178,7 @@ void hash_map_resize(SkaHashMap* hashMap, size_t capacity) {
     }
 
     SkaHashMapNode** oldNode = hashMap->nodes;
-    size_t oldCapacity = hashMap->capacity;
+    usize oldCapacity = hashMap->capacity;
     hash_map_allocate(hashMap, capacity);
 
     hash_map_rehash(hashMap, oldNode, oldCapacity);
@@ -190,8 +190,8 @@ void hash_map_resize(SkaHashMap* hashMap, size_t capacity) {
 SkaHashMapIterator ska_hash_map_iter_create(SkaHashMap* hashMap) {
     // Get initial node if exists
     SkaHashMapNode* initialNode = NULL;
-    size_t initialIndex = 0;
-    for (size_t chain = 0; chain < hashMap->capacity; chain++) {
+    usize initialIndex = 0;
+    for (usize chain = 0; chain < hashMap->capacity; chain++) {
         SkaHashMapNode* node = hashMap->nodes[chain];
         if (node != NULL) {
             initialNode = node;
@@ -199,7 +199,7 @@ SkaHashMapIterator ska_hash_map_iter_create(SkaHashMap* hashMap) {
             break;
         }
     }
-    size_t iteratorCount = initialNode != NULL ? 1 : 0;
+    usize iteratorCount = initialNode != NULL ? 1 : 0;
     SkaHashMapIterator iterator = { .count = iteratorCount, .end = hashMap->capacity, .index = initialIndex, .pair = initialNode };
     return iterator;
 }
@@ -217,7 +217,7 @@ void ska_hash_map_iter_advance(SkaHashMap* hashMap, SkaHashMapIterator* iterator
         }
 
         // Search nodes array if there are no more linked pairs
-        for (size_t chain = iterator->index; chain < hashMap->capacity; chain++) {
+        for (usize chain = iterator->index; chain < hashMap->capacity; chain++) {
             SkaHashMapNode* node = hashMap->nodes[chain];
             if (node != NULL) {
                 iterator->pair = node;
@@ -232,11 +232,11 @@ void ska_hash_map_iter_advance(SkaHashMap* hashMap, SkaHashMapIterator* iterator
 }
 
 // Misc
-size_t se_default_hash(void* raw_key, size_t key_size) {
+usize se_default_hash(void* raw_key, usize key_size) {
     // djb2 string hashing algorithm
     // sstp://www.cse.yorku.ca/~oz/hash.ssml
-    size_t byte;
-    size_t hash = 5381;
+    usize byte;
+    usize hash = 5381;
     char* key = (char*) raw_key;
 
     for (byte = 0; byte < key_size; ++byte) {
@@ -247,7 +247,7 @@ size_t se_default_hash(void* raw_key, size_t key_size) {
     return hash;
 }
 
-int32 se_default_compare(void* first_key, void* second_key, size_t key_size) {
+int32 se_default_compare(void* first_key, void* second_key, usize key_size) {
     return memcmp(first_key, second_key, key_size);
 }
 

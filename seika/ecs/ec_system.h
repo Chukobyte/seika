@@ -45,7 +45,7 @@ typedef struct SkaECSSystem {
     FixedUpdateFunc fixed_update_func;
     NetworkCallbackFunc network_callback_func;
     SkaComponentType component_signature;
-    size_t entity_count;
+    usize entity_count;
     // Keeps track of entities that match a component signature
     SkaEntity entities[SKA_MAX_ENTITIES];
 } SkaECSSystem;

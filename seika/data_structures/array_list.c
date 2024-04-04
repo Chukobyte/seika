@@ -7,11 +7,11 @@
 
 #define SKA_ARRAY_LIST_DEFAULT_CAPACITY 16
 
-SkaArrayList* ska_array_list_create_default_capacity(size_t valueSize) {
+SkaArrayList* ska_array_list_create_default_capacity(usize valueSize) {
     return ska_array_list_create(valueSize, SKA_ARRAY_LIST_DEFAULT_CAPACITY);
 }
 
-SkaArrayList* ska_array_list_create(size_t valueSize, size_t initialCapacity) {
+SkaArrayList* ska_array_list_create(usize valueSize, usize initialCapacity) {
     SkaArrayList* newList = SKA_MEM_ALLOCATE(SkaArrayList);
     newList->data = SKA_MEM_ALLOCATE_SIZE(initialCapacity * valueSize);
     newList->valueSize = valueSize;
@@ -34,17 +34,17 @@ void ska_array_list_push_back(SkaArrayList* list, const void* value) {
     list->size++;
 }
 
-void* ska_array_list_get(SkaArrayList* list, size_t index) {
+void* ska_array_list_get(SkaArrayList* list, usize index) {
     SKA_ASSERT_FMT(index < list->size, "Attempting to access out of bounds index '%d", index);
     return (char*)list->data + index * list->valueSize;
 }
 
 bool ska_array_list_remove(SkaArrayList* list, const void* value) {
-    size_t index = 0;
+    usize index = 0;
     while (index < list->size) {
         if (memcmp((char*)list->data + index * list->valueSize, value, list->valueSize) == 0) {
             // Found the element, remove it
-            for (size_t i = index + 1; i < list->size; ++i) {
+            for (usize i = index + 1; i < list->size; ++i) {
                 memcpy((char*)list->data + (i - 1) * list->valueSize, (char*)list->data + i * list->valueSize, list->valueSize);
             }
             list->size--;
@@ -56,10 +56,10 @@ bool ska_array_list_remove(SkaArrayList* list, const void* value) {
     return false;
 }
 
-bool ska_array_list_remove_by_index(SkaArrayList* list, size_t index) {
+bool ska_array_list_remove_by_index(SkaArrayList* list, usize index) {
     if (index < list->size) {
         // Shift elements after the removed element
-        for (size_t i = index + 1; i < list->size; ++i) {
+        for (usize i = index + 1; i < list->size; ++i) {
             memcpy((char*)list->data + (i - 1) * list->valueSize, (char*)list->data + i * list->valueSize, list->valueSize);
         }
         list->size--;

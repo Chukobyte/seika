@@ -22,7 +22,7 @@ static char* shader_file_parse_data_get_full_uniforms_source(SkaShaderFileParseD
     }
     char uniformsBuffer[1024];
     uniformsBuffer[0] = '\0';
-    for (size_t i = 0; i < parseData->uniformCount; i++) {
+    for (usize i = 0; i < parseData->uniformCount; i++) {
         ska_strcat(uniformsBuffer, "uniform ");
         switch (parseData->uniforms[i].type) {
         case SkaShaderParamType_BOOL: {
@@ -64,7 +64,7 @@ char* shader_file_parse_data_get_full_functions_source(SkaShaderFileParseData* p
     }
     char functionsBuffer[4096];
     functionsBuffer[0] = '\0';
-    for (size_t i = 0; i < parseData->functionCount; i++) {
+    for (usize i = 0; i < parseData->functionCount; i++) {
         ska_strcat(functionsBuffer, parseData->functions[i].fullFunctionSource);
         ska_strcat(functionsBuffer, "\n");
     }
@@ -74,7 +74,7 @@ char* shader_file_parse_data_get_full_functions_source(SkaShaderFileParseData* p
 void shader_file_parse_data_delete_internal_memory(SkaShaderFileParseData* parseData) {
     SKA_MEM_FREE(parseData->fullVertexSource);
     SKA_MEM_FREE(parseData->fullFragmentSource);
-    for (size_t i = 0; i < parseData->functionCount; i++) {
+    for (usize i = 0; i < parseData->functionCount; i++) {
         SKA_MEM_FREE(parseData->functions[i].name);
         SKA_MEM_FREE(parseData->functions[i].fullFunctionSource);
     }
@@ -148,7 +148,7 @@ SkaShaderFileParserFunction shader_file_find_next_function(char** shaderSource, 
     char shaderFunctionBuffer[1024];
     ska_strcpy(shaderFunctionBuffer, functionReturnType);
     ska_strcat(shaderFunctionBuffer, " ");
-    size_t bufferIndex = strlen(shaderFunctionBuffer);
+    usize bufferIndex = strlen(shaderFunctionBuffer);
 
     // Get name first
     char shaderFunctionName[64];
@@ -165,7 +165,7 @@ SkaShaderFileParserFunction shader_file_find_next_function(char** shaderSource, 
         }
     }
     // Now just loop through until we encounter a '}'
-    size_t openBracketsCount = 0;
+    usize openBracketsCount = 0;
     while (*(*shaderSource) != '\0') {
         shaderFunctionBuffer[bufferIndex++] = *(*shaderSource);
         (*shaderSource)++;
@@ -205,7 +205,7 @@ char* shader_file_parse_function_body(const char* functionSource) {
     if (currentToken == '}') {
         return NULL;
     }
-    size_t openBracketsCount = 1;
+    usize openBracketsCount = 1;
     while (openBracketsCount > 0) {
         currentToken = shaderFunctionBuffer[functionBufferIndex++];
         functionBodyBuffer[functionBodyIndex++] = currentToken;
@@ -482,10 +482,10 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
     const char* SHADER_FUNCTIONS_REPLACE_TOKEN = "//@@FUNCTIONS\n";
     const char* SHADER_VERTEX_BODY_REPLACE_TOKEN = "//@@vertex()\n";
     const char* SHADER_FRAGMENT_BODY_REPLACE_TOKEN = "//@@fragment()\n";
-    const size_t SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH = strlen(SHADER_UNIFORMS_REPLACE_TOKEN);
-    const size_t SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH = strlen(SHADER_FUNCTIONS_REPLACE_TOKEN);
-    const size_t SHADER_VERTEX_BODY_REPLACE_TOKEN_LENGTH = strlen(SHADER_VERTEX_BODY_REPLACE_TOKEN);
-    const size_t SHADER_FRAGMENT_BODY_REPLACE_TOKEN_LENGTH = strlen(SHADER_FRAGMENT_BODY_REPLACE_TOKEN);
+    const usize SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH = strlen(SHADER_UNIFORMS_REPLACE_TOKEN);
+    const usize SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH = strlen(SHADER_FUNCTIONS_REPLACE_TOKEN);
+    const usize SHADER_VERTEX_BODY_REPLACE_TOKEN_LENGTH = strlen(SHADER_VERTEX_BODY_REPLACE_TOKEN);
+    const usize SHADER_FRAGMENT_BODY_REPLACE_TOKEN_LENGTH = strlen(SHADER_FRAGMENT_BODY_REPLACE_TOKEN);
 
     const SEShaderFileParseBaseText shaderBaseText = shader_file_get_base_shader_text(result.parseData.shaderType);
     char fullShaderBuffer[4096];
@@ -499,7 +499,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
         }
         char* uniformsSource = shader_file_parse_data_get_full_uniforms_source(&result.parseData);
         if (uniformsSource) {
-            const size_t uniformsReplaceLength = strlen(uniformsSource);
+            const usize uniformsReplaceLength = strlen(uniformsSource);
             memmove(foundUniformsToken + uniformsReplaceLength,
                     foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH,
                     strlen(foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH) + 1);
@@ -513,7 +513,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
         }
         char* functionsSource = shader_file_parse_data_get_full_functions_source(&result.parseData);
         if (functionsSource) {
-            const size_t functionsReplaceLength = strlen(functionsSource);
+            const usize functionsReplaceLength = strlen(functionsSource);
             memmove(foundFunctionsToken + functionsReplaceLength,
                     foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH,
                     strlen(foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH) + 1);
@@ -525,7 +525,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
         if (!foundVertexToken) {
             SHADER_FILE_PARSER_ERROR_RETURN(result, originalSource, "Unable to find vertex() token in vertex shader!")
         }
-        const size_t vertexBodyReplaceLength = strlen(result.parseData.vertexFunctionSource);
+        const usize vertexBodyReplaceLength = strlen(result.parseData.vertexFunctionSource);
         memmove(foundVertexToken + vertexBodyReplaceLength,
                 foundVertexToken + SHADER_VERTEX_BODY_REPLACE_TOKEN_LENGTH,
                 strlen(foundVertexToken + SHADER_VERTEX_BODY_REPLACE_TOKEN_LENGTH) + 1);
@@ -544,7 +544,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
         }
         char* uniformsSource = shader_file_parse_data_get_full_uniforms_source(&result.parseData);
         if (uniformsSource) {
-            const size_t uniformsReplaceLength = strlen(uniformsSource);
+            const usize uniformsReplaceLength = strlen(uniformsSource);
             memmove(foundUniformsToken + uniformsReplaceLength,
                     foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH,
                     strlen(foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH) + 1);
@@ -558,7 +558,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
         }
         char* functionsSource = shader_file_parse_data_get_full_functions_source(&result.parseData);
         if (functionsSource) {
-            const size_t functionsReplaceLength = strlen(functionsSource);
+            const usize functionsReplaceLength = strlen(functionsSource);
             memmove(foundFunctionsToken + functionsReplaceLength,
                     foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH,
                     strlen(foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH) + 1);
@@ -570,7 +570,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
         if (!foundFragmentToken) {
             SHADER_FILE_PARSER_ERROR_RETURN(result, originalSource, "Unable to find fragment() token in fragment shader!")
         }
-        const size_t fragmentBodyReplaceLength = strlen(result.parseData.fragmentFunctionSource);
+        const usize fragmentBodyReplaceLength = strlen(result.parseData.fragmentFunctionSource);
         memmove(foundFragmentToken + fragmentBodyReplaceLength,
                 foundFragmentToken + SHADER_FRAGMENT_BODY_REPLACE_TOKEN_LENGTH,
                 strlen(foundFragmentToken + SHADER_FRAGMENT_BODY_REPLACE_TOKEN_LENGTH) + 1);
@@ -597,10 +597,10 @@ void ska_shader_file_parse_clear_parse_result(SkaShaderFileParseResult* result) 
     if (result->parseData.fullFragmentSource) {
         SKA_MEM_FREE(result->parseData.fullFragmentSource);
     }
-    for (size_t i = 0; i < result->parseData.uniformCount; i++) {
+    for (usize i = 0; i < result->parseData.uniformCount; i++) {
         SKA_MEM_FREE(result->parseData.uniforms[i].name);
     }
-    for (size_t i = 0; i < result->parseData.functionCount; i++) {
+    for (usize i = 0; i < result->parseData.functionCount; i++) {
         SKA_MEM_FREE(result->parseData.functions[i].name);
         SKA_MEM_FREE(result->parseData.functions[i].fullFunctionSource);
     }

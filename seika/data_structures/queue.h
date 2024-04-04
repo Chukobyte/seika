@@ -10,11 +10,11 @@
 // Unsigned int queue
 typedef struct SkaQueue {
     uint32 front, rear, size, invalidValue;
-    size_t capacity;
+    usize capacity;
     uint32* array;
 } SkaQueue;
 
-SkaQueue* ska_queue_create(size_t capacity, uint32 invalidValue);
+SkaQueue* ska_queue_create(usize capacity, uint32 invalidValue);
 void ska_queue_destroy(SkaQueue* queue);
 bool ska_queue_is_full(SkaQueue* queue);
 bool ska_queue_is_empty(SkaQueue* queue);

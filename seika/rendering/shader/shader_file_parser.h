@@ -13,8 +13,8 @@ typedef struct SkaShaderFileParseData {
     char* fullFragmentSource;
     char* vertexFunctionSource;
     char* fragmentFunctionSource;
-    size_t uniformCount;
-    size_t functionCount;
+    usize uniformCount;
+    usize functionCount;
     SkaShaderParam uniforms[32];
     SkaShaderFileParserFunction functions[32];
 } SkaShaderFileParseData;

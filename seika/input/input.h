@@ -247,7 +247,7 @@ typedef struct SkaInputActionValue {
 typedef struct SkaInputAction {
     char* name;
     SkaInputActionValue actionValues[SKA_INPUT_MAX_INPUT_ACTION_VALUES];
-    size_t actionValuesCount;
+    usize actionValuesCount;
 } SkaInputAction;
 
 const char* ska_input_key_to_string(SkaInputKey key);

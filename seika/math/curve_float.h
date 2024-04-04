@@ -19,12 +19,12 @@ typedef struct SkaCurveControlPoint {
 } SkaCurveControlPoint;
 
 typedef struct SkaCurveFloat {
-    size_t controlPointCount;
+    usize controlPointCount;
     SkaCurveControlPoint controlPoints[SKA_CURVE_MAX_CONTROL_POINTS];
 } SkaCurveFloat;
 
 void ska_curve_float_add_control_point(SkaCurveFloat* curve, SkaCurveControlPoint point);
-void ska_curve_float_add_control_points(SkaCurveFloat* curve, SkaCurveControlPoint points[], size_t count);
+void ska_curve_float_add_control_points(SkaCurveFloat* curve, SkaCurveControlPoint points[], usize count);
 bool ska_curve_float_remove_control_point(SkaCurveFloat* curve, f64 x, f64 y);
 f64 ska_curve_float_eval(const SkaCurveFloat* curve, f64 t);
 

@@ -42,7 +42,7 @@ SkaAssetFileLoaderReadMode ska_asset_file_loader_get_read_mode() {
 
 SkaArchiveFileAsset ska_asset_file_loader_get_asset(const char* path) {
     void* fileBuffer = NULL;
-    size_t fileBufferSize;
+    usize fileBufferSize;
     zip_entry_open(packageArchive, path);
     {
         zip_entry_read(packageArchive, &fileBuffer, &fileBufferSize);
@@ -86,9 +86,9 @@ void ska_asset_file_loader_free_image_data(SkaAssetFileImageData* data) {
     SKA_MEM_FREE(data);
 }
 
-char* ska_asset_file_loader_read_file_contents_as_string(const char* filePath, size_t* size) {
+char* ska_asset_file_loader_read_file_contents_as_string(const char* filePath, usize* size) {
     char* fileString = NULL;
-    size_t len = 0;
+    usize len = 0;
     if (globalReadMode == SkaAssetFileLoaderReadMode_DISK) {
         if (ska_fs_does_file_exist(filePath)) {
             fileString = ska_fs_read_file_contents(filePath, &len);
@@ -106,9 +106,9 @@ char* ska_asset_file_loader_read_file_contents_as_string(const char* filePath, s
     return fileString;
 }
 
-char* ska_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, size_t* size) {
+char* ska_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, usize* size) {
     char* fileString = NULL;
-    size_t len = 0;
+    usize len = 0;
     if (globalReadMode == SkaAssetFileLoaderReadMode_DISK) {
         if (ska_fs_does_file_exist(filePath)) {
             fileString = ska_fs_read_file_contents_without_raw(filePath, &len);

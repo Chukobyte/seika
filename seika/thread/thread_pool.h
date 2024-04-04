@@ -19,12 +19,12 @@ typedef struct SkaThreadPool {
     pthread_mutex_t workMutex;
     pthread_cond_t workCond;
     pthread_cond_t workingCond;
-    size_t workingCount;
-    size_t threadCount;
+    usize workingCount;
+    usize threadCount;
     bool shouldStop;
 } SkaThreadPool;
 
-SkaThreadPool* ska_tpool_create(size_t num);
+SkaThreadPool* ska_tpool_create(usize num);
 void ska_tpool_destroy(SkaThreadPool* tp);
 // Adds worker (or job) to the thread pool.
 bool ska_tpool_add_work(SkaThreadPool* tp, SkaThreadFunc func, void* arg);

@@ -50,7 +50,7 @@ SkaAudioSource* ska_audio_load_audio_source_wav(const char* fileName) {
 }
 
 bool load_wav_data_from_file(const char* file_path, int32_t* sample_count, int32_t* channels, int32_t* sample_rate, void** samples) {
-    size_t len = 0;
+    usize len = 0;
     char* file_data = ska_asset_file_loader_read_file_contents_as_string(file_path, &len);
     ska_logger_debug("file '%s' size '%u' bytes", file_path, len);
 

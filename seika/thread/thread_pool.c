@@ -87,7 +87,7 @@ static void* tpool_worker(void *arg) {
 
 
 // --- Thread Pool --- //
-SkaThreadPool* ska_tpool_create(size_t num) {
+SkaThreadPool* ska_tpool_create(usize num) {
     SkaThreadPool* tp;
     pthread_t thread;
 
@@ -105,7 +105,7 @@ SkaThreadPool* ska_tpool_create(size_t num) {
     tp->workFirst = NULL;
     tp->workLast  = NULL;
 
-    for (size_t i = 0; i < num; i++) {
+    for (usize i = 0; i < num; i++) {
         pthread_create(&thread, NULL, tpool_worker, tp);
         pthread_detach(thread);
     }

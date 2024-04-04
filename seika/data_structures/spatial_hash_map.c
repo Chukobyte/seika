@@ -10,14 +10,13 @@
 #define SKA_SPATIAL_HASH_MAX_POSITION_HASH 8
 
 typedef struct PositionHashes {
-    size_t hashCount;
+    usize hashCount;
     int32 hashes[SKA_SPATIAL_HASH_MAX_POSITION_HASH];
 } PositionHashes;
 
 static void spatial_hash_map_update(SkaSpatialHashMap* hashMap, uint32 entity, SkaSpatialHashMapGridSpacesHandle* handle, SkaRect2* collisionRect);
 static bool change_cell_size_if_needed(SkaSpatialHashMap* hashMap, SkaRect2* collisionRectToCheck);
 static int32 spatial_hash(SkaSpatialHashMap* hashMap, SkaVector2* position);
-static void spatial_hash_map_destroy_node(SkaSpatialHashMap* hashMap);
 static SkaSpatialHashMapGridSpace* get_or_create_grid_space(SkaSpatialHashMap* hashMap, int32 positionHash);
 static bool link_object_by_position_hash(SkaSpatialHashMap* hashMap, SkaSpatialHashMapGridSpacesHandle* object, uint32 value, int32 positionHash, PositionHashes* hashes);
 static bool unlink_object_by_entity(SkaSpatialHashMap* hashMap, SkaSpatialHashMapGridSpacesHandle* object, SkaSpatialHashMapGridSpace* gridSpace, uint32 entity);
@@ -176,9 +175,9 @@ SkaSpatialHashMapCollisionResult ska_spatial_hash_map_compute_collision(SkaSpati
         return result;
     }
     SkaSpatialHashMapGridSpacesHandle* objectHandle = (SkaSpatialHashMapGridSpacesHandle*) *(SkaSpatialHashMapGridSpacesHandle**) objectHandlePtr;
-    for (size_t i = 0; i < objectHandle->gridSpaceCount; i++) {
+    for (usize i = 0; i < objectHandle->gridSpaceCount; i++) {
         SkaSpatialHashMapGridSpace* gridSpace = objectHandle->gridSpaces[i];
-        for (size_t j = 0; j < gridSpace->entityCount; j++) {
+        for (usize j = 0; j < gridSpace->entityCount; j++) {
             uint32 entityToCollide = gridSpace->entities[j];
             if (entity != entityToCollide && !collision_result_has_entity(&result, entityToCollide)) {
                 SkaSpatialHashMapGridSpacesHandle* entityToCollideObjectHandle = (SkaSpatialHashMapGridSpacesHandle*) *(SkaSpatialHashMapGridSpacesHandle**) ska_hash_map_get(
@@ -215,7 +214,7 @@ SkaSpatialHashMapGridSpace* get_or_create_grid_space(SkaSpatialHashMap* hashMap,
 
 bool link_object_by_position_hash(SkaSpatialHashMap* hashMap, SkaSpatialHashMapGridSpacesHandle* object, uint32 value, int32 positionHash, PositionHashes* hashes) {
     // Exit if position hash exists
-    for (size_t i = 0; i < hashes->hashCount; i++) {
+    for (usize i = 0; i < hashes->hashCount; i++) {
         if (positionHash == hashes->hashes[i]) {
             return false;
         }
@@ -232,7 +231,7 @@ bool link_object_by_position_hash(SkaSpatialHashMap* hashMap, SkaSpatialHashMapG
 
 bool unlink_object_by_entity(SkaSpatialHashMap* hashMap, SkaSpatialHashMapGridSpacesHandle* object, SkaSpatialHashMapGridSpace* gridSpace, uint32 entity) {
     bool objectUnlinked = false;
-    for (size_t i = 0; i < gridSpace->entityCount; i++) {
+    for (usize i = 0; i < gridSpace->entityCount; i++) {
         if (entity == gridSpace->entities[i] || gridSpace->entities[i] == SKA_SPATIAL_HASH_NULL_ENTITY) {
             if (i + 1 < gridSpace->entityCount) {
                 gridSpace->entities[i] = gridSpace->entities[i + 1];
@@ -249,14 +248,14 @@ bool unlink_object_by_entity(SkaSpatialHashMap* hashMap, SkaSpatialHashMapGridSp
 }
 
 void unlink_all_objects_by_entity(SkaSpatialHashMap* hashMap, SkaSpatialHashMapGridSpacesHandle* object, uint32 entity) {
-    const size_t numberOfSpaces = object->gridSpaceCount;
-    for (size_t i = 0; i < numberOfSpaces; i++) {
+    const usize numberOfSpaces = object->gridSpaceCount;
+    for (usize i = 0; i < numberOfSpaces; i++) {
         unlink_object_by_entity(hashMap, object, object->gridSpaces[i], entity);
     }
 }
 
 bool collision_result_has_entity(SkaSpatialHashMapCollisionResult* result, uint32 entity) {
-    for (size_t i = 0; i < result->collisionCount; i++) {
+    for (usize i = 0; i < result->collisionCount; i++) {
         if (entity == result->collisions[i]) {
             return true;
         }

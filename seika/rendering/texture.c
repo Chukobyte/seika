@@ -49,7 +49,7 @@ SkaTexture* ska_texture_create_texture2(const char* filePath, GLint wrapS, GLint
     // Load image data
     SkaAssetFileImageData* fileImageData = ska_asset_file_loader_load_image_data(filePath);
     SKA_ASSERT_FMT(fileImageData != NULL, "Failed to load texture image at file path '%s'", filePath);
-    const size_t imageDataSize = strlen((char*) fileImageData->data);
+    const usize imageDataSize = strlen((char*) fileImageData->data);
     texture->data = (unsigned char*) SKA_MEM_ALLOCATE_SIZE(imageDataSize);
     memcpy(texture->data, fileImageData->data, imageDataSize);
     texture->data = fileImageData->data; // TODO: Fix
@@ -64,12 +64,12 @@ SkaTexture* ska_texture_create_texture2(const char* filePath, GLint wrapS, GLint
     return texture;
 }
 
-SkaTexture* ska_texture_create_texture_from_memory(void* buffer, size_t bufferSize) {
+SkaTexture* ska_texture_create_texture_from_memory(void* buffer, usize bufferSize) {
     return ska_texture_create_texture_from_memory2(buffer, bufferSize, DEFAULT_TEXTURE_REF.wrapS,
                                                    DEFAULT_TEXTURE_REF.wrapT, DEFAULT_TEXTURE_REF.applyNearestNeighbor);
 }
 
-SkaTexture* ska_texture_create_texture_from_memory2(void* buffer, size_t bufferSize, GLint wrapS, GLint wrapT, bool applyNearestNeighbor) {
+SkaTexture* ska_texture_create_texture_from_memory2(void* buffer, usize bufferSize, GLint wrapS, GLint wrapT, bool applyNearestNeighbor) {
     SkaTexture* texture = ska_texture_create_default_texture();
     texture->wrapS = wrapS;
     texture->wrapT = wrapT;
