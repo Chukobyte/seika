@@ -5,7 +5,7 @@
 #include "seika/memory.h"
 #include "seika/assert.h"
 
-#define SKA_ARRAY2D_IS_VALID_COORD(ARRAY2D, ROW, COL) (!((int32)ROW >= ARRAY2D->size.w || (int32)COL >= ARRAY2D->size.h))
+#define SKA_ARRAY2D_IS_COORD_INVALID(ARRAY2D, ROW, COL) ((int32)ROW >= ARRAY2D->size.w || (int32)COL >= ARRAY2D->size.h)
 
 SkaArray2D* ska_array2d_create(usize rows, usize cols, usize elementSize) {
     SkaArray2D* newArray = SKA_MEM_ALLOCATE(SkaArray2D);
@@ -27,14 +27,14 @@ void ska_array2d_destroy(SkaArray2D* array2d) {
 }
 
 void* ska_array2d_get(SkaArray2D* array2d, usize x, usize y) {
-    if (!SKA_ARRAY2D_IS_VALID_COORD(array2d, x, y)) {
+    if (SKA_ARRAY2D_IS_COORD_INVALID(array2d, x, y)) {
         return NULL;
     }
     return (void*)((char*)array2d->data[y] + x * array2d->elementSize);
 }
 
 bool ska_array2d_set(SkaArray2D* array2d, usize x, usize y, void* newValue) {
-    if (!SKA_ARRAY2D_IS_VALID_COORD(array2d, x, y)) {
+    if (SKA_ARRAY2D_IS_COORD_INVALID(array2d, x, y)) {
         return false;
     }
     memcpy((void*)((char*)array2d->data[y] + x * array2d->elementSize), newValue, array2d->elementSize);
