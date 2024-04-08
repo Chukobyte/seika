@@ -4,6 +4,7 @@ set(CMAKE_C_STANDARD 11)
 
 project(seika C)
 
+option(IS_CI_BUILD "" OFF)
 option(SEIKA_STATIC_LIB "Make seika and dependent libs static" OFF)
 
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
@@ -36,39 +37,8 @@ endif ()
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${flags})
 
-#if (NOT SEIKA_STATIC_LIB)
-#    if (WIN32)
-#        # SDL
-#        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#                "${CMAKE_BINARY_DIR}/_deps/sdl_content-build/SDL3.dll"
-#                $<TARGET_FILE_DIR:${PROJECT_NAME}>/
-#                )
-#        # Freetype
-#        if(CMAKE_BUILD_TYPE MATCHES Debug)
-#            set(FREETYPE_DLL_NAME "libfreetyped.dll")
-#        else ()
-#            set(FREETYPE_DLL_NAME "libfreetype.dll")
-#        endif ()
-#        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-#                COMMAND ${CMAKE_COMMAND} -E copy_if_different
-#                "${CMAKE_BINARY_DIR}/_deps/freetype_content-build/${FREETYPE_DLL_NAME}"
-#                $<TARGET_FILE_DIR:${PROJECT_NAME}>/
-#        )
-        # SDL
-#        file(GLOB SDL3_DLLS "${CMAKE_BINARY_DIR}/_deps/sdl_content-build/*.dll")
-#        install(FILES ${SDL3_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
-        # Freetype
-#        file(GLOB FREETYPE_DLLS "${CMAKE_BINARY_DIR}/_deps/freetype_content-build/*.dll")
-#        install(FILES ${FREETYPE_DLLS} DESTINATION ${CMAKE_BINARY_DIR})
-#    endif ()
-#endif ()
-
 # Copy directories over that are needed to test
-if (NOT DEFINED IS_CI_BUILD)
-    set(IS_CI_BUILD "false")
-endif()
-if (IS_CI_BUILD STREQUAL "false")
+if (NOT IS_CI_BUILD)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${PROJECT_SOURCE_DIR}/test
