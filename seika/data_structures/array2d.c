@@ -43,17 +43,21 @@ bool ska_array2d_set(SkaArray2D* array2d, usize x, usize y, void* newValue) {
 
 void ska_array2d_resize(SkaArray2D* array2d, usize newX, usize newY) {
     // Reallocate memory for data array
-    const usize width = SKA_MATH_MAX(newX, 1);
-    const usize height = SKA_MATH_MAX(newY, 1);
-
-    array2d->data = ska_mem_reallocate(array2d->data, height * sizeof(void*));
-    for (usize i = 0; i < height; i++) {
-        if (i < array2d->size.h) {
-            // Resize existing rows
-            array2d->data[i] = ska_mem_reallocate(array2d->data[i], width * array2d->elementSize);
-        } else {
-            // Allocate memory for new rows
-            array2d->data[i] = SKA_MEM_ALLOCATE_SIZE(width * array2d->elementSize);
+    const usize newWidth = SKA_MATH_MAX(newX, 1);
+    const usize newHeight = SKA_MATH_MAX(newY, 1);
+    // Cache off old data
+    void** oldData = array2d->data;
+    const SkaSize2Di oldSize = array2d->size;
+    // Allocate data for all columns
+    array2d->data = SKA_MEM_ALLOCATE_SIZE(newHeight * sizeof(void*));
+    // Iterate over new rows
+    for (usize i = 0; i < newHeight; i++) {
+        // Allocate data for new row
+        array2d->data[i] = SKA_MEM_ALLOCATE_SIZE(newX * array2d->elementSize);
+        if (i < (usize)oldSize.h) {
+            // Now copy old data
+            const usize bytesToCopy = SKA_MATH_MIN((usize)oldSize.w, newWidth) * array2d->elementSize;
+            memcpy(array2d->data[i], oldData[i], bytesToCopy);
         }
     }
 
@@ -62,6 +66,11 @@ void ska_array2d_resize(SkaArray2D* array2d, usize newX, usize newY) {
     if (newX == 0 && newY == 0) {
         ska_array2d_reset(array2d);
     }
+
+    for (usize i = 0; i < (usize)oldSize.h; i++) {
+        SKA_MEM_FREE(oldData[i]);
+    }
+    SKA_MEM_FREE(oldData);
 }
 
 void ska_array2d_clear(SkaArray2D* array2d) {
