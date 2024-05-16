@@ -47,6 +47,10 @@ SkaFont* ska_font_create_font_from_memory(void* buffer, usize bufferSize, int32 
     return font;
 }
 
+void ska_font_delete(SkaFont* font) {
+    SKA_MEM_FREE(font);
+}
+
 bool ska_generate_new_font_face(const char* fileName, FT_Face* face) {
     if (ska_asset_file_loader_get_read_mode() == SkaAssetFileLoaderReadMode_ARCHIVE) {
         SkaArchiveFileAsset fileAsset = ska_asset_file_loader_get_asset(fileName);
