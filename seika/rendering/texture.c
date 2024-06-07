@@ -81,7 +81,7 @@ SkaTexture* ska_texture_create_texture_from_memory2(void* buffer, usize bufferSi
 
     ska_texture_generate(texture);
 
-    ska_asset_file_loader_free_image_data(&(SkaAssetFileImageData){ imageData });
+    stbi_image_free(imageData);
 
     return texture;
 }
