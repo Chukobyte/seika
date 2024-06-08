@@ -29,8 +29,8 @@ typedef struct SkaTexture {
 
 SkaTexture* ska_texture_create_texture(const char* filePath);
 SkaTexture* ska_texture_create_texture2(const char* filePath, GLint wrapS, GLint wrapT, bool applyNearestNeighbor);
-SkaTexture* ska_texture_create_texture_from_memory(void* buffer, usize bufferSize);
-SkaTexture* ska_texture_create_texture_from_memory2(void* buffer, usize bufferSize, GLint wrapS, GLint wrapT, bool applyNearestNeighbor);
+SkaTexture* ska_texture_create_texture_from_memory(const void* buffer, usize bufferSize);
+SkaTexture* ska_texture_create_texture_from_memory2(const void* buffer, usize bufferSize, GLint wrapS, GLint wrapT, bool applyNearestNeighbor);
 SkaTexture* ska_texture_create_solid_colored_texture(GLsizei width, GLsizei height, GLuint colorValue);
 void ska_texture_delete(SkaTexture* texture);
 GLint ska_texture_wrap_string_to_int(const char* wrap);

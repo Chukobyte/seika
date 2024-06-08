@@ -64,12 +64,12 @@ SkaTexture* ska_texture_create_texture2(const char* filePath, GLint wrapS, GLint
     return texture;
 }
 
-SkaTexture* ska_texture_create_texture_from_memory(void* buffer, usize bufferSize) {
+SkaTexture* ska_texture_create_texture_from_memory(const void* buffer, usize bufferSize) {
     return ska_texture_create_texture_from_memory2(buffer, bufferSize, DEFAULT_TEXTURE_REF.wrapS,
                                                    DEFAULT_TEXTURE_REF.wrapT, DEFAULT_TEXTURE_REF.applyNearestNeighbor);
 }
 
-SkaTexture* ska_texture_create_texture_from_memory2(void* buffer, usize bufferSize, GLint wrapS, GLint wrapT, bool applyNearestNeighbor) {
+SkaTexture* ska_texture_create_texture_from_memory2(const void* buffer, usize bufferSize, GLint wrapS, GLint wrapT, bool applyNearestNeighbor) {
     SkaTexture* texture = ska_texture_create_default_texture();
     texture->wrapS = wrapS;
     texture->wrapT = wrapT;

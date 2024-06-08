@@ -29,7 +29,7 @@ SkaFont* ska_font_create_font(const char* fileName, int32 size, bool applyNeares
     return font;
 }
 
-SkaFont* ska_font_create_font_from_memory(void* buffer, usize bufferSize, int32 size, bool applyNearestNeighbor) {
+SkaFont* ska_font_create_font_from_memory(const void* buffer, usize bufferSize, int32 size, bool applyNearestNeighbor) {
     FT_Face face;
     SkaFont* font = SKA_MEM_ALLOCATE(SkaFont);
     font->size = size;
