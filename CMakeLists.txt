@@ -7,6 +7,9 @@ project(seika C)
 option(IS_CI_BUILD "" OFF)
 option(SEIKA_STATIC_LIB "Make seika and dependent libs static" OFF)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     list(APPEND flags "/W3" "/Zc:preprocessor")
 elseif (APPLE)
