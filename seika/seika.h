@@ -6,6 +6,8 @@ extern "C" {
 
 #include "defines.h"
 
+struct SkaColor;
+
 bool ska_init();
 void ska_shutdown();
 bool ska_init_all(const char* title, int32 windowWidth, int32 windowHeight, int32 resolutionWidth, int32 resolutionHeight);
@@ -22,7 +24,7 @@ bool ska_print_errors();
 bool ska_window_init(const char* title, int32 windowWidth, int32 windowHeight);
 bool ska_window_init2(const char* title, int32 windowWidth, int32 windowHeight, int32 resolutionWidth, int32 resolutionHeight, bool maintainAspectRatio);
 void ska_window_shutdown();
-void ska_window_render();
+void ska_window_render(const struct SkaColor* windowBackgroundColor);
 
 bool ska_input_init();
 void ska_input_shutdown();

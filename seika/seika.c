@@ -208,12 +208,9 @@ void ska_window_shutdown() {
     }
 }
 
-void ska_window_render() {
+void ska_window_render(const SkaColor* windowBackgroundColor) {
     SKA_ASSERT(SKA_HAS_FLAG(SkaSystemFlag_WINDOW, skaState.runningSystems));
-
-    static const SkaColor backgroundColor = {33.0f / 255.0f, 33.0f / 255.0f, 33.0f / 255.0f, 1.0f };
-    ska_renderer_process_and_flush_batches(&backgroundColor);
-
+    ska_renderer_process_and_flush_batches(windowBackgroundColor);
     SDL_GL_SwapWindow(window);
 }
 
