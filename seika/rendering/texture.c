@@ -24,7 +24,7 @@ static const struct SkaTexture DEFAULT_TEXTURE_REF = {
     .fileName = NULL
 };
 
-static inline bool ska_texture_is_texture_valid(SkaTexture* texture) {
+static inline bool ska_texture_is_texture_valid(const SkaTexture* texture) {
     return texture != NULL;
 }
 
@@ -143,10 +143,10 @@ GLint ska_texture_wrap_string_to_int(const char* wrap) {
     return GL_CLAMP_TO_BORDER;
 }
 
-const char* ska_texture_get_wrap_s_string(SkaTexture* texture) {
+const char* ska_texture_get_wrap_s_string(const SkaTexture* texture) {
     return texture->wrapS == GL_REPEAT ? "repeat" : "clamp_to_border";
 }
 
-const char* ska_texture_get_wrap_t_string(SkaTexture* texture) {
+const char* ska_texture_get_wrap_t_string(const SkaTexture* texture) {
     return texture->wrapT == GL_REPEAT ? "repeat" : "clamp_to_border";
 }

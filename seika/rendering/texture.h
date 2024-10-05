@@ -34,8 +34,8 @@ SkaTexture* ska_texture_create_texture_from_memory2(const void* buffer, usize bu
 SkaTexture* ska_texture_create_solid_colored_texture(GLsizei width, GLsizei height, GLuint colorValue);
 void ska_texture_delete(SkaTexture* texture);
 GLint ska_texture_wrap_string_to_int(const char* wrap);
-const char* ska_texture_get_wrap_s_string(SkaTexture* texture);
-const char* ska_texture_get_wrap_t_string(SkaTexture* texture);
+const char* ska_texture_get_wrap_s_string(const SkaTexture* texture);
+const char* ska_texture_get_wrap_t_string(const SkaTexture* texture);
 
 #ifdef __cplusplus
 }
