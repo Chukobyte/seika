@@ -4,8 +4,6 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
-
 #include "seika/defines.h"
 
 // --- Audio Manager --- //
