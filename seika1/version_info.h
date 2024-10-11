@@ -1,6 +1,6 @@
 #pragma once
 
-#include "macro_utils.h"
+#include "seika/macro_utils.h"
 
 #define SKA_VERSION_MAJOR 0
 #define SKA_VERSION_MINOR 1

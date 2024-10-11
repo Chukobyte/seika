@@ -8,9 +8,13 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "version_info.h"
+#include "seika/version_info.h"
 
 // Compilation modes
+
+#ifndef SKA_RENDERING_MODULE
+#define SKA_RENDERING_MODULE 1
+#endif
 
 #define SKA_INCLUDE_RENDERING 1
 #define SKA_INCLUDE_THREAD 1

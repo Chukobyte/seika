@@ -1,8 +1,9 @@
+#pragma once
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#pragma once
 
 #include <assert.h>
 #include <stdlib.h>

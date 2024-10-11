@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "stdbool.h"
+#include "seika/defines.h"
 
 #if defined(_WIN32) || defined(_WIN64) // Windows
 #define SKA_TRIGGER_BREAKPOINT __debugbreak()

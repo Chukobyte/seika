@@ -1,6 +1,6 @@
 #pragma once
 
-#include "defines.h"
+#include "seika/defines.h"
 
 // Copies string and allocated new memory
 char* ska_strdup(const char* string);
