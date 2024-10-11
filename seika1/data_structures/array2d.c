@@ -8,10 +8,10 @@
 #define SKA_ARRAY2D_IS_COORD_INVALID(ARRAY2D, ROW, COL) ((int32)ROW >= ARRAY2D->size.w || (int32)COL >= ARRAY2D->size.h)
 
 SkaArray2D* ska_array2d_create(usize rows, usize cols, usize elementSize) {
-    SkaArray2D* newArray = SKA_MEM_ALLOCATE(SkaArray2D);
-    newArray->data = SKA_MEM_ALLOCATE_SIZE(cols * sizeof(void*));
+    SkaArray2D* newArray = SKA_ALLOC(SkaArray2D);
+    newArray->data = SKA_ALLOC_BYTES(cols * sizeof(void*));
     for (usize i = 0; i < cols; i++) {
-        newArray->data[i] = SKA_MEM_ALLOCATE_SIZE(rows * elementSize);
+        newArray->data[i] = SKA_ALLOC_BYTES(rows * elementSize);
     }
     newArray->size = (SkaSize2Di){ .w = (int32)rows, .h = (int32)cols };
     newArray->elementSize = elementSize;
@@ -20,10 +20,10 @@ SkaArray2D* ska_array2d_create(usize rows, usize cols, usize elementSize) {
 
 void ska_array2d_destroy(SkaArray2D* array2d) {
     for (int32 i = 0; i < array2d->size.h; i++) {
-        SKA_MEM_FREE(array2d->data[i]);
+        SKA_FREE(array2d->data[i]);
     }
-    SKA_MEM_FREE(array2d->data);
-    SKA_MEM_FREE(array2d);
+    SKA_FREE(array2d->data);
+    SKA_FREE(array2d);
 }
 
 void* ska_array2d_get(SkaArray2D* array2d, usize x, usize y) {
@@ -49,11 +49,11 @@ void ska_array2d_resize(SkaArray2D* array2d, usize newX, usize newY) {
     void** oldData = array2d->data;
     const SkaSize2Di oldSize = array2d->size;
     // Allocate data for all columns
-    array2d->data = SKA_MEM_ALLOCATE_SIZE(newHeight * sizeof(void*));
+    array2d->data = SKA_ALLOC_BYTES(newHeight * sizeof(void*));
     // Iterate over new rows
     for (usize i = 0; i < newHeight; i++) {
         // Allocate data for new row
-        array2d->data[i] = SKA_MEM_ALLOCATE_SIZE(newX * array2d->elementSize);
+        array2d->data[i] = SKA_ALLOC_BYTES(newX * array2d->elementSize);
         if (i < (usize)oldSize.h) {
             // Now copy old data
             const usize bytesToCopy = SKA_MATH_MIN((usize)oldSize.w, newWidth) * array2d->elementSize;
@@ -68,9 +68,9 @@ void ska_array2d_resize(SkaArray2D* array2d, usize newX, usize newY) {
     }
 
     for (usize i = 0; i < (usize)oldSize.h; i++) {
-        SKA_MEM_FREE(oldData[i]);
+        SKA_FREE(oldData[i]);
     }
-    SKA_MEM_FREE(oldData);
+    SKA_FREE(oldData);
 }
 
 void ska_array2d_clear(SkaArray2D* array2d) {

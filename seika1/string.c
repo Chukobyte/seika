@@ -11,7 +11,7 @@
 
 char* ska_strdup(const char* string) {
     const usize string_length = strlen(string) + 1;
-    char* new_string = (char*)SKA_MEM_ALLOCATE_SIZE(string_length);
+    char* new_string = (char*)SKA_ALLOC_BYTES(string_length);
 
     if (new_string == NULL) {
         return NULL;
@@ -21,7 +21,7 @@ char* ska_strdup(const char* string) {
 }
 
 char* ska_strdup_from_memory(void* data, usize size) {
-    char* newString = (char*)SKA_MEM_ALLOCATE_SIZE(size + 1);
+    char* newString = (char*)SKA_ALLOC_BYTES(size + 1);
     memcpy(newString, data, size);
     newString[size] = '\0';
     return newString;
@@ -79,7 +79,7 @@ char* ska_str_to_lower_and_underscore_whitespace(char* str) {
 unsigned char* ska_str_convert_string_to_unsigned_char(const char* value, usize* outSize) {
     const usize stringLength = strlen(value);
     *outSize = stringLength + 1;
-    unsigned char* returnValue = (unsigned char*)SKA_MEM_ALLOCATE_SIZE(*outSize);
+    unsigned char* returnValue = (unsigned char*)SKA_ALLOC_BYTES(*outSize);
     for (usize i = 0; i < stringLength; i++) {
         returnValue[i] = (unsigned char)value[i];
     }
@@ -93,7 +93,7 @@ char* ska_str_trim(const char* value, char delimiter) {
     if (value == NULL) {
         return NULL;
     }
-    newStr = (char*)SKA_MEM_ALLOCATE_SIZE(strlen(value) + 1);
+    newStr = (char*)SKA_ALLOC_BYTES(strlen(value) + 1);
     if (newStr == NULL) {
         return NULL;
     }
@@ -118,7 +118,7 @@ char* ska_str_trim_and_replace(const char* value, char delimiter, const char* re
     char pathBuffer[SE_TRIM_PATH_BUFFER];
     strcpy(pathBuffer, newValue);
     strcat(pathBuffer, replacementValue);
-    SKA_MEM_FREE(newValue);
+    SKA_FREE(newValue);
     newValue = ska_strdup(pathBuffer);
     return newValue;
 #undef SE_TRIM_PATH_BUFFER
@@ -146,7 +146,7 @@ char* get_project_archive_name(const char* startingPath) {
     char pathBuffer[256];
     strcpy(pathBuffer, validPath);
     strcat(pathBuffer, ".zip");
-    SKA_MEM_FREE(validPath);
+    SKA_FREE(validPath);
     validPath = ska_strdup(pathBuffer);
     return validPath;
 }

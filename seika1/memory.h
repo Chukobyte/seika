@@ -6,19 +6,19 @@ extern "C" {
 
 #include "seika/defines.h"
 
-#define SKA_MEM_ALLOCATE(DataType)             \
+#define SKA_ALLOC(DataType)             \
 (DataType*) ska_mem_allocate(sizeof(DataType))
 
-#define SKA_MEM_ALLOCATE_ARRAY(DataType, ArraySize)             \
-(DataType*) ska_mem_allocate(ArraySize * sizeof(DataType))
+#define SKA_ALLOC_ZEROED(DataType)             \
+(DataType*) ska_mem_allocate_zeroed(sizeof(DataType))
 
-#define SKA_MEM_ALLOCATE_SIZE(Bytes)             \
+#define SKA_ALLOC_BYTES(Bytes)             \
 ska_mem_allocate(Bytes)
 
-#define SKA_MEM_ALLOCATE_SIZE_ZERO(Blocks, Bytes)             \
-ska_mem_allocate(Blocks * Bytes)
+#define SKA_ALLOC_BYTES_ZEROED(Bytes)             \
+ska_mem_allocate_zeroed(Bytes)
 
-#define SKA_MEM_FREE(Memory)             \
+#define SKA_FREE(Memory)             \
 ska_mem_free(Memory)
 
 typedef struct SkaMemAllocator {

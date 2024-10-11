@@ -18,11 +18,11 @@ int32 main(int32 argv, char** args) {
 }
 
 void seika_mem_test(void) {
-    int* testInt = SKA_MEM_ALLOCATE(int);
+    int* testInt = SKA_ALLOC(int);
     TEST_ASSERT_NOT_NULL(testInt);
     *testInt = 5;
     TEST_ASSERT_EQUAL_INT(5, *testInt);
     TEST_ASSERT_TRUE(ska_mem_report_leaks());
-    SKA_MEM_FREE(testInt);
+    SKA_FREE(testInt);
     TEST_ASSERT_FALSE(ska_mem_report_leaks());
 }

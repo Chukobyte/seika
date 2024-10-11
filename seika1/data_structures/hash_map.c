@@ -18,7 +18,7 @@ static void hash_map_allocate(SkaHashMap* hashMap, usize capacity);
 static void hash_map_resize(SkaHashMap* hashMap, usize capacity);
 
 SkaHashMap* ska_hash_map_create(usize keySize, usize valueSize, usize capacity) {
-    SkaHashMap* map = (SkaHashMap*) SKA_MEM_ALLOCATE_SIZE(sizeof(SkaHashMap));
+    SkaHashMap* map = (SkaHashMap*) SKA_ALLOC_BYTES(sizeof(SkaHashMap));
     map->keySize = keySize;
     map->valueSize = valueSize;
     map->size = 0;
@@ -29,9 +29,9 @@ SkaHashMap* ska_hash_map_create(usize keySize, usize valueSize, usize capacity) 
 }
 
 SkaHashMapNode* hash_map_create_node(SkaHashMap* hashMap, void* key, void* value, SkaHashMapNode* next) {
-    SkaHashMapNode* node = (SkaHashMapNode*) SKA_MEM_ALLOCATE(SkaHashMapNode);
-    node->key = SKA_MEM_ALLOCATE_SIZE(hashMap->keySize);
-    node->value = SKA_MEM_ALLOCATE_SIZE(hashMap->valueSize);
+    SkaHashMapNode* node = (SkaHashMapNode*) SKA_ALLOC(SkaHashMapNode);
+    node->key = SKA_ALLOC_BYTES(hashMap->keySize);
+    node->value = SKA_ALLOC_BYTES(hashMap->valueSize);
     memcpy(node->key, key, hashMap->keySize);
     memcpy(node->value, value, hashMap->valueSize);
     node->next = next;
@@ -50,7 +50,7 @@ bool ska_hash_map_destroy(SkaHashMap* hashMap) {
         }
     }
 
-    SKA_MEM_FREE(hashMap);
+    SKA_FREE(hashMap);
 
     return true;
 }
@@ -147,7 +147,7 @@ void hash_map_shrink_if_needed(SkaHashMap* hashMap) {
 }
 
 void hash_map_allocate(SkaHashMap* hashMap, usize capacity) {
-    hashMap->nodes = (SkaHashMapNode**)SKA_MEM_ALLOCATE_SIZE(capacity * sizeof(SkaHashMapNode*));
+    hashMap->nodes = (SkaHashMapNode**)SKA_ALLOC_BYTES(capacity * sizeof(SkaHashMapNode*));
     memset(hashMap->nodes, 0, capacity * sizeof(SkaHashMapNode*));
 
     hashMap->capacity = capacity;

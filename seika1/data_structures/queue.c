@@ -3,19 +3,19 @@
 #include "seika1/memory.h"
 
 SkaQueue* ska_queue_create(usize capacity, uint32 invalidValue) {
-    SkaQueue* queue = SKA_MEM_ALLOCATE(SkaQueue);
+    SkaQueue* queue = SKA_ALLOC(SkaQueue);
     queue->capacity = capacity;
     queue->invalidValue = invalidValue;
     queue->size = 0;
     queue->front = 0;
     queue->rear = (uint32)capacity - 1;
-    queue->array = (uint32*)SKA_MEM_ALLOCATE_SIZE(queue->capacity * sizeof(uint32));
+    queue->array = (uint32*)SKA_ALLOC_BYTES(queue->capacity * sizeof(uint32));
     return queue;
 }
 
 void ska_queue_destroy(SkaQueue* queue) {
-    SKA_MEM_FREE(queue->array);
-    SKA_MEM_FREE(queue);
+    SKA_FREE(queue->array);
+    SKA_FREE(queue);
 }
 
 bool ska_queue_is_full(SkaQueue* queue) {
