@@ -2,8 +2,8 @@
 
 #include <string.h>
 
-#include "seika/memory.h"
-#include "seika/assert.h"
+#include "seika1/memory.h"
+#include "seika1/assert.h"
 
 #define SKA_ARRAY2D_IS_COORD_INVALID(ARRAY2D, ROW, COL) ((int32)ROW >= ARRAY2D->size.w || (int32)COL >= ARRAY2D->size.h)
 

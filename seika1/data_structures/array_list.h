@@ -1,6 +1,6 @@
 #pragma once
 
-#include "seika/defines.h"
+#include "seika1/defines.h"
 
 #define SKA_ARRAY_LIST_GET_ARRAY(LIST, TYPE) ((TYPE*)((LIST)->data))
 #define SKA_ARRAY_LIST_FOR_EACH(LIST, TYPE, VALUE) for(TYPE* VALUE = SKA_ARRAY_LIST_GET_ARRAY(LIST, TYPE), *VALUE##_end = VALUE + (LIST)->size; VALUE < VALUE##_end; VALUE++)

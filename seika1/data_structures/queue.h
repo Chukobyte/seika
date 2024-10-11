@@ -1,6 +1,6 @@
 #pragma once
 
-#include "seika/defines.h"
+#include "seika1/defines.h"
 
 // TODO: If other types are needed, create a macro to simplify queues by type
 

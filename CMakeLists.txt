@@ -26,4 +26,7 @@ if (SK_IS_MAIN)
     # Create seika test exe
     add_executable(seika_test test/test.c)
     target_link_libraries(seika_test seika unity)
+    # Create seika1 test exe
+    add_executable(seika1_test test/test1.c)
+    target_link_libraries(seika1_test seika1 unity)
 endif()

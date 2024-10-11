@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "seika/defines.h"
+#include "seika1/defines.h"
 
 #define SKA_STRING_HASH_MAP_SHRINK_THRESHOLD 0.25f
 #define SKA_STRING_HASH_MAP_MIN_CAPACITY 8

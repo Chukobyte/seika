@@ -1,10 +1,9 @@
-#include "seika/string.h"
+#include "seika1/string.h"
 
-#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
 
-#include "seika/memory.h"
+#include "seika1/memory.h"
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4996) // for strcpy and strncat

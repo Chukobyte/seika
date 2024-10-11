@@ -1,6 +1,6 @@
 #include "queue.h"
 
-#include "seika/memory.h"
+#include "seika1/memory.h"
 
 SkaQueue* ska_queue_create(usize capacity, uint32 invalidValue) {
     SkaQueue* queue = SKA_MEM_ALLOCATE(SkaQueue);

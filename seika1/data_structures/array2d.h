@@ -1,6 +1,6 @@
 #pragma once
 
-#include "seika/math/math.h"
+#include "seika1/math/math.h"
 
 typedef struct SkaArray2D {
     void** data;

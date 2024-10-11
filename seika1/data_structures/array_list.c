@@ -2,8 +2,8 @@
 
 #include <string.h>
 
-#include "seika/memory.h"
-#include "seika/assert.h"
+#include "seika1/memory.h"
+#include "seika1/assert.h"
 
 #define SKA_ARRAY_LIST_DEFAULT_CAPACITY 16
 

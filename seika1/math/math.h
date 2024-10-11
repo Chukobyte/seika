@@ -10,7 +10,7 @@ extern "C" {
 
 #include <cglm/cglm.h>
 
-#include "seika/defines.h"
+#include "seika1/defines.h"
 
 #define SKA_PI 3.14159265358979323846f
 #define SKA_RAD_2_DEG(RADIANS) ((RADIANS) * (180.0 / (f64)SKA_PI))

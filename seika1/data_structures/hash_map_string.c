@@ -2,9 +2,9 @@
 
 #include <string.h>
 
-#include "seika/string.h"
-#include "seika/memory.h"
-#include "seika/assert.h"
+#include "seika1/string.h"
+#include "seika1/memory.h"
+#include "seika1/assert.h"
 
 static usize ska_default_hash_string(const char* raw_key);
 static int32 ska_default_compare_string(const char* first_key, const char* second_key);

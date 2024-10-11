@@ -2,8 +2,8 @@
 
 #include <string.h>
 
-#include "seika/memory.h"
-#include "seika/assert.h"
+#include "seika1/memory.h"
+#include "seika1/assert.h"
 
 static usize se_default_hash(void* raw_key, usize key_size);
 static int32 se_default_compare(void* first_key, void* second_key, usize key_size);

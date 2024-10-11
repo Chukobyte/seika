@@ -8,7 +8,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "seika/version_info.h"
+#include "seika1/version_info.h"
 
 // Compilation modes
 

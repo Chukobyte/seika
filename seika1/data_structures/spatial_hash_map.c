@@ -3,8 +3,8 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "seika/memory.h"
-#include "seika/assert.h"
+#include "seika1/memory.h"
+#include "seika1/assert.h"
 
 #define SKA_SPATIAL_HASH_NULL_ENTITY 4294967295
 #define SKA_SPATIAL_HASH_MAX_POSITION_HASH 8

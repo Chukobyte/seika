@@ -1,7 +1,7 @@
 #include "curve_float.h"
 
-#include "seika/math/math.h"
-#include "seika/assert.h"
+#include "seika1/math/math.h"
+#include "seika1/assert.h"
 
 // Helper functions
 void control_point_swap(SkaCurveControlPoint* pointA, SkaCurveControlPoint* pointB) {

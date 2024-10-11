@@ -1,6 +1,6 @@
 #pragma once
 
-#include "seika/defines.h"
+#include "seika1/defines.h"
 
 #define SKA_ARRAY_UTILS_REMOVE_ARRAY_ITEM(ARRAY, ARRAY_SIZE, ELEMENT, EMPTY_VALUE) \
 {                                                                                       \

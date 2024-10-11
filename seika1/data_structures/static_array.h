@@ -1,7 +1,7 @@
 #pragma once
 
-#include "seika/defines.h"
-#include "seika/data_structures/array_utils.h"
+#include "seika1/defines.h"
+#include "seika1/data_structures/array_utils.h"
 
 // Helper class for generalized use of static arrays
 

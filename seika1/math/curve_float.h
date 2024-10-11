@@ -4,10 +4,7 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
-#include <stdbool.h>
-
-#include "seika/defines.h"
+#include "seika1/defines.h"
 
 #define SKA_CURVE_MAX_CONTROL_POINTS 16
 

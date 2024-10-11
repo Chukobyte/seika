@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "seika/string.h"
+#include "seika1/string.h"
 #include "memory.h"
 
 #define SKA_LOGGER_MAX_QUEUED_MESSAGES 16
