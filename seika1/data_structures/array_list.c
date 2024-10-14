@@ -17,6 +17,7 @@ SkaArrayList* ska_array_list_create(usize valueSize, usize initialCapacity) {
     newList->valueSize = valueSize;
     newList->capacity = initialCapacity;
     newList->initialCapacity = initialCapacity;
+    newList->size = 0;
     return newList;
 }
 
