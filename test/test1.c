@@ -46,5 +46,15 @@ void seika_array_list_test(void) {
         index++;
     }
 
+    ska_array_list_remove_by_index(arrayList, 1);
+    int oneValue = (int)*(int*)ska_array_list_get(arrayList, 1);
+    TEST_ASSERT_EQUAL_INT(3, oneValue);
+
+    ska_array_list_remove(arrayList, &(int){3});
+    oneValue = (int)*(int*)ska_array_list_get(arrayList, 1);
+    TEST_ASSERT_EQUAL_INT(5, oneValue);
+
+    ska_array_list_clear(arrayList);
+    TEST_ASSERT_TRUE(ska_array_list_is_empty(arrayList));
     ska_array_list_destroy(arrayList);
 }

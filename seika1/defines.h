@@ -12,18 +12,21 @@ extern "C" {
 
 // Compilation modes
 
-#ifndef SKA_RENDERING_MODULE
-#define SKA_RENDERING_MODULE 1
+#ifndef SKA_ECS
+#define SKA_ECS 1
 #endif
 
-#define SKA_INCLUDE_RENDERING 1
-#define SKA_INCLUDE_THREAD 1
-#define SKA_INCLUDE_NETWORKING 1
-#define SKA_INCLUDE_DATA_STRUCTURES 1
-#define SKA_INCLUDE_ASSET 1
-#define SKA_INCLUDE_AUDIO 1
-#define SKA_INCLUDE_ECS 1
-#define SKA_INCLUDE_MATH 1
+#ifndef SKA_INPUT
+#define SKA_INPUT 1
+#endif
+
+#ifndef SKA_RENDERING
+#define SKA_RENDERING 1
+#endif
+
+#ifndef SKA_AUDIO
+#define SKA_AUDIO 1
+#endif
 
 typedef size_t usize;
 

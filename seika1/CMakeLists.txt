@@ -18,15 +18,31 @@ file(GLOB_RECURSE SEIKA_SRC ./*.c ./*.h)
 add_library(${PROJECT_NAME} STATIC ${SEIKA_SRC})
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../)
 
+set(LIBS_TO_LINK "")
+
+if (SEIKA_ENABLE_RENDERING)
+    list(APPEND LIBS_TO_LINK glad stb_image freetype)
+endif()
+
+if (SEIKA_ENABLE_AUDIO)
+    list(APPEND LIBS_TO_LINK miniaudio)
+endif()
+
+if (SEIKA_ENABLE_INPUT)
+    list(APPEND LIBS_TO_LINK ${SDL3_LIBRARY})
+endif()
+
 #--- Link ---#
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio ${SDL3_LIBRARY} freetype Ws2_32)
+    list(APPEND LIBS_TO_LINK Ws2_32)
 elseif (WIN32)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio -lmingw32 -static-libgcc ${SDL3_LIBRARY} freetype -lws2_32)
+    list(APPEND LIBS_TO_LINK -lmingw32 -static-libgcc -lws2_32)
 elseif (APPLE)
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio -Xlinker ${SDL3_LIBRARY} freetype m)
+    list(APPEND LIBS_TO_LINK m)
 else ()
-    target_link_libraries(${PROJECT_NAME} PUBLIC cglm glad stb_image zip miniaudio -static-libgcc -Xlinker -export-dynamic ${SDL3_LIBRARY} freetype m)
+    list(APPEND LIBS_TO_LINK -static-libgcc -Xlinker -export-dynamic m)
 endif ()
+
+target_link_libraries(${PROJECT_NAME} PUBLIC cglm zip ${LIBS_TO_LINK})
 
 target_compile_options(${PROJECT_NAME} PUBLIC ${flags})
