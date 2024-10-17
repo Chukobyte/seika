@@ -124,6 +124,10 @@ void* ska_ecs_component_manager_get_component_unchecked(SkaEntity entity, SkaCom
 }
 
 void ska_ecs_component_manager_set_component(SkaEntity entity, SkaComponentIndex index, void* component) {
+    // Add to component array if entity exceeds size
+    if ((usize)entity >= componentManager.componentArrays->size) {
+        ska_array_list_push_back(componentManager.componentArrays, &entity);
+    }
     ComponentArray* componentArray = ska_array_list_get(componentManager.componentArrays, (usize)entity);
     component_array_set_component(componentArray, index, component);
     componentArray->signature |= component_manager_translate_index_to_type(index);
