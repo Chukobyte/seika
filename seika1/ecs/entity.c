@@ -2,7 +2,7 @@
 #include "seika/data_structures/queue.h"
 #include "seika/assert.h"
 
-static SkaQueue* entityIdQueue = NULL;
+static SkaIdQueue* entityIdQueue = NULL;
 static SkaEntity entityIdCounter = 0;
 static usize activeEntityCount = 0;
 
