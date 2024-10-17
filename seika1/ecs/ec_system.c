@@ -1,12 +1,10 @@
 #include "ec_system.h"
 
-#include <string.h>
-
-#include "seika/string.h"
-#include "seika/flag_utils.h"
-#include "seika/logger.h"
-#include "seika/memory.h"
-#include "seika/assert.h"
+#include "seika1/string.h"
+#include "seika1/flag_utils.h"
+#include "seika1/logger.h"
+#include "seika1/memory.h"
+#include "seika1/assert.h"
 
 //--- EC System Manager ---//
 #define MAX_ENTITY_SYSTEMS_PER_HOOK 12
@@ -52,7 +50,7 @@ void ska_ecs_system_finalize() {
 }
 
 SkaECSSystem* ska_ecs_system_create(const char* systemName) {
-    SkaECSSystem* newSystem = SKA_MEM_ALLOCATE(SkaECSSystem);
+    SkaECSSystem* newSystem = SKA_ALLOC_ZEROED(SkaECSSystem);
     newSystem->name = ska_strdup(systemName);
     newSystem->entities = ska_array_list_create_default_capacity(sizeof(SkaEntity));
     return newSystem;
@@ -127,7 +125,7 @@ void ska_ecs_system_destroy(SkaECSSystem* entitySystem) {
     if (entitySystem->on_ec_system_destroy) {
         entitySystem->on_ec_system_destroy(entitySystem);
     }
-    SKA_MEM_FREE(entitySystem);
+    SKA_FREE(entitySystem);
 }
 
 void ska_ecs_system_register(SkaECSSystem* system) {

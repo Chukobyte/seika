@@ -105,7 +105,7 @@ void ska_logger_internal_queue_message(const char* fmt, ...) {
             queuedLogMessagesCount++;
         }
         // Freeing in case we looped around
-        SKA_MEM_FREE(queuedLogMessages[currentIndex]);
+        SKA_FREE(queuedLogMessages[currentIndex]);
         queuedLogMessages[currentIndex] = ska_strdup(str);
     }
     va_end(args);
@@ -115,7 +115,7 @@ bool ska_logger_internal_print_queue() {
     if (queuedLogMessagesCount > 0) {
         for (usize i = 0; i < queuedLogMessagesCount; i++) {
             ska_logger_message(queuedLogMessages[i]);
-            SKA_MEM_FREE(queuedLogMessages[i]);
+            SKA_FREE(queuedLogMessages[i]);
             queuedLogMessages[i] = NULL;
         }
         queuedLogMessagesCount = 0;

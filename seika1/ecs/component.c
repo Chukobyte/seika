@@ -149,6 +149,16 @@ bool ska_ecs_component_manager_has_component(SkaEntity entity, SkaComponentIndex
     return component_array_has_component(componentArray, index);
 }
 
+void ska_ecs_component_manager_set_component_signature(SkaEntity entity, SkaComponentType componentTypeSignature) {
+    ComponentArray* componentArray = ska_array_list_get(componentManager.componentArrays, (usize)entity);
+    componentArray->signature = componentTypeSignature;
+}
+
+SkaComponentType ska_ecs_component_manager_get_component_signature(SkaEntity entity) {
+    const ComponentArray* componentArray = ska_array_list_get(componentManager.componentArrays, (usize)entity);
+    return componentArray->signature;
+}
+
 SkaComponentType component_manager_translate_index_to_type(SkaComponentIndex index) {
     SKA_STRING_HASH_MAP_FOR_EACH(componentNameToTypeMap, iter) {
         SkaStringHashMapNode* node = iter.pair;
