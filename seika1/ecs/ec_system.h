@@ -1,6 +1,7 @@
 #pragma once
 
 #include "component.h"
+#include "seika1/data_structures/array_list.h"
 
 #define SKA_ECS_SYSTEM_CREATE(NAME, ...) \
 ska_ecs_system_create_with_signature_string(NAME, #__VA_ARGS__)
@@ -11,6 +12,8 @@ ska_ecs_system_create_from_template_with_signature_string(TEMPLATE, #__VA_ARGS__
 // Creates and register system from template
 #define SKA_ECS_SYSTEM_REGISTER_FROM_TEMPLATE(TEMPLATE, ...) \
 ska_ecs_system_register(ska_ecs_system_create_from_template_with_signature_string(TEMPLATE, #__VA_ARGS__))
+
+#define SKA_ECS_SYSTEM_ENTITIES_FOR(SYSTEM, VALUE) SKA_ARRAY_LIST_FOR_EACH(SYSTEM->list, SkaEntity, VALUE)
 
 struct SkaECSSystem;
 
@@ -45,9 +48,7 @@ typedef struct SkaECSSystem {
     FixedUpdateFunc fixed_update_func;
     NetworkCallbackFunc network_callback_func;
     SkaComponentType component_signature;
-    usize entity_count;
-    // Keeps track of entities that match a component signature
-    SkaEntity entities[SKA_MAX_ENTITIES];
+    SkaArrayList* entities;
 } SkaECSSystem;
 
 typedef struct SkaECSSystemTemplate {

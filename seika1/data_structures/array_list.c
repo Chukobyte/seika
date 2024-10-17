@@ -13,7 +13,7 @@ SkaArrayList* ska_array_list_create_default_capacity(usize valueSize) {
 
 SkaArrayList* ska_array_list_create(usize valueSize, usize initialCapacity) {
     SkaArrayList* newList = SKA_ALLOC(SkaArrayList);
-    newList->data = SKA_ALLOC_BYTES(initialCapacity * valueSize);
+    newList->data = SKA_ALLOC_BYTES_ZEROED(initialCapacity * valueSize);
     newList->valueSize = valueSize;
     newList->capacity = initialCapacity;
     newList->initialCapacity = initialCapacity;
@@ -69,7 +69,16 @@ bool ska_array_list_remove_by_index(SkaArrayList* list, usize index) {
     return false;
 }
 
-bool ska_array_list_is_empty(SkaArrayList *list) {
+bool ska_array_list_has(const SkaArrayList* list, const void* value) {
+    for (usize i = 0; i < list->size; i++) {
+        if (memcmp((char*)list->data + i * list->valueSize, value, list->valueSize) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ska_array_list_is_empty(const SkaArrayList *list) {
     return list->size == 0;
 }
 
