@@ -1,5 +1,11 @@
 #pragma once
 
+// #define SKA_QUEUE_TEMPLATE uint32
+// #include "queue_template.h"
+// #define SKA_QUEUE_TEMPLATE int32
+// #include "queue_template.h"
+// #undef SKA_QUEUE_TEMPLATE
+
 #include "seika1/defines.h"
 
 // TODO: If other types are needed, create a macro to simplify queues by type

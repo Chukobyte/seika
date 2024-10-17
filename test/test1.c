@@ -3,6 +3,7 @@
 
 #include "seika1/memory.h"
 #include "seika1/data_structures/array_list.h"
+#include "seika1/data_structures/queue.h"
 
 #define RESOURCES_PATH "test/resources"
 #define RESOURCES_PACK_PATH "test/resources/test.pck"
@@ -12,6 +13,7 @@ void tearDown(void) {}
 
 void seika_mem_test(void);
 void seika_array_list_test(void);
+void seika_queue_test(void);
 
 int32 main(int32 argv, char** args) {
     UNITY_BEGIN();
@@ -58,3 +60,5 @@ void seika_array_list_test(void) {
     TEST_ASSERT_TRUE(ska_array_list_is_empty(arrayList));
     ska_array_list_destroy(arrayList);
 }
+
+void seika_queue_test(void) {}
