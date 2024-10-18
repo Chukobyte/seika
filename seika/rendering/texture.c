@@ -31,7 +31,7 @@ static inline bool ska_texture_is_texture_valid(const SkaTexture* texture) {
 }
 
 static inline SkaTexture* ska_texture_create_default_texture() {
-    SkaTexture* texture = SKA_MEM_ALLOCATE(SkaTexture);
+    SkaTexture* texture = SKA_ALLOC(SkaTexture);
     memcpy(texture, &DEFAULT_TEXTURE_REF, sizeof(SkaTexture));
     return texture;
 }
@@ -52,7 +52,7 @@ SkaTexture* ska_texture_create_texture2(const char* filePath, GLint wrapS, GLint
     SkaAssetFileImageData* fileImageData = ska_asset_file_loader_load_image_data(filePath);
     SKA_ASSERT_FMT(fileImageData != NULL, "Failed to load texture image at file path '%s'", filePath);
     const usize imageDataSize = strlen((char*) fileImageData->data);
-    texture->data = (unsigned char*) SKA_MEM_ALLOCATE_SIZE(imageDataSize);
+    texture->data = (unsigned char*) SKA_ALLOC_BYTES(imageDataSize);
 //    memcpy(texture->data, fileImageData->data, imageDataSize);
     texture->data = fileImageData->data; // TODO: Fix
     texture->width = fileImageData->width;
@@ -76,7 +76,7 @@ SkaTexture* ska_texture_create_texture_from_memory2(const void* buffer, usize bu
     texture->wrapS = wrapS;
     texture->wrapT = wrapT;
     texture->applyNearestNeighbor = applyNearestNeighbor;
-    texture->data = (unsigned char*) SKA_MEM_ALLOCATE_SIZE(bufferSize);
+    texture->data = (unsigned char*) SKA_ALLOC_BYTES(bufferSize);
     unsigned char* imageData = stbi_load_from_memory((unsigned char*)buffer, (int32)bufferSize, &texture->width, &texture->height, &texture->nrChannels, 0);
     SKA_ASSERT(imageData);
 //    memcpy(texture->data, imageData, bufferSize);
@@ -96,7 +96,7 @@ SkaTexture* ska_texture_create_solid_colored_texture(GLsizei width, GLsizei heig
     texture->height = height;
 
     const GLsizei dataSize = width * height * 4;
-    texture->data = (unsigned char*)SKA_MEM_ALLOCATE_SIZE(dataSize);
+    texture->data = (unsigned char*)SKA_ALLOC_BYTES(dataSize);
     for (GLsizei i = 0; i < dataSize; i++) {
         texture->data[i] = colorValue;
     }
@@ -132,8 +132,8 @@ void ska_texture_generate(SkaTexture* texture) {
 }
 
 void ska_texture_delete(SkaTexture* texture) {
-    SKA_MEM_FREE(texture->fileName);
-    SKA_MEM_FREE(texture);
+    SKA_FREE(texture->fileName);
+    SKA_FREE(texture);
 }
 
 GLint ska_texture_wrap_string_to_int(const char* wrap) {

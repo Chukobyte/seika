@@ -8,7 +8,7 @@
 static bool shader_check_compile_errors(uint32 shaderId, const char* type);
 
 SkaShader* ska_shader_compile_new_shader(const char* vertexSource, const char* fragmentSource) {
-    SkaShader* shader = SKA_MEM_ALLOCATE(SkaShader);
+    SkaShader* shader = SKA_ALLOC(SkaShader);
     GLuint vertex, fragment;
     // vertex
     vertex = glCreateShader(GL_VERTEX_SHADER);

@@ -8,7 +8,7 @@
 #include "seika/memory.h"
 #include "seika/assert.h"
 #include "seika/asset/asset_file_loader.h"
-#include "seika/data_structures/queue.h"
+#include "seika/data_structures/id_queue.h"
 #include "seika/logger.h"
 
 // --- Parsed Shader Cache --- //
@@ -20,14 +20,14 @@ SkaStringHashMap* parsedShaderCacheMap = NULL;
 
 // --- Shader Cache --- //
 static SkaShaderInstance* instanceCache[SKA_SHADER_INSTANCE_MAX_INSTANCES];
-static SkaQueue* shaderInstanceIdQueue = NULL;
+static SkaIdQueue* shaderInstanceIdQueue = NULL;
 
 void ska_shader_cache_initialize() {
     SKA_ASSERT(shaderInstanceIdQueue == NULL);
     SKA_ASSERT(parsedShaderCacheMap == NULL);
-    shaderInstanceIdQueue = ska_queue_create(SKA_SHADER_INSTANCE_MAX_INSTANCES, SKA_SHADER_INSTANCE_INVALID_ID);
+    shaderInstanceIdQueue = ska_id_queue_create(SKA_SHADER_INSTANCE_MAX_INSTANCES);
     for (uint32_t i = 0; i < SKA_SHADER_INSTANCE_MAX_INSTANCES; i++) {
-        ska_queue_enqueue(shaderInstanceIdQueue, i);
+        ska_id_queue_enqueue(shaderInstanceIdQueue, i);
         instanceCache[i] = NULL;
     }
     parsedShaderCacheMap = ska_string_hash_map_create_default_capacity();
@@ -36,7 +36,7 @@ void ska_shader_cache_initialize() {
 void ska_shader_cache_finalize() {
     SKA_ASSERT(shaderInstanceIdQueue != NULL);
     SKA_ASSERT(parsedShaderCacheMap != NULL);
-    ska_queue_destroy(shaderInstanceIdQueue);
+    ska_id_queue_destroy(shaderInstanceIdQueue);
     shaderInstanceIdQueue = NULL;
     SKA_STRING_HASH_MAP_FOR_EACH(parsedShaderCacheMap, iter) {
         SkaStringHashMapNode* node = iter.pair;
@@ -48,14 +48,16 @@ void ska_shader_cache_finalize() {
 }
 
 SkaShaderInstanceId ska_shader_cache_add_instance(SkaShaderInstance* instance) {
-    const SkaShaderInstanceId newId = ska_queue_dequeue(shaderInstanceIdQueue);
+    SkaShaderInstanceId newId;
+    const bool succes = ska_id_queue_dequeue(shaderInstanceIdQueue, &newId);
+    SKA_ASSERT(succes);
     instanceCache[newId] = instance;
     return newId;
 }
 
 void ska_shader_cache_remove_instance(SkaShaderInstanceId instanceId) {
     instanceCache[instanceId] = NULL;
-    ska_queue_enqueue(shaderInstanceIdQueue, instanceId);
+    ska_id_queue_enqueue(shaderInstanceIdQueue, instanceId);
 }
 
 SkaShaderInstance* ska_shader_cache_get_instance(SkaShaderInstanceId instanceId) {

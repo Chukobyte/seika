@@ -129,6 +129,6 @@ SkaAssetFileImageData* ska_asset_file_loader_load_image_data(const char* filePat
 
 void ska_asset_file_loader_free_image_data(SkaAssetFileImageData* data) {
     stbi_image_free(data->data);
-    SKA_MEM_FREE(data);
+    SKA_FREE(data);
 }
 #endif // #if SKA_RENDERING

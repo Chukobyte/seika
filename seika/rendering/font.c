@@ -15,7 +15,7 @@ static void ska_initialize_font(FT_Face face, SkaFont* font, bool applyNearestNe
 
 SkaFont* ska_font_create_font(const char* fileName, int32 size, bool applyNearestNeighbor) {
     FT_Face face;
-    SkaFont* font = SKA_MEM_ALLOCATE(SkaFont);
+    SkaFont* font = SKA_ALLOC(SkaFont);
     font->size = size;
 
     // Failed to create font, exit out early
@@ -33,7 +33,7 @@ SkaFont* ska_font_create_font(const char* fileName, int32 size, bool applyNeares
 
 SkaFont* ska_font_create_font_from_memory(const void* buffer, usize bufferSize, int32 size, bool applyNearestNeighbor) {
     FT_Face face;
-    SkaFont* font = SKA_MEM_ALLOCATE(SkaFont);
+    SkaFont* font = SKA_ALLOC(SkaFont);
     font->size = size;
 
     // Failed to create font, exit out early
@@ -50,7 +50,7 @@ SkaFont* ska_font_create_font_from_memory(const void* buffer, usize bufferSize, 
 }
 
 void ska_font_delete(SkaFont* font) {
-    SKA_MEM_FREE(font);
+    SKA_FREE(font);
 }
 
 bool ska_generate_new_font_face(const char* fileName, FT_Face* face) {
