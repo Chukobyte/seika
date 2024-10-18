@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.27.0)
 
 set(CMAKE_C_STANDARD 11)
 
-project(seika1 C)
+project(seika C)
 
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     list(APPEND flags "/W3" "/Zc:preprocessor")
