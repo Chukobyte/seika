@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_ECS
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -52,3 +54,5 @@ const char* ska_ecs_component_get_component_data_index_string(SkaComponentIndex 
 #ifdef __cplusplus
 }
 #endif
+
+#endif // if SKA_ECS

@@ -1,3 +1,5 @@
+#if SKA_ECS
+
 #include "entity.h"
 #include "seika1/data_structures/id_queue.h"
 #include "seika1/assert.h"
@@ -36,3 +38,5 @@ void ska_ecs_entity_return(SkaEntity entity) {
 usize ska_ecs_entity_get_active_count() {
     return activeEntityCount;
 }
+
+#endif // if SKA_ECS

@@ -1,3 +1,5 @@
+#if SKA_ECS
+
 #include "ec_system.h"
 
 #include "seika1/string.h"
@@ -284,3 +286,5 @@ void ska_ecs_system_insert_entity_into_system(SkaEntity entity, SkaECSSystem* sy
 void ska_ecs_system_remove_entity_from_system(SkaEntity entity, SkaECSSystem* system) {
     ska_array_list_remove(system->entities, &entity);
 }
+
+#endif // if SKA_ECS

@@ -4,9 +4,12 @@
 #include "seika1/memory.h"
 #include "seika1/data_structures/array_list.h"
 #include "seika1/data_structures/id_queue.h"
+#include "seika1/math/math.h"
+
+#if SKA_ECS
 #include "seika1/ecs/ecs.h"
 #include "seika1/ecs/ec_system.h"
-#include "seika1/math/math.h"
+#endif
 
 #define RESOURCES_PATH "test/resources"
 #define RESOURCES_PACK_PATH "test/resources/test.pck"

@@ -1,3 +1,5 @@
+#if SKA_ECS
+
 #include "component.h"
 
 #include "seika1/string.h"
@@ -180,3 +182,5 @@ const char* ska_ecs_component_get_component_data_index_string(SkaComponentIndex 
     }
     return "INVALID";
 }
+
+#endif // if SKA_ECS

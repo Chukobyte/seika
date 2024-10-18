@@ -183,7 +183,7 @@ void hash_map_resize(SkaHashMap* hashMap, usize capacity) {
 
     hash_map_rehash(hashMap, oldNode, oldCapacity);
 
-    SKA_MEM_FREE(oldNode);
+    SKA_FREE(oldNode);
 }
 
 // --- Iterator --- //
@@ -256,9 +256,9 @@ void hash_map_destroy_node(SkaHashMapNode* node) {
     SKA_ASSERT(node->value != NULL);
     SKA_ASSERT(node->key != NULL);
 
-    SKA_MEM_FREE(node->key);
+    SKA_FREE(node->key);
     node->key = NULL;
-    SKA_MEM_FREE(node->value);
+    SKA_FREE(node->value);
     node->value = NULL;
-    SKA_MEM_FREE(node);
+    SKA_FREE(node);
 }

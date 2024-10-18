@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_ECS
+
 #include "component.h"
 #include "seika1/data_structures/array_list.h"
 
@@ -109,3 +111,5 @@ void ska_ecs_system_event_post_update_all_systems();
 void ska_ecs_system_event_update_systems(f32 deltaTime);
 void ska_ecs_system_event_fixed_update_systems(f32 deltaTime);
 void ska_ecs_system_event_network_callback(const char* message);
+
+#endif // if SKA_ECS

@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_ECS
+
 #include "seika1/defines.h"
 
 // Entity is defined as a unsigned 32-bit integer
@@ -13,3 +15,5 @@ SkaEntity ska_ecs_entity_create();
 // Push entity to the queue
 void ska_ecs_entity_return(SkaEntity entity);
 usize ska_ecs_entity_get_active_count();
+
+#endif // if SKA_ECS

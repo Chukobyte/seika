@@ -1,3 +1,5 @@
+#if SKA_ECS
+
 #include "ecs.h"
 
 void ska_ecs_initialize() {
@@ -11,3 +13,5 @@ void ska_ecs_finalize() {
     ska_ecs_component_manager_finalize();
     ska_ecs_system_finalize();
 }
+
+#endif // if SKA_ECS
