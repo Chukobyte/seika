@@ -10,24 +10,6 @@ extern "C" {
 
 #include "seika1/version_info.h"
 
-// Compilation modes
-
-#ifndef SKA_ECS
-#define SKA_ECS 1
-#endif
-
-#ifndef SKA_INPUT
-#define SKA_INPUT 1
-#endif
-
-#ifndef SKA_RENDERING
-#define SKA_RENDERING 1
-#endif
-
-#ifndef SKA_AUDIO
-#define SKA_AUDIO 1
-#endif
-
 typedef size_t usize;
 
 typedef int16_t int16;
