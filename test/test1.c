@@ -3,8 +3,10 @@
 
 #include "seika/memory.h"
 #include "seika/asset/asset_file_loader.h"
+#include "seika/data_structures/array2d.h"
 #include "seika/data_structures/array_list.h"
 #include "seika/data_structures/id_queue.h"
+#include "seika/data_structures/spatial_hash_map.h"
 #include "seika/math/math.h"
 
 #if SKA_ECS
@@ -24,6 +26,9 @@ void tearDown(void) {}
 
 void seika_mem_test(void);
 void seika_array_list_test(void);
+void seika_hash_map_test(void);
+void seika_spatial_hash_map_test(void);
+void seika_array2d_test(void);
 void seika_id_queue_test(void);
 void seika_asset_file_loader_test(void);
 
@@ -39,6 +44,9 @@ int32 main(int32 argv, char** args) {
     UNITY_BEGIN();
     RUN_TEST(seika_mem_test);
     RUN_TEST(seika_array_list_test);
+    RUN_TEST(seika_hash_map_test);
+    RUN_TEST(seika_spatial_hash_map_test);
+    RUN_TEST(seika_array2d_test);
     RUN_TEST(seika_id_queue_test);
     RUN_TEST(seika_asset_file_loader_test);
 #if SKA_ECS
@@ -114,6 +122,130 @@ void seika_id_queue_test(void) {
     ska_id_queue_dequeue(idQueue, &value);
     TEST_ASSERT_EQUAL_UINT32(10, value);
     TEST_ASSERT_EQUAL_size_t(20, idQueue->capacity);
+}
+
+void seika_hash_map_test(void) {
+    SkaHashMap* hashMap = ska_hash_map_create(sizeof(int32), sizeof(int32), SKA_HASH_MAP_MIN_CAPACITY);
+    TEST_ASSERT_NOT_NULL(hashMap);
+
+    int32 key1 = 0;
+    int32 value1 = 11;
+    ska_hash_map_add(hashMap, &key1, &value1);
+    TEST_ASSERT_EQUAL_INT(1, hashMap->size);
+    int32 returnedValue1 = *(int32*) ska_hash_map_get(hashMap, &key1);
+    TEST_ASSERT_EQUAL_INT(value1, returnedValue1);
+
+    int32 key2 = 1;
+    int32 value2 = 22;
+    ska_hash_map_add(hashMap, &key2, &value2);
+    TEST_ASSERT_EQUAL_INT(2, hashMap->size);
+
+    // Iterator test
+    int32 iterCount = 0;
+    for (SkaHashMapIterator iterator = ska_hash_map_iter_create(hashMap); ska_hash_map_iter_is_valid(hashMap, &iterator); ska_hash_map_iter_advance(hashMap, &iterator)) {
+        iterCount++;
+    }
+    TEST_ASSERT_EQUAL_INT(2, iterCount);
+    // Iter Macro test
+    iterCount = 0;
+    SKA_HASH_MAP_FOR_EACH(hashMap, iter) {
+        iterCount++;
+    }
+    TEST_ASSERT_EQUAL_INT(2, iterCount);
+
+    ska_hash_map_destroy(hashMap);
+}
+
+void seika_spatial_hash_map_test(void) {
+    const int32 maxSpriteSize = 32;
+    SkaSpatialHashMap* spatialHashMap = ska_spatial_hash_map_create(maxSpriteSize * 2);
+    TEST_ASSERT_NOT_NULL(spatialHashMap);
+
+    // Create two entities and insert them into hash map
+    const uint32 entity = 1;
+    SkaSpatialHashMapGridSpacesHandle* handle = ska_spatial_hash_map_insert_or_update(spatialHashMap, entity, &(SkaRect2) {
+        0.0f, 0.0f, 32.0f, 32.0f
+    });
+    TEST_ASSERT_EQUAL(handle, ska_spatial_hash_map_get(spatialHashMap, entity));
+
+    const uint32 entityTwo = 2;
+    SkaSpatialHashMapGridSpacesHandle* handleTwo = ska_spatial_hash_map_insert_or_update(spatialHashMap, entityTwo, &(SkaRect2) {
+        16.0f, 16.0f, 48.0f, 48.0f
+    });
+    TEST_ASSERT_EQUAL(handleTwo, ska_spatial_hash_map_get(spatialHashMap, entityTwo));
+
+    // An entity that should not be collided with
+    const uint32 entityNotCollided = 3;
+    ska_spatial_hash_map_insert_or_update(spatialHashMap, entityNotCollided, &(SkaRect2) {
+        64.0f, 64.0f, 96.0f, 96.0f
+    });
+
+    // Test collision result to make sure the two entities collide
+    const SkaSpatialHashMapCollisionResult collisionResult = ska_spatial_hash_map_compute_collision(spatialHashMap, entity);
+    TEST_ASSERT_EQUAL_INT(1, collisionResult.collisionCount);
+
+    if (collisionResult.collisionCount > 0) {
+        TEST_ASSERT_EQUAL_INT(2, collisionResult.collisions[0]);
+    }
+
+    ska_spatial_hash_map_remove(spatialHashMap, entity);
+    TEST_ASSERT_NULL(ska_spatial_hash_map_get(spatialHashMap, entity));
+    ska_spatial_hash_map_remove(spatialHashMap, entityTwo);
+    TEST_ASSERT_NULL(ska_spatial_hash_map_get(spatialHashMap, entityTwo));
+
+    ska_spatial_hash_map_destroy(spatialHashMap);
+}
+
+void seika_array2d_test(void) {
+    typedef struct TestArrayStruct {
+        int value;
+    } TestArrayStruct;
+
+    SkaArray2D* array2D = ska_array2d_create(5, 5, sizeof(TestArrayStruct));
+
+    TestArrayStruct* struct0_3 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_NOT_NULL(struct0_3);
+    TEST_ASSERT_EQUAL_INT(0, struct0_3->value);
+
+    struct0_3->value = 5;
+    const TestArrayStruct* struct0_3Again = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_EQUAL_INT(5, struct0_3Again->value);
+
+    TestArrayStruct* struct4_2 = (TestArrayStruct*)ska_array2d_get(array2D, 4, 2);
+    TEST_ASSERT_NOT_NULL(struct4_2);
+    TEST_ASSERT_EQUAL_INT(0, struct4_2->value);
+    bool wasSetSuccessful = ska_array2d_set(array2D, 4, 2, &(TestArrayStruct){ .value = 1000 });
+    TEST_ASSERT_TRUE(wasSetSuccessful);
+    TEST_ASSERT_EQUAL_INT(1000, struct4_2->value);
+    wasSetSuccessful = false;
+
+    TestArrayStruct* struct7_9 = (TestArrayStruct*)ska_array2d_get(array2D, 7, 7);
+    TEST_ASSERT_NULL(struct7_9);
+    wasSetSuccessful = ska_array2d_set(array2D, 7, 9, &(TestArrayStruct){ .value = 1000 });
+    TEST_ASSERT_FALSE(wasSetSuccessful);
+    ska_array2d_resize(array2D, 10, 10);
+    struct7_9 = (TestArrayStruct*)ska_array2d_get(array2D, 7, 7);
+    TEST_ASSERT_NOT_NULL(struct7_9);
+    // Test old struct values
+    const TestArrayStruct* struct0_3Again2 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    const TestArrayStruct* struct4_2Again = (TestArrayStruct*)ska_array2d_get(array2D, 4, 2);
+    TEST_ASSERT_EQUAL_INT(5, struct0_3Again2->value);
+    TEST_ASSERT_EQUAL_INT(1000, struct4_2Again->value);
+
+    ska_array2d_resize(array2D, 4, 4);
+    TEST_ASSERT_NULL(ska_array2d_get(array2D, 7, 7));
+    const TestArrayStruct* struct0_3Again3 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_NOT_NULL(struct0_3Again3);
+    TEST_ASSERT_EQUAL_INT(5, struct0_3Again3->value);
+
+    ska_array2d_reset(array2D);
+    const TestArrayStruct* struct0_3Again4 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_EQUAL_INT(0, struct0_3Again4->value);
+    ska_array2d_reset_default(array2D, &(TestArrayStruct){ .value = 230 });
+    const TestArrayStruct* struct0_3Again5 = (TestArrayStruct*)ska_array2d_get(array2D, 0, 3);
+    TEST_ASSERT_EQUAL_INT(230, struct0_3Again5->value);
+
+    ska_array2d_destroy(array2D);
 }
 
 void seika_asset_file_loader_test(void) {

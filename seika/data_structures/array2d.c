@@ -9,9 +9,9 @@
 
 SkaArray2D* ska_array2d_create(usize rows, usize cols, usize elementSize) {
     SkaArray2D* newArray = SKA_ALLOC(SkaArray2D);
-    newArray->data = SKA_ALLOC_BYTES(cols * sizeof(void*));
+    newArray->data = SKA_ALLOC_BYTES_ZEROED(cols * sizeof(void*));
     for (usize i = 0; i < cols; i++) {
-        newArray->data[i] = SKA_ALLOC_BYTES(rows * elementSize);
+        newArray->data[i] = SKA_ALLOC_BYTES_ZEROED(rows * elementSize);
     }
     newArray->size = (SkaSize2Di){ .w = (int32)rows, .h = (int32)cols };
     newArray->elementSize = elementSize;
