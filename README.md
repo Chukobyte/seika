@@ -33,17 +33,18 @@ A framework for windows, macOS, and linux that can be used to make games.
 ## How to include in a project
 
 Seika uses cmake to build.  To include in your project, add the following to your CMakeLists.txt:
+
 ```cmake
-# Include seika framework as a dependency
+# Include old_seika framework as a dependency
 include(FetchContent)
 
 FetchContent_Declare(
-        seika
+        old_seika
         GIT_REPOSITORY https://github.com/Chukobyte/seika.git
         GIT_TAG v0.1.0
 )
 
-FetchContent_MakeAvailable(seika)
+FetchContent_MakeAvailable(old_seika)
 ```
 
 Make sure to link seika to the target with `target_link_libraries`.

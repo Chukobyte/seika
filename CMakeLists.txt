@@ -34,7 +34,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 include(Dependencies.cmake)
 
 if (SEIKA_ENABLE_OLD)
-    add_subdirectory(seika)
+    add_subdirectory(old_seika)
 endif()
 if (SEIKA_ENABLE_1)
     add_subdirectory(seika1)
@@ -48,7 +48,7 @@ endif()
 
 if (SK_IS_MAIN)
     if (SEIKA_ENABLE_OLD)
-        # Create seika test exe
+        # Create old_seika test exe
         add_executable(seika_test test/test.c)
         target_link_libraries(seika_test seika unity)
     endif()

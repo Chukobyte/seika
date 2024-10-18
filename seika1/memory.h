@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "seika/defines.h"
+#include "seika1/defines.h"
 
 #define SKA_ALLOC(DataType)             \
 (DataType*) ska_mem_allocate(sizeof(DataType))
