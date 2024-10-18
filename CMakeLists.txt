@@ -13,7 +13,7 @@ option(SEIKA_ENABLE_1 "Will build new seika lib" ON)
 option(SEIKA_ECS "Will enable ecs" ON)
 option(SEIKA_INPUT "Will enable input" ON)
 option(SEIKA_RENDERING "Will enable rendering" OFF)
-option(SEIKA_AUDIO "Will enable audio" OFF)
+option(SEIKA_AUDIO "Will enable audio" ON)
 
 add_compile_definitions(SKA_ECS=$<IF:$<BOOL:${SEIKA_ECS}>,1,0>)
 add_compile_definitions(SKA_INPUT=$<IF:$<BOOL:${SEIKA_INPUT}>,1,0>)

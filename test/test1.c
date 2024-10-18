@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "seika/memory.h"
+#include "seika/asset/asset_file_loader.h"
 #include "seika/data_structures/array_list.h"
 #include "seika/data_structures/id_queue.h"
 #include "seika/math/math.h"
@@ -24,6 +25,7 @@ void tearDown(void) {}
 void seika_mem_test(void);
 void seika_array_list_test(void);
 void seika_id_queue_test(void);
+void seika_asset_file_loader_test(void);
 
 #if SKA_ECS
 void seika_ecs_test(void);
@@ -38,6 +40,7 @@ int32 main(int32 argv, char** args) {
     RUN_TEST(seika_mem_test);
     RUN_TEST(seika_array_list_test);
     RUN_TEST(seika_id_queue_test);
+    RUN_TEST(seika_asset_file_loader_test);
 #if SKA_ECS
     RUN_TEST(seika_ecs_test);
 #endif
@@ -111,6 +114,26 @@ void seika_id_queue_test(void) {
     ska_id_queue_dequeue(idQueue, &value);
     TEST_ASSERT_EQUAL_UINT32(10, value);
     TEST_ASSERT_EQUAL_size_t(20, idQueue->capacity);
+}
+
+void seika_asset_file_loader_test(void) {
+    ska_asset_file_loader_initialize();
+
+    ska_asset_file_loader_set_read_mode(SkaAssetFileLoaderReadMode_ARCHIVE);
+    const bool hasLoaded = ska_asset_file_loader_load_archive("test/resources/test.pck");
+    TEST_ASSERT_TRUE(hasLoaded);
+
+    // File exists in archive
+    SkaArchiveFileAsset existingFileAsset = ska_asset_file_loader_get_asset("test.txt");
+    TEST_ASSERT_TRUE(ska_asset_file_loader_is_asset_valid(&existingFileAsset));
+    // File doesn't exist
+    SkaArchiveFileAsset nonExistingFileAsset = ska_asset_file_loader_get_asset("test.png");
+    TEST_ASSERT_FALSE(ska_asset_file_loader_is_asset_valid(&nonExistingFileAsset));
+    // Test loading from disk
+    SkaArchiveFileAsset diskAsset = ska_asset_file_loader_load_asset_from_disk("test/resources/test.pck");
+    TEST_ASSERT_TRUE(ska_asset_file_loader_is_asset_valid(&diskAsset));
+
+    ska_asset_file_loader_finalize();
 }
 
 #if SKA_ECS

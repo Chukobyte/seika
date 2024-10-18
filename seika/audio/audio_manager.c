@@ -39,7 +39,7 @@ static SkaAudioInstances* audio_instances = NULL;
 
 // --- Audio Manager --- //
 bool ska_audio_manager_init(uint32 wavSampleRate) {
-    audio_instances = SKA_MEM_ALLOCATE(SkaAudioInstances);
+    audio_instances = SKA_ALLOC(SkaAudioInstances);
     pthread_mutex_init(&audio_mutex, NULL);
     ska_audio_set_wav_sample_rate(wavSampleRate);
     // Device
@@ -53,7 +53,7 @@ bool ska_audio_manager_init(uint32 wavSampleRate) {
     config.sampleRate = wavSampleRate;
     config.dataCallback = audio_data_callback;
     config.pUserData = NULL;
-    audio_device = SKA_MEM_ALLOCATE(ma_device);
+    audio_device = SKA_ALLOC(ma_device);
     if (ma_device_init(NULL, &config, audio_device) != MA_SUCCESS) {
         ska_logger_error("Failed to initialize miniaudio device!");
         return false;
@@ -69,10 +69,10 @@ bool ska_audio_manager_init(uint32 wavSampleRate) {
 
 void ska_audio_manager_finalize() {
     ma_device_uninit(audio_device);
-    SKA_MEM_FREE(audio_device);
+    SKA_FREE(audio_device);
     audio_device = NULL;
 
-    SKA_MEM_FREE(audio_instances); // TODO: Properly free up all instances
+    SKA_FREE(audio_instances); // TODO: Properly free up all instances
     audio_instances = NULL;
 
     pthread_mutex_destroy(&audio_mutex);
@@ -90,7 +90,7 @@ void ska_audio_manager_play_sound(const char* filePath, bool loops) {
     pthread_mutex_lock(&audio_mutex);
     // Create audio instance and add to instances array
     static unsigned int audioInstanceId = 0;  // TODO: temp id for now in case we need to grab a hold of an audio instance for roll back later...
-    SkaAudioInstance* audioInstance = SKA_MEM_ALLOCATE(SkaAudioInstance);
+    SkaAudioInstance* audioInstance = SKA_ALLOC(SkaAudioInstance);
     audioInstance->source = ska_asset_manager_get_audio_source(filePath);
     audioInstance->id = audioInstanceId++;
     audioInstance->does_loop = loops;
@@ -127,7 +127,7 @@ void audio_data_callback(ma_device* device, void* output, const void* input, ma_
         SkaAudioInstance* audioInst = audio_instances->instances[i];
         SKA_ASSERT_FMT(audioInst != NULL, "audio instance with index %zu is null!", i);
         if (!audioInst->is_playing) {
-            SKA_MEM_FREE(audioInst);
+            SKA_FREE(audioInst);
             audio_instances->instances[i] = NULL;
             removedInstances++;
             continue;
@@ -172,7 +172,7 @@ void audio_data_callback(ma_device* device, void* output, const void* input, ma_
                     ska_logger_debug("Audio instance with id '%u' is queued for deletion!", audioInst->id);
                     audio_instances->instances[i] = NULL;
                     removedInstances++;
-                    SKA_MEM_FREE(audioInst);
+                    SKA_FREE(audioInst);
                     break;
                 }
             }
