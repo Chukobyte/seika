@@ -9,7 +9,7 @@ option(SEIKA_STATIC_LIB "Make seika and dependent libs static" OFF)
 option(SEIKA_ENABLE_OLD "Will build old seika lib" OFF)
 option(SEIKA_ENABLE_1 "Will build new seika lib" ON)
 
-# Compilation Modes
+# Optional Modules
 option(SEIKA_ECS "Will enable ecs" ON)
 option(SEIKA_INPUT "Will enable input" ON)
 option(SEIKA_RENDERING "Will enable rendering" OFF)
