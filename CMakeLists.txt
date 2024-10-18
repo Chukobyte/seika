@@ -20,13 +20,6 @@ add_compile_definitions(SKA_INPUT=$<IF:$<BOOL:${SEIKA_INPUT}>,1,0>)
 add_compile_definitions(SKA_RENDERING=$<IF:$<BOOL:${SEIKA_RENDERING}>,1,0>)
 add_compile_definitions(SKA_AUDIO=$<IF:$<BOOL:${SEIKA_AUDIO}>,1,0>)
 
-function(set_common_compile_definitions target)
-    target_compile_definitions(${target} PRIVATE SKA_ECS=$<IF:$<BOOL:${SEIKA_ECS}>,1,0>)
-    target_compile_definitions(${target} PRIVATE SKA_INPUT=$<IF:$<BOOL:${SEIKA_INPUT}>,1,0>)
-    target_compile_definitions(${target} PRIVATE SKA_RENDERING=$<IF:$<BOOL:${SEIKA_RENDERING}>,1,0>)
-    target_compile_definitions(${target} PRIVATE SKA_AUDIO=$<IF:$<BOOL:${SEIKA_AUDIO}>,1,0>)
-endfunction()
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
@@ -56,6 +49,5 @@ if (SK_IS_MAIN)
         # Create seika1 test exe
         add_executable(seika1_test test/test1.c)
         target_link_libraries(seika1_test seika1 unity)
-        set_common_compile_definitions(seika1_test)
     endif()
 endif()
