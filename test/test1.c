@@ -1,14 +1,14 @@
 #include <unity.h>
 #include <string.h>
 
-#include "seika1/memory.h"
-#include "seika1/data_structures/array_list.h"
-#include "seika1/data_structures/id_queue.h"
-#include "seika1/math/math.h"
+#include "seika/memory.h"
+#include "seika/data_structures/array_list.h"
+#include "seika/data_structures/id_queue.h"
+#include "seika/math/math.h"
 
 #if SKA_ECS
-#include "seika1/ecs/ecs.h"
-#include "seika1/ecs/ec_system.h"
+#include "seika/ecs/ecs.h"
+#include "seika/ecs/ec_system.h"
 #endif
 
 #define RESOURCES_PATH "test/resources"

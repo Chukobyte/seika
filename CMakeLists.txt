@@ -37,7 +37,7 @@ if (SEIKA_ENABLE_OLD)
     add_subdirectory(old_seika)
 endif()
 if (SEIKA_ENABLE_1)
-    add_subdirectory(seika1)
+    add_subdirectory(seika)
 endif()
 
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
