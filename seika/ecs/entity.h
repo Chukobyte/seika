@@ -6,7 +6,7 @@
 
 // Entity is defined as a unsigned 32-bit integer
 typedef uint32 SkaEntity;
-#define SKA_NULL_ENTITY (SkaEntity)0
+#define SKA_NULL_ENTITY (SkaEntity)-1
 
 void ska_ecs_entity_initialize();
 void ska_ecs_entity_finalize();
