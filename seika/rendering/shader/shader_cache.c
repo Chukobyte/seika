@@ -109,8 +109,8 @@ SkaShaderInstanceId ska_shader_cache_create_instance_and_add_from_raw(const char
     char* vertexSource = ska_asset_file_loader_read_file_contents_as_string(vertexPath, NULL);
     char* fragmentSource = ska_asset_file_loader_read_file_contents_as_string(fragmentPath, NULL);
     const SkaShaderInstanceId newId = ska_shader_cache_create_instance_and_add_from_source(vertexSource, fragmentSource);
-    SKA_MEM_FREE(vertexSource);
-    SKA_MEM_FREE(fragmentSource);
+    SKA_FREE(vertexSource);
+    SKA_FREE(fragmentSource);
     return newId;
 }
 

@@ -10,12 +10,12 @@
 
 #define SHADER_FILE_PARSER_ERROR_RETURN(RESULT, SOURCE, MESSAGE) \
 ska_strcpy((RESULT).errorMessage, (MESSAGE));                        \
-SKA_MEM_FREE((SOURCE));                                           \
+SKA_FREE((SOURCE));                                           \
 return (RESULT);
 
 #define SHADER_FILE_PARSER_ERROR_FMT_RETURN(RESULT, SOURCE, FMT, ...) \
 sprintf((RESULT).errorMessage, (FMT), ##__VA_ARGS__);                 \
-SKA_MEM_FREE((SOURCE));                                                \
+SKA_FREE((SOURCE));                                                \
 return (RESULT);
 
 static char* shader_file_parse_data_get_full_uniforms_source(SkaShaderFileParseData* parseData) {
@@ -74,11 +74,11 @@ char* shader_file_parse_data_get_full_functions_source(SkaShaderFileParseData* p
 }
 
 void shader_file_parse_data_delete_internal_memory(SkaShaderFileParseData* parseData) {
-    SKA_MEM_FREE(parseData->fullVertexSource);
-    SKA_MEM_FREE(parseData->fullFragmentSource);
+    SKA_FREE(parseData->fullVertexSource);
+    SKA_FREE(parseData->fullFragmentSource);
     for (usize i = 0; i < parseData->functionCount; i++) {
-        SKA_MEM_FREE(parseData->functions[i].name);
-        SKA_MEM_FREE(parseData->functions[i].fullFunctionSource);
+        SKA_FREE(parseData->functions[i].name);
+        SKA_FREE(parseData->functions[i].fullFunctionSource);
     }
 }
 
@@ -464,12 +464,12 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
             // Check for vertex and fragment shader functions
             if (strcmp(parsedFunction.name, "vertex") == 0) {
                 result.parseData.vertexFunctionSource = shader_file_parse_function_body(parsedFunction.fullFunctionSource);
-                SKA_MEM_FREE(parsedFunction.name);
-                SKA_MEM_FREE(parsedFunction.fullFunctionSource);
+                SKA_FREE(parsedFunction.name);
+                SKA_FREE(parsedFunction.fullFunctionSource);
             } else if (strcmp(parsedFunction.name, "fragment") == 0) {
                 result.parseData.fragmentFunctionSource = shader_file_parse_function_body(parsedFunction.fullFunctionSource);
-                SKA_MEM_FREE(parsedFunction.name);
-                SKA_MEM_FREE(parsedFunction.fullFunctionSource);
+                SKA_FREE(parsedFunction.name);
+                SKA_FREE(parsedFunction.fullFunctionSource);
             } else {
                 // Add non vertex and fragment functions to our array
                 result.parseData.functions[result.parseData.functionCount++] = parsedFunction;
@@ -506,7 +506,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
                     foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH,
                     strlen(foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH) + 1);
             memcpy(foundUniformsToken, uniformsSource, uniformsReplaceLength);
-            SKA_MEM_FREE(uniformsSource);
+            SKA_FREE(uniformsSource);
         }
         // Vertex functions
         char* foundFunctionsToken = strstr(fullShaderBuffer, SHADER_FUNCTIONS_REPLACE_TOKEN);
@@ -520,7 +520,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
                     foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH,
                     strlen(foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH) + 1);
             memcpy(foundFunctionsToken, functionsSource, functionsReplaceLength);
-            SKA_MEM_FREE(functionsSource);
+            SKA_FREE(functionsSource);
         }
         // Vertex body
         char* foundVertexToken = strstr(fullShaderBuffer, SHADER_VERTEX_BODY_REPLACE_TOKEN);
@@ -551,7 +551,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
                     foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH,
                     strlen(foundUniformsToken + SHADER_UNIFORMS_REPLACE_TOKEN_LENGTH) + 1);
             memcpy(foundUniformsToken, uniformsSource, uniformsReplaceLength);
-            SKA_MEM_FREE(uniformsSource);
+            SKA_FREE(uniformsSource);
         }
         // Fragment functions
         char* foundFunctionsToken = strstr(fullShaderBuffer, SHADER_FUNCTIONS_REPLACE_TOKEN);
@@ -565,7 +565,7 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
                     foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH,
                     strlen(foundFunctionsToken + SHADER_FUNCTIONS_REPLACE_TOKEN_LENGTH) + 1);
             memcpy(foundFunctionsToken, functionsSource, functionsReplaceLength);
-            SKA_MEM_FREE(functionsSource);
+            SKA_FREE(functionsSource);
         }
         // Fragment body
         char* foundFragmentToken = strstr(fullShaderBuffer, SHADER_FRAGMENT_BODY_REPLACE_TOKEN);
@@ -581,30 +581,30 @@ SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderS
 //        printf("FULL FRAGMENT SOURCE = \n%s\n", fullShaderBuffer);
     result.parseData.fullFragmentSource = ska_strdup(fullShaderBuffer);
 
-    SKA_MEM_FREE(originalSource);
+    SKA_FREE(originalSource);
 
     return result;
 }
 
 void ska_shader_file_parse_clear_parse_result(SkaShaderFileParseResult* result) {
     if (result->parseData.fragmentFunctionSource) {
-        SKA_MEM_FREE(result->parseData.fragmentFunctionSource);
+        SKA_FREE(result->parseData.fragmentFunctionSource);
     }
     if (result->parseData.vertexFunctionSource) {
-        SKA_MEM_FREE(result->parseData.vertexFunctionSource);
+        SKA_FREE(result->parseData.vertexFunctionSource);
     }
     if (result->parseData.fullVertexSource) {
-        SKA_MEM_FREE(result->parseData.fullVertexSource);
+        SKA_FREE(result->parseData.fullVertexSource);
     }
     if (result->parseData.fullFragmentSource) {
-        SKA_MEM_FREE(result->parseData.fullFragmentSource);
+        SKA_FREE(result->parseData.fullFragmentSource);
     }
     for (usize i = 0; i < result->parseData.uniformCount; i++) {
-        SKA_MEM_FREE(result->parseData.uniforms[i].name);
+        SKA_FREE(result->parseData.uniforms[i].name);
     }
     for (usize i = 0; i < result->parseData.functionCount; i++) {
-        SKA_MEM_FREE(result->parseData.functions[i].name);
-        SKA_MEM_FREE(result->parseData.functions[i].fullFunctionSource);
+        SKA_FREE(result->parseData.functions[i].name);
+        SKA_FREE(result->parseData.functions[i].fullFunctionSource);
     }
 }
 

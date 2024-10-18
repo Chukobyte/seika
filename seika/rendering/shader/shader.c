@@ -36,7 +36,7 @@ SkaShader* ska_shader_compile_new_shader(const char* vertexSource, const char* f
 }
 
 void ska_shader_destroy(SkaShader* shader) {
-    SKA_MEM_FREE(shader);
+    SKA_FREE(shader);
 }
 
 bool shader_check_compile_errors(uint32 shaderId, const char* type) {
