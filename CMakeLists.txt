@@ -11,7 +11,7 @@ option(SEIKA_ENABLE_1 "Will build new seika lib" ON)
 
 # Compilation Modes
 option(SEIKA_ECS "Will enable ecs" ON)
-option(SEIKA_INPUT "Will enable input" OFF)
+option(SEIKA_INPUT "Will enable input" ON)
 option(SEIKA_RENDERING "Will enable rendering" OFF)
 option(SEIKA_AUDIO "Will enable audio" OFF)
 
