@@ -36,7 +36,7 @@ if (NOT TARGET unity)
     FetchContent_MakeAvailable(unity_content)
 endif()
 
-if (SEIKA_ENABLE_INPUT)
+if (SEIKA_INPUT)
     # https://github.com/libsdl-org/SDL
     if (NOT TARGET SDL3::SDL3-static)
         set(SDL_STATIC ${SEIKA_STATIC_LIB})
@@ -57,7 +57,7 @@ if (SEIKA_ENABLE_INPUT)
     endif ()
 endif()
 
-if (SEIKA_ENABLE_RENDERING)
+if (SEIKA_RENDERING)
     # https://github.com/Dav1dde/glad
     if (NOT TARGET glad)
         if (SEIKA_STATIC_LIB)
@@ -93,7 +93,7 @@ if (SEIKA_ENABLE_RENDERING)
     endif()
 endif()
 
-if (SEIKA_ENABLE_AUDIO)
+if (SEIKA_AUDIO)
     # https://github.com/mackron/miniaudio
     if (NOT TARGET miniaudio)
         add_library(miniaudio INTERFACE thirdparty/miniaudio/miniaudio.h)

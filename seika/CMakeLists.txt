@@ -20,15 +20,15 @@ target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/..
 
 set(LIBS_TO_LINK "")
 
-if (SEIKA_ENABLE_RENDERING)
+if (SEIKA_RENDERING)
     list(APPEND LIBS_TO_LINK glad stb_image freetype)
 endif()
 
-if (SEIKA_ENABLE_AUDIO)
+if (SEIKA_AUDIO)
     list(APPEND LIBS_TO_LINK miniaudio)
 endif()
 
-if (SEIKA_ENABLE_INPUT)
+if (SEIKA_INPUT)
     list(APPEND LIBS_TO_LINK ${SDL3_LIBRARY})
 endif()
 
