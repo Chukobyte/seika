@@ -59,9 +59,17 @@ static void update_axis_key_state(SkaInputKey key, SkaInputInteractionStatus int
 
 bool ska_input_initialize() {
     SKA_ASSERT(!isInputActive);
-    if (SDL_InitSubSystem( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
-        return false;
+    const bool isSDLInitialized = SDL_WasInit(0) != 0;
+    if (isSDLInitialized) {
+        if (SDL_InitSubSystem( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
+            return false;
+        }
+    } else {
+        if (SDL_Init( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
+            return false;
+        }
     }
+
 
     if (!ska_sdl_load_gamepad_mappings()) {
         return false;
@@ -74,6 +82,11 @@ bool ska_input_initialize() {
 void ska_input_finalize() {
     SKA_ASSERT(isInputActive);
     SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD);
+    const bool subsystemsStillInitialized = SDL_WasInit(0) != 0;
+    if (!subsystemsStillInitialized) {
+        SDL_Quit();
+    }
+
     isInputActive = false;
 }
 
