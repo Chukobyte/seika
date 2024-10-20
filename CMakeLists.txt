@@ -25,6 +25,14 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 include(Dependencies.cmake)
 
 add_subdirectory(seika)
+# Apply the compile definitions to the `seika` target
+target_compile_definitions(seika
+        PUBLIC
+        SKA_ECS=$<IF:$<BOOL:${SEIKA_ECS}>,1,0>
+        SKA_INPUT=$<IF:$<BOOL:${SEIKA_INPUT}>,1,0>
+        SKA_RENDERING=$<IF:$<BOOL:${SEIKA_RENDERING}>,1,0>
+        SKA_AUDIO=$<IF:$<BOOL:${SEIKA_AUDIO}>,1,0>
+)
 
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
     set(SK_IS_MAIN TRUE)
