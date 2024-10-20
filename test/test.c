@@ -2,12 +2,15 @@
 #include <string.h>
 
 #include "seika/memory.h"
+#include "seika/event.h"
 #include "seika/asset/asset_file_loader.h"
 #include "seika/data_structures/array2d.h"
 #include "seika/data_structures/array_list.h"
 #include "seika/data_structures/id_queue.h"
 #include "seika/data_structures/spatial_hash_map.h"
-#include "seika/math/math.h"
+#include "seika/math/curve_float.h"
+#include "seika/rendering/shader/shader_instance.h"
+#include "seika/rendering/shader/shader_file_parser.h"
 
 #if SKA_ECS
 #include "seika/ecs/ecs.h"
@@ -30,7 +33,12 @@ void seika_hash_map_test(void);
 void seika_spatial_hash_map_test(void);
 void seika_array2d_test(void);
 void seika_id_queue_test(void);
+
 void seika_asset_file_loader_test(void);
+void seika_observer_test(void);
+void seika_curve_float_test(void);
+void seika_shader_instance_test(void);
+void seika_shader_file_parser_test(void);
 
 #if SKA_ECS
 void seika_ecs_test(void);
@@ -49,6 +57,10 @@ int32 main(int32 argv, char** args) {
     RUN_TEST(seika_array2d_test);
     RUN_TEST(seika_id_queue_test);
     RUN_TEST(seika_asset_file_loader_test);
+    RUN_TEST(seika_observer_test);
+    RUN_TEST(seika_curve_float_test);
+    RUN_TEST(seika_shader_instance_test);
+    RUN_TEST(seika_shader_file_parser_test);
 #if SKA_ECS
     RUN_TEST(seika_ecs_test);
 #endif
@@ -266,6 +278,121 @@ void seika_asset_file_loader_test(void) {
     TEST_ASSERT_TRUE(ska_asset_file_loader_is_asset_valid(&diskAsset));
 
     ska_asset_file_loader_finalize();
+}
+
+//--- Observer Test ---//
+
+static bool hasObserved = false;
+
+void observer_func1(SkaSubjectNotifyPayload* payload) {
+    hasObserved = true;
+}
+
+void observer_func2(SkaSubjectNotifyPayload* payload) {
+    const int dataValue = *(int*) payload->data;
+    if (dataValue == 3) {
+        hasObserved = true;
+    }
+}
+
+void seika_observer_test(void) {
+    SkaEvent* event = ska_event_new();
+    // Test 1 - Simple test with passing a NULL payload
+    SkaObserver* observer = ska_observer_new(observer_func1);
+    ska_event_register_observer(event, observer);
+    TEST_ASSERT_EQUAL_INT(1, event->observerCount);
+    ska_event_notify_observers(event, NULL);
+    TEST_ASSERT(hasObserved);
+    ska_event_unregister_observer(event, observer);
+    TEST_ASSERT_EQUAL_INT(0, event->observerCount);
+    hasObserved = false;
+
+    // Test 2 - A slightly more complicated example filling out the payload
+    ska_observer_delete(observer);
+    observer = ska_observer_new(observer_func2);
+    ska_event_register_observer(event, observer);
+    int dataValue = 3;
+    ska_event_notify_observers(event, &(SkaSubjectNotifyPayload) {
+            .data = &dataValue
+    });
+    TEST_ASSERT(hasObserved);
+
+    // Clean up
+    ska_event_delete(event);
+    ska_observer_delete(observer);
+}
+
+void seika_curve_float_test(void) {
+    SkaCurveFloat curve = { .controlPointCount = 0 };
+    SkaCurveControlPoint point1 = { .x = 0.0, .y = 0.0, .tangentIn = 0.0, .tangentOut = 0.0 };
+    ska_curve_float_add_control_point(&curve, point1);
+    TEST_ASSERT_EQUAL_UINT(1, curve.controlPointCount);
+    TEST_ASSERT_EQUAL_DOUBLE(0.0, ska_curve_float_eval(&curve, 1.0));
+    SkaCurveControlPoint point2 = { .x = 1.0, .y = 1.0, .tangentIn = 0.0, .tangentOut = 0.0 };
+    ska_curve_float_add_control_point(&curve, point2);
+    TEST_ASSERT_EQUAL_DOUBLE(0.0, ska_curve_float_eval(&curve, 0.0));
+    TEST_ASSERT_EQUAL_DOUBLE(0.5, ska_curve_float_eval(&curve, 0.5));
+    TEST_ASSERT_EQUAL_DOUBLE(1.0, ska_curve_float_eval(&curve, 1.0));
+    ska_curve_float_remove_control_point(&curve, point2.x, point2.y);
+    TEST_ASSERT_EQUAL_UINT(1, curve.controlPointCount);
+
+    // TODO: Write performance tests
+//    SE_PROFILE_CODE(
+//        for (int32 i = 0; i < 10000000; i++) {}
+//    )
+//
+//    f64 cpu_time_used;
+//    SE_PROFILE_CODE_WITH_VAR(cpu_time_used, for (int32 i = 0; i < 10000000; i++) {})
+//    printf("Time taken: %f seconds\n", cpu_time_used);
+}
+
+void seika_shader_instance_test(void) {
+    // Shader instance param tests
+    SkaShaderInstance shaderInstance = { .shader = NULL, .paramMap = ska_string_hash_map_create_default_capacity() };
+
+    ska_shader_instance_param_create_bool(&shaderInstance, "is_active", false);
+    TEST_ASSERT_FALSE(ska_shader_instance_param_get_bool(&shaderInstance, "is_active"));
+    ska_shader_instance_param_update_bool(&shaderInstance, "is_active", true);
+    TEST_ASSERT_TRUE(ska_shader_instance_param_get_bool(&shaderInstance, "is_active"));
+
+    // Clean up
+    SKA_STRING_HASH_MAP_FOR_EACH(shaderInstance.paramMap, iter) {
+        SkaStringHashMapNode* node = iter.pair;
+        SkaShaderParam* param = (SkaShaderParam*) node->value;
+        SKA_FREE(param->name);
+    }
+    ska_string_hash_map_destroy(shaderInstance.paramMap);
+}
+
+void seika_shader_file_parser_test(void) {
+    char shader[] =
+            "shader_type screen;\n"
+            "\n"
+            "uniform float time;\n"
+            "uniform vec2 size;\n"
+            "uniform float brightness = 1.0f;\n"
+            "uniform int spriteCount = 1;\n"
+            "\n"
+            "vec3 testFunc() {\n"
+            "    return vec3(1.0f);\n"
+            "}\n"
+            "\n"
+            "void vertex() {\n"
+            "    VERTEX.x += 0.1f;"
+            "}\n"
+            "\n"
+            "void fragment() {\n"
+            "    COLOR *= brightness;\n"
+            "}\n"
+            "\n";
+    SkaShaderFileParseResult result = ska_shader_file_parser_parse_shader(shader);
+    // Shouldn't be an error message
+    const bool hasErrorMessage = strlen(result.errorMessage) > 0;
+    if (hasErrorMessage) {
+        printf("Shader parse error = '%s'\n", result.errorMessage);
+    }
+    TEST_ASSERT_FALSE(hasErrorMessage);
+    ska_shader_file_parse_clear_parse_result(&result);
 }
 
 #if SKA_ECS
