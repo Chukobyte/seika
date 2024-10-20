@@ -13,11 +13,6 @@ option(SEIKA_INPUT "Will enable input" ON)
 option(SEIKA_RENDERING "Will enable rendering" ON)
 option(SEIKA_AUDIO "Will enable audio" ON)
 
-add_compile_definitions(SKA_ECS=$<IF:$<BOOL:${SEIKA_ECS}>,1,0>)
-add_compile_definitions(SKA_INPUT=$<IF:$<BOOL:${SEIKA_INPUT}>,1,0>)
-add_compile_definitions(SKA_RENDERING=$<IF:$<BOOL:${SEIKA_RENDERING}>,1,0>)
-add_compile_definitions(SKA_AUDIO=$<IF:$<BOOL:${SEIKA_AUDIO}>,1,0>)
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
@@ -25,7 +20,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 include(Dependencies.cmake)
 
 add_subdirectory(seika)
-# Apply the compile definitions to the `seika` target
 target_compile_definitions(seika
         PUBLIC
         SKA_ECS=$<IF:$<BOOL:${SEIKA_ECS}>,1,0>
