@@ -120,7 +120,6 @@ void seika_id_queue_test(void) {
 
     TEST_ASSERT_TRUE(ska_id_queue_is_empty(idQueue));
 
-    //
     ska_id_queue_enqueue(idQueue, 4);
     ska_id_queue_enqueue(idQueue, 6);
     ska_id_queue_enqueue(idQueue, 5);
