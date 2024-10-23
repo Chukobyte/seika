@@ -1,3 +1,5 @@
+#include "audio_manager.h"
+#include "seika/assert.h"
 #if SKA_AUDIO
 
 #include "audio.h"
@@ -10,8 +12,21 @@
 #include "seika/asset/asset_file_loader.h"
 
 static uint32 audioWavSampleRate = SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE;
+static bool isAudioInitialized = false;
 
 static bool load_wav_data_from_file(const char* file_path, int32* sample_count, int32* channels, int32* sample_rate, void** samples);
+
+void ska_audio_initialize() {
+    SKA_ASSERT(isAudioInitialized == false);
+    ska_audio_manager_init(SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE);
+    isAudioInitialized = true;
+}
+
+void ska_audio_finalize() {
+    SKA_ASSERT(isAudioInitialized);
+    ska_audio_manager_finalize();
+    isAudioInitialized = false;
+}
 
 void ska_audio_print_audio_source(SkaAudioSource* audioSource) {
     ska_logger_debug("audio source | channels = %d, sample rate = %d, sample count = %d, samples = %x",
