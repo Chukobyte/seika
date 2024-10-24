@@ -45,8 +45,10 @@ if (SK_IS_MAIN)
                 ${PROJECT_SOURCE_DIR}/test
                 $<TARGET_FILE_DIR:seika_test>/test
         )
-        # Create test game executable
-        add_executable(seika_test_game test/game/src/main.c)
-        target_link_libraries(seika_test_game seika)
+        if (SEIKA_INPUT OR SEIKA_RENDERING)
+            # Create test game executable
+            add_executable(seika_test_game test/game/src/main.c)
+            target_link_libraries(seika_test_game seika)
+        endif ()
     endif()
 endif()
