@@ -38,12 +38,15 @@ if (SK_IS_MAIN)
     # Create seika test exe
     add_executable(seika_test test/test.c)
     target_link_libraries(seika_test seika unity)
-    # Copy directories over that are needed to test
     if (NOT IS_CI_BUILD)
+        # Copy directories over that are needed to test
         add_custom_command(TARGET seika_test POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_directory
                 ${PROJECT_SOURCE_DIR}/test
                 $<TARGET_FILE_DIR:seika_test>/test
         )
+        # Create test game executable
+        add_executable(seika_test_game test/game/src/main.c)
+        target_link_libraries(seika_test_game seika)
     endif()
 endif()
