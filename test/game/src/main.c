@@ -33,9 +33,10 @@ static void game_run() {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             switch(event.type) {
-                case SDL_EVENT_QUIT:
+                case SDL_EVENT_QUIT: {
                     shouldQuit = true;
-                break;
+                    break;
+                }
                 case SDL_EVENT_WINDOW_RESIZED: {
                     const Sint32 windowWidth = event.window.data1;
                     const Sint32 windowHeight = event.window.data2;
