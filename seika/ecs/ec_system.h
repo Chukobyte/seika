@@ -15,7 +15,7 @@ ska_ecs_system_create_from_template_with_signature_string(TEMPLATE, #__VA_ARGS__
 #define SKA_ECS_SYSTEM_REGISTER_FROM_TEMPLATE(TEMPLATE, ...) \
 ska_ecs_system_register(ska_ecs_system_create_from_template_with_signature_string(TEMPLATE, #__VA_ARGS__))
 
-#define SKA_ECS_SYSTEM_ENTITIES_FOR(SYSTEM, VALUE) SKA_ARRAY_LIST_FOR_EACH(SYSTEM->list, SkaEntity, VALUE)
+#define SKA_ECS_SYSTEM_ENTITIES_FOR(SYSTEM, VALUE) SKA_ARRAY_LIST_FOR_EACH(SYSTEM->entities, SkaEntity, VALUE)
 
 struct SkaECSSystem;
 
