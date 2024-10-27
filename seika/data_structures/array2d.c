@@ -49,11 +49,11 @@ void ska_array2d_resize(SkaArray2D* array2d, usize newX, usize newY) {
     void** oldData = array2d->data;
     const SkaSize2Di oldSize = array2d->size;
     // Allocate data for all columns
-    array2d->data = SKA_ALLOC_BYTES(newHeight * sizeof(void*));
+    array2d->data = SKA_ALLOC_BYTES_ZEROED(newHeight * sizeof(void*));
     // Iterate over new rows
     for (usize i = 0; i < newHeight; i++) {
         // Allocate data for new row
-        array2d->data[i] = SKA_ALLOC_BYTES(newX * array2d->elementSize);
+        array2d->data[i] = SKA_ALLOC_BYTES_ZEROED(newX * array2d->elementSize);
         if (i < (usize)oldSize.h) {
             // Now copy old data
             const usize bytesToCopy = SKA_MATH_MIN((usize)oldSize.w, newWidth) * array2d->elementSize;
