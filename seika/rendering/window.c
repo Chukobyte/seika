@@ -81,4 +81,8 @@ void ska_window_render(const SkaColor* backgroundColor) {
     SDL_GL_SwapWindow(window);
 }
 
+bool ska_window_set_vsync(bool enabled) {
+    return SDL_GL_SetSwapInterval((int)enabled) == 0;
+}
+
 #endif // #if SKA_RENDERING
