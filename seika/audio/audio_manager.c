@@ -39,7 +39,7 @@ static SkaAudioInstances* audio_instances = NULL;
 
 // --- Audio Manager --- //
 bool ska_audio_manager_init(uint32 wavSampleRate) {
-    audio_instances = SKA_ALLOC(SkaAudioInstances);
+    audio_instances = SKA_ALLOC_ZEROED(SkaAudioInstances);
     pthread_mutex_init(&audio_mutex, NULL);
     ska_audio_set_wav_sample_rate(wavSampleRate);
     // Device
