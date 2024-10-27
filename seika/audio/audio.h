@@ -21,7 +21,7 @@ typedef struct SkaAudioSource {
     int32 sample_count;
 } SkaAudioSource;
 
-void ska_audio_initialize();
+bool ska_audio_initialize();
 void ska_audio_finalize();
 void ska_audio_print_audio_source(SkaAudioSource* audioSource);
 void ska_audio_set_wav_sample_rate(uint32 wavSampleRate);

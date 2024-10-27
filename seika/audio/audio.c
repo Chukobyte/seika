@@ -16,10 +16,11 @@ static bool isAudioInitialized = false;
 
 static bool load_wav_data_from_file(const char* file_path, int32* sample_count, int32* channels, int32* sample_rate, void** samples);
 
-void ska_audio_initialize() {
+bool ska_audio_initialize() {
     SKA_ASSERT(isAudioInitialized == false);
     ska_audio_manager_init(SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE);
     isAudioInitialized = true;
+    return true;
 }
 
 void ska_audio_finalize() {
