@@ -7,7 +7,7 @@
 //--- Observer ---//
 SkaObserver* ska_observer_new(SkaObserverOnNotify onNotifyFunc) {
     SKA_ASSERT(onNotifyFunc != NULL);
-    SkaObserver* observer = SKA_ALLOC(SkaObserver);
+    SkaObserver* observer = SKA_ALLOC_ZEROED(SkaObserver);
     observer->on_notify = onNotifyFunc;
     return observer;
 }
@@ -18,7 +18,7 @@ void ska_observer_delete(SkaObserver* observer) {
 
 //--- Event ---//
 SkaEvent* ska_event_new() {
-    SkaEvent* event = SKA_ALLOC(SkaEvent);
+    SkaEvent* event = SKA_ALLOC_ZEROED(SkaEvent);
     event->observerCount = 0;
     return event;
 }
