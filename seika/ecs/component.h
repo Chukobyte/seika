@@ -48,6 +48,7 @@ void ska_ecs_component_manager_remove_all_components(SkaEntity entity);
 bool ska_ecs_component_manager_has_component(SkaEntity entity, SkaComponentIndex index);
 void ska_ecs_component_manager_set_component_signature(SkaEntity entity, SkaComponentType componentTypeSignature);
 SkaComponentType ska_ecs_component_manager_get_component_signature(SkaEntity entity);
+void ska_ecs_component_manager_reserve(SkaEntity lastEntity);
 
 const char* ska_ecs_component_get_component_data_index_string(SkaComponentIndex index);
 

@@ -126,10 +126,7 @@ void* ska_ecs_component_manager_get_component_unchecked(SkaEntity entity, SkaCom
 }
 
 void ska_ecs_component_manager_set_component(SkaEntity entity, SkaComponentIndex index, void* component) {
-    // Add to component array if entity exceeds size
-    if ((usize)entity >= componentManager.componentArrays->size) {
-        ska_array_list_push_back(componentManager.componentArrays, &entity);
-    }
+    ska_ecs_component_manager_reserve(entity);
     ComponentArray* componentArray = ska_array_list_get(componentManager.componentArrays, (usize)entity);
     component_array_set_component(componentArray, index, component);
     componentArray->signature |= component_manager_translate_index_to_type(index);
@@ -159,6 +156,14 @@ void ska_ecs_component_manager_set_component_signature(SkaEntity entity, SkaComp
 SkaComponentType ska_ecs_component_manager_get_component_signature(SkaEntity entity) {
     const ComponentArray* componentArray = ska_array_list_get(componentManager.componentArrays, (usize)entity);
     return componentArray->signature;
+}
+
+void ska_ecs_component_manager_reserve(SkaEntity lastEntity) {
+    // Add to component array if entity exceeds size
+    usize newIndex = (usize)lastEntity;
+    while (componentManager.componentArrays->size < newIndex) {
+        ska_array_list_push_back(componentManager.componentArrays, &(ComponentArray){0});
+    }
 }
 
 SkaComponentType component_manager_translate_index_to_type(SkaComponentIndex index) {
