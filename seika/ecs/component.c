@@ -161,7 +161,7 @@ SkaComponentType ska_ecs_component_manager_get_component_signature(SkaEntity ent
 void ska_ecs_component_manager_reserve(SkaEntity lastEntity) {
     // Add to component array if entity exceeds size
     usize newIndex = (usize)lastEntity;
-    while (componentManager.componentArrays->size < newIndex) {
+    while (componentManager.componentArrays->size <= newIndex) {
         ska_array_list_push_back(componentManager.componentArrays, &(ComponentArray){0});
     }
 }
