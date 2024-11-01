@@ -39,12 +39,12 @@ Seika uses cmake to build.  To include in your project, add the following to you
 include(FetchContent)
 
 FetchContent_Declare(
-        old_seika
+        seika
         GIT_REPOSITORY https://github.com/Chukobyte/seika.git
-        GIT_TAG v0.1.0
+        GIT_TAG v0.2.0
 )
 
-FetchContent_MakeAvailable(old_seika)
+FetchContent_MakeAvailable(seika)
 ```
 
 Make sure to link seika to the target with `target_link_libraries`.
@@ -64,15 +64,23 @@ A simple example of creating a window and querying for inputs.
 #include <seika/input/input.h>
 
 int main(int argv, char** args) {
-    ska_init_all("Simple Window", 800, 600, 800, 600);
+    ska_window_initialize((SkaWindowProperties){
+        .title = "Simple Window",
+        .windowWidth = 800,
+        .windowHeight = 600,
+        .resolutionWidth = 800,
+        .resolutionHeight = 600,
+        .maintainAspectRatio = true,
+    });
+    ska_input_initialize();
 
-    while (ska_is_running()) {
+    while (true) {
+        // TODO: Need to update this
         ska_update();
 
         if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_ESCAPE, 0)) {
             break;
         }
-
         if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_SPACE, 0)) {
             printf("space just pressed\n");
         }
@@ -83,10 +91,12 @@ int main(int argv, char** args) {
             printf("space just released\n");
         }
 
-        ska_window_render();
+        static SkaColor windowBackgroundColor = (SkaColor){ 0.2f, 0.2f, 0.2f, 1.0f };
+        ska_window_render(&windowBackgroundColor);
     }
 
-    ska_shutdown_all();
+    ska_window_finalize();
+    ska_input_finalize();
 
     return 0;
 }

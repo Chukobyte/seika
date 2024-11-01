@@ -87,7 +87,14 @@ static const SkaMemAllocator defaultAlloc = {
     .report_leaks = internal_mem_report_leaks
 };
 
-static SkaMemAllocator currentAlloc = defaultAlloc;
+static SkaMemAllocator currentAlloc = {
+    .allocate = internal_mem_allocate,
+    .allocate_zeroed = internal_mem_allocate_zeroed,
+    .reallocate = internal_mem_reallocate,
+    .free = internal_mem_free,
+    .report_leaks = internal_mem_report_leaks
+};
+
 
 void ska_set_current_allocator(const SkaMemAllocator allocator) {
     SKA_ASSERT_FMT(isAllocatorValid(&allocator), "Must implement all allocator functions before setting");
