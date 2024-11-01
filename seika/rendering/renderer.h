@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -33,3 +35,5 @@ void ska_renderer_set_global_shader_param_time(f32 timeValue);
 #ifdef __cplusplus
 }
 #endif
+
+#endif // #if SKA_RENDERING

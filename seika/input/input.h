@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_INPUT
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -250,6 +252,9 @@ typedef struct SkaInputAction {
     usize actionValuesCount;
 } SkaInputAction;
 
+bool ska_input_initialize();
+void ska_input_finalize();
+
 const char* ska_input_key_to_string(SkaInputKey key);
 SkaInputKey ska_input_string_to_key(const char* keyName);
 
@@ -290,3 +295,5 @@ void ska_input_reset(SkaInputDeviceIndex deviceIndex);
 #ifdef __cplusplus
 }
 #endif
+
+#endif // if SKA_INPUT

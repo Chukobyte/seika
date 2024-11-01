@@ -1,10 +1,10 @@
 #pragma once
 
+#if SKA_AUDIO
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stdbool.h>
 
 #include "seika/defines.h"
 
@@ -18,3 +18,5 @@ void ska_audio_manager_stop_sound(const char* filePath);
 #ifdef __cplusplus
 }
 #endif
+
+#endif // #if SKA_AUDIO

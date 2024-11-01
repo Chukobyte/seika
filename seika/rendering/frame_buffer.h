@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -32,3 +34,5 @@ SkaFrameBufferViewportData* ska_frame_buffer_get_cached_viewport_data();
 #ifdef __cplusplus
 }
 #endif
+
+#endif // #if SKA_RENDERING

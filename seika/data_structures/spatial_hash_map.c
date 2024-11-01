@@ -25,7 +25,7 @@ static bool collision_result_has_entity(SkaSpatialHashMapCollisionResult* result
 
 // Public facing functions
 SkaSpatialHashMap* ska_spatial_hash_map_create(int32 initialCellSize) {
-    SkaSpatialHashMap* map = SKA_MEM_ALLOCATE(SkaSpatialHashMap);
+    SkaSpatialHashMap* map = SKA_ALLOC(SkaSpatialHashMap);
     map->cellSize = initialCellSize;
     map->largestObjectSize = initialCellSize;
     map->gridMap = ska_hash_map_create(sizeof(int32), sizeof(SkaSpatialHashMapGridSpace **), SKA_HASH_MAP_MIN_CAPACITY);
@@ -40,18 +40,18 @@ void ska_spatial_hash_map_destroy(SkaSpatialHashMap* hashMap) {
     SKA_HASH_MAP_FOR_EACH(hashMap->gridMap, iter) {
         SkaHashMapNode* node = iter.pair;
         SkaSpatialHashMapGridSpace* gridSpace = (SkaSpatialHashMapGridSpace*) *(SkaSpatialHashMapGridSpace**) node->value;
-        SKA_MEM_FREE(gridSpace);
+        SKA_FREE(gridSpace);
     }
     ska_hash_map_destroy(hashMap->gridMap);
     // Grid space Handle Map
     SKA_HASH_MAP_FOR_EACH(hashMap->objectToGridMap, iter) {
         SkaHashMapNode* node = iter.pair;
         SkaSpatialHashMapGridSpacesHandle* handle = (SkaSpatialHashMapGridSpacesHandle*) *(SkaSpatialHashMapGridSpacesHandle**) node->value;
-        SKA_MEM_FREE(handle);
+        SKA_FREE(handle);
     }
     ska_hash_map_destroy(hashMap->objectToGridMap);
     // Finally free the hashmap memory
-    SKA_MEM_FREE(hashMap);
+    SKA_FREE(hashMap);
 }
 
 // The purpose of this function is to make sure that 'cellSize' is twice as big as the largest object
@@ -73,7 +73,7 @@ bool change_cell_size_if_needed(SkaSpatialHashMap* hashMap, SkaRect2* collisionR
 SkaSpatialHashMapGridSpacesHandle* ska_spatial_hash_map_insert_or_update(SkaSpatialHashMap* hashMap, uint32 entity, SkaRect2* collisionRect) {
     // Create new object handle if it doesn't exist
     if (!ska_hash_map_has(hashMap->objectToGridMap, &entity)) {
-        SkaSpatialHashMapGridSpacesHandle* newHandle = SKA_MEM_ALLOCATE(SkaSpatialHashMapGridSpacesHandle);
+        SkaSpatialHashMapGridSpacesHandle* newHandle = SKA_ALLOC(SkaSpatialHashMapGridSpacesHandle);
         newHandle->gridSpaceCount = 0;
         newHandle->collisionRect = (SkaRect2) {
             0.0f, 0.0f, 0.0f, 0.0f
@@ -156,7 +156,7 @@ void ska_spatial_hash_map_remove(SkaSpatialHashMap* hashMap, uint32 entity) {
             hashMap->largestObjectSize = foundLargestObjectSize;
         }
     }
-    SKA_MEM_FREE(objectHandle);
+    SKA_FREE(objectHandle);
 }
 
 SkaSpatialHashMapGridSpacesHandle* ska_spatial_hash_map_get(SkaSpatialHashMap* hashMap, uint32 entity) {
@@ -203,7 +203,7 @@ int32 spatial_hash(SkaSpatialHashMap* hashMap, SkaVector2* position) {
 
 SkaSpatialHashMapGridSpace* get_or_create_grid_space(SkaSpatialHashMap* hashMap, int32 positionHash) {
     if (!ska_hash_map_has(hashMap->gridMap, &positionHash)) {
-        SkaSpatialHashMapGridSpace* newGridSpace = SKA_MEM_ALLOCATE(SkaSpatialHashMapGridSpace);
+        SkaSpatialHashMapGridSpace* newGridSpace = SKA_ALLOC(SkaSpatialHashMapGridSpace);
         newGridSpace->entityCount = 0;
         ska_hash_map_add(hashMap->gridMap, &positionHash, &newGridSpace);
     }

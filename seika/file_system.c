@@ -110,7 +110,7 @@ char* ska_fs_read_file_contents(const char* filePath, usize* sz) {
     if (fp) {
         readSize = ska_fs_get_file_size(filePath);
         // Update buffer
-        buffer = (char*)SKA_MEM_ALLOCATE_SIZE(readSize + 1);
+        buffer = (char*)SKA_ALLOC_BYTES(readSize + 1);
         if (buffer != NULL) {
             fread(buffer, 1, readSize, fp);
             buffer[readSize] = '\0';
@@ -130,7 +130,7 @@ char* ska_fs_read_file_contents_without_raw(const char* filePath, usize* sz) {
     if (fp) {
         readSize = ska_fs_get_file_size(filePath);
         // Update buffer
-        buffer = (char*)SKA_MEM_ALLOCATE_SIZE(readSize + 1);
+        buffer = (char*)SKA_ALLOC_BYTES(readSize + 1);
         if (buffer != NULL) {
             usize bytesRead = 0;
             while (bytesRead < readSize) {

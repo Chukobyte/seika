@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 #include <stdbool.h>
 
 #include <glad/glad.h>
@@ -24,3 +26,5 @@ void ska_shader_set_vec2_float(SkaShader* shader, const char* name, f32 v1, f32 
 void ska_shader_set_vec3_float(SkaShader* shader, const char* name, f32 v1, f32 v2, f32 v3);
 void ska_shader_set_vec4_float(SkaShader* shader, const char* name, f32 v1, f32 v2, f32 v3, f32 v4);
 void ska_shader_set_mat4_float(SkaShader* shader, const char* name, mat4* value);
+
+#endif // #if SKA_RENDERING

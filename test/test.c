@@ -3,17 +3,23 @@
 
 #include "seika/memory.h"
 #include "seika/event.h"
-#include "seika/input/input.h"
-#include "seika/data_structures/hash_map.h"
-#include "seika/data_structures/spatial_hash_map.h"
-#include "seika/data_structures/array2d.h"
-#include "seika/data_structures/linked_list.h"
-#include "seika/ecs/ec_system.h"
-#include "seika/ecs/ecs.h"
-#include "seika/math/curve_float.h"
 #include "seika/asset/asset_file_loader.h"
+#include "seika/data_structures/array2d.h"
+#include "seika/data_structures/array_list.h"
+#include "seika/data_structures/id_queue.h"
+#include "seika/data_structures/spatial_hash_map.h"
+#include "seika/math/curve_float.h"
 #include "seika/rendering/shader/shader_instance.h"
 #include "seika/rendering/shader/shader_file_parser.h"
+
+#if SKA_ECS
+#include "seika/ecs/ecs.h"
+#include "seika/ecs/ec_system.h"
+#endif
+
+#if SKA_INPUT
+#include "seika/input/input.h"
+#endif
 
 #define RESOURCES_PATH "test/resources"
 #define RESOURCES_PACK_PATH "test/resources/test.pck"
@@ -21,118 +27,112 @@
 void setUp(void) {}
 void tearDown(void) {}
 
-void seika_input_test(void);
+void seika_mem_test(void);
+void seika_array_list_test(void);
 void seika_hash_map_test(void);
 void seika_spatial_hash_map_test(void);
-void seika_linked_list_test(void);
 void seika_array2d_test(void);
+void seika_id_queue_test(void);
 
 void seika_asset_file_loader_test(void);
 void seika_observer_test(void);
 void seika_curve_float_test(void);
 void seika_shader_instance_test(void);
 void seika_shader_file_parser_test(void);
+
+#if SKA_ECS
 void seika_ecs_test(void);
+#endif
+
+#if SKA_INPUT
+void seika_input_test(void);
+#endif
 
 int32 main(int32 argv, char** args) {
     UNITY_BEGIN();
-    RUN_TEST(seika_input_test);
+    RUN_TEST(seika_mem_test);
+    RUN_TEST(seika_array_list_test);
     RUN_TEST(seika_hash_map_test);
     RUN_TEST(seika_spatial_hash_map_test);
-    RUN_TEST(seika_linked_list_test);
     RUN_TEST(seika_array2d_test);
+    RUN_TEST(seika_id_queue_test);
     RUN_TEST(seika_asset_file_loader_test);
     RUN_TEST(seika_observer_test);
     RUN_TEST(seika_curve_float_test);
     RUN_TEST(seika_shader_instance_test);
     RUN_TEST(seika_shader_file_parser_test);
+#if SKA_ECS
     RUN_TEST(seika_ecs_test);
+#endif
+#if SKA_INPUT
+    RUN_TEST(seika_input_test);
+#endif
     return UNITY_END();
 }
 
-void seika_input_test(void) {
-    TEST_MESSAGE("Testing 'for each' and checking input type");
-    SKA_INPUT_KEY_GAMEPAD_FOR_EACH(key) {
-        TEST_ASSERT_TRUE(ska_input_is_gamepad_key(key));
+void seika_mem_test(void) {
+    int* testInt = SKA_ALLOC(int);
+    TEST_ASSERT_NOT_NULL(testInt);
+    *testInt = 5;
+    TEST_ASSERT_EQUAL_INT(5, *testInt);
+    TEST_ASSERT_TRUE(ska_mem_report_leaks());
+    SKA_FREE(testInt);
+    TEST_ASSERT_FALSE(ska_mem_report_leaks());
+}
+
+void seika_array_list_test(void) {
+    int listValues[] = { 8, 2, 3, 5 };
+    SkaArrayList* arrayList = ska_array_list_create_default_capacity(sizeof(int));
+    TEST_ASSERT_TRUE(ska_array_list_is_empty(arrayList));
+
+    for (int i = 0; i < 4; i++) {
+        ska_array_list_push_back(arrayList, &listValues[i]);
     }
-    SKA_INPUT_KEY_KEYBOARD_FOR_EACH(key) {
-        TEST_ASSERT_TRUE(ska_input_is_keyboard_key(key));
+    TEST_ASSERT_FALSE(ska_array_list_is_empty(arrayList));
+    int index = 0;
+    SKA_ARRAY_LIST_FOR_EACH(arrayList, int, i) {
+        const int value = (int)*(int*)ska_array_list_get(arrayList, index);
+        TEST_ASSERT_EQUAL_INT(listValues[index], value);
+        index++;
     }
-    SKA_INPUT_KEY_MOUSE_FOR_EACH(key) {
-        TEST_ASSERT_TRUE(ska_input_is_mouse_key(key));
+
+    ska_array_list_remove_by_index(arrayList, 1);
+    int oneValue = (int)*(int*)ska_array_list_get(arrayList, 1);
+    TEST_ASSERT_EQUAL_INT(3, oneValue);
+
+    ska_array_list_remove(arrayList, &(int){3});
+    oneValue = (int)*(int*)ska_array_list_get(arrayList, 1);
+    TEST_ASSERT_EQUAL_INT(5, oneValue);
+
+    ska_array_list_clear(arrayList);
+    TEST_ASSERT_TRUE(ska_array_list_is_empty(arrayList));
+    ska_array_list_destroy(arrayList);
+}
+
+void seika_id_queue_test(void) {
+    SkaIdQueue* idQueue = ska_id_queue_create(10);
+
+    uint32 value;
+    for (uint32 i = 0; i < 10; i++) {
+        ska_id_queue_dequeue(idQueue, &value);
+        TEST_ASSERT_EQUAL_UINT32(i, value);
     }
 
-    const char* backspaceKeyName = ska_input_key_to_string(SkaInputKey_KEYBOARD_BACKSPACE);
-    const SkaInputKey backSpaceKey = ska_input_string_to_key(backspaceKeyName);
-    TEST_ASSERT_EQUAL_STRING("Backspace", backspaceKeyName);
-    TEST_ASSERT_EQUAL_INT(SkaInputKey_KEYBOARD_BACKSPACE, backSpaceKey);
+    TEST_ASSERT_TRUE(ska_id_queue_is_empty(idQueue));
 
-    TEST_MESSAGE("Testing events");
-    ska_input_register_input_event3(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_BACKSPACE, SkaInputTriggerType_PRESSED);
-    TEST_ASSERT_TRUE(ska_input_is_key_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_TRUE(ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_FALSE(ska_input_is_key_just_released(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    ska_id_queue_enqueue(idQueue, 4);
+    ska_id_queue_enqueue(idQueue, 6);
+    ska_id_queue_enqueue(idQueue, 5);
+    ska_id_queue_dequeue(idQueue, &value);
+    TEST_ASSERT_EQUAL_UINT32(4, value);
+    ska_id_queue_dequeue(idQueue, &value);
+    TEST_ASSERT_EQUAL_UINT32(6, value);
+    ska_id_queue_dequeue(idQueue, &value);
+    TEST_ASSERT_EQUAL_UINT32(5, value);
 
-    ska_input_register_input_event3(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_BACKSPACE, SkaInputTriggerType_PRESSED);
-    TEST_ASSERT_TRUE(ska_input_is_key_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_FALSE(ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_FALSE(ska_input_is_key_just_released(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-
-    ska_input_register_input_event3(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_BACKSPACE, SkaInputTriggerType_RELEASED);
-    TEST_ASSERT_FALSE(ska_input_is_key_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_FALSE(ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_TRUE(ska_input_is_key_just_released(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-
-    TEST_MESSAGE("Testing input get axis input");
-    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y, SkaInputTriggerType_AXIS_IN_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, -0.5f);
-    const SkaVector2 firstAxisInput = ska_input_get_axis_input(SkaInputAxis_LEFT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, firstAxisInput.x);
-    TEST_ASSERT_EQUAL_FLOAT(-0.5f, firstAxisInput.y);
-
-    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X, SkaInputTriggerType_AXIS_IN_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.25f);
-    const SkaVector2 secondAxisInput = ska_input_get_axis_input(SkaInputAxis_LEFT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
-    TEST_ASSERT_EQUAL_FLOAT(0.25f, secondAxisInput.x);
-    TEST_ASSERT_EQUAL_FLOAT(-0.5f, secondAxisInput.y);
-
-    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X, SkaInputTriggerType_AXIS_STOPPED_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.25f);
-    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y, SkaInputTriggerType_AXIS_STOPPED_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.25f);
-    const SkaVector2 thirdAxisInput = ska_input_get_axis_input(SkaInputAxis_LEFT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, thirdAxisInput.x);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, thirdAxisInput.y);
-
-    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X, SkaInputTriggerType_AXIS_IN_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 1.0f);
-    const SkaVector2 fourthAxisInput = ska_input_get_axis_input(SkaInputAxis_RIGHT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
-    TEST_ASSERT_EQUAL_FLOAT(1.0f, fourthAxisInput.x);
-    TEST_ASSERT_EQUAL_FLOAT(0.0f, fourthAxisInput.y);
-
-    TEST_MESSAGE("Testing input actions");
-    SkaInputActionHandle jumpActionHandle = ska_input_add_input_action(
-        "jump",
-        (SkaInputActionValue[]){ { .key = SkaInputKey_KEYBOARD_SPACE, .strengthThreshold = 0.5f }, { .key = SkaInputKey_KEYBOARD_RETURN, .strengthThreshold = 0.5f }, { SkaInputKey_INVALID } },
-        SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX
-    );
-    TEST_ASSERT_NOT_EQUAL_UINT32(SKA_INPUT_INVALID_INPUT_ACTION_HANDLE, jumpActionHandle);
-    jumpActionHandle = ska_input_find_input_action_handle("jump", SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
-    TEST_ASSERT_NOT_EQUAL_UINT32(SKA_INPUT_INVALID_INPUT_ACTION_HANDLE, jumpActionHandle);
-
-    ska_input_register_input_event(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_RETURN, SkaInputTriggerType_PRESSED, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.0f);
-    TEST_ASSERT_TRUE(ska_input_is_input_action_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_TRUE(ska_input_is_input_action_just_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_FALSE(ska_input_is_input_action_just_released(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_EQUAL_FLOAT(1.0f, ska_input_get_input_action_strength(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-
-    ska_input_new_frame();
-    TEST_ASSERT_TRUE(ska_input_is_input_action_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_FALSE(ska_input_is_input_action_just_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_FALSE(ska_input_is_input_action_just_released(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-
-    ska_input_register_input_event(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_RETURN, SkaInputTriggerType_RELEASED, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.0f);
-    TEST_ASSERT_FALSE(ska_input_is_input_action_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_FALSE(ska_input_is_input_action_just_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-    TEST_ASSERT_TRUE(ska_input_is_input_action_just_released(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
-
-    ska_input_remove_input_action(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
-    TEST_ASSERT_EQUAL_UINT32(SKA_INPUT_INVALID_INPUT_ACTION_HANDLE, ska_input_find_input_action_handle("jump", SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    ska_id_queue_dequeue(idQueue, &value);
+    TEST_ASSERT_EQUAL_UINT32(10, value);
+    TEST_ASSERT_EQUAL_size_t(20, idQueue->capacity);
 }
 
 void seika_hash_map_test(void) {
@@ -207,74 +207,6 @@ void seika_spatial_hash_map_test(void) {
     ska_spatial_hash_map_destroy(spatialHashMap);
 }
 
-static bool linked_list_test_sort(void* a, void* b) {
-    int numA = (int) *(int*) a;
-    int numB = (int) *(int*) b;
-    return numA > numB;
-}
-
-void seika_linked_list_test(void) {
-    SkaLinkedList* list = ska_linked_list_create(sizeof(int32));
-    // Test prepend
-    int32 num1 = 9;
-    int32 num2 = 7;
-    ska_linked_list_prepend(list, &num1);
-    const int32 returnedNum = (int32) *(int32*) ska_linked_list_get_front(list);
-    TEST_ASSERT_EQUAL_INT(1, list->size);
-    TEST_ASSERT_EQUAL_INT(num1, returnedNum);
-    ska_linked_list_prepend(list, &num2);
-    TEST_ASSERT_EQUAL_INT(2, list->size);
-    ska_linked_list_remove(list, &num1);
-    TEST_ASSERT_EQUAL_INT(1, list->size);
-    int32* returnedNum2 = (int32*) ska_linked_list_pop_front(list);
-    TEST_ASSERT_EQUAL_INT(7, *returnedNum2);
-    TEST_ASSERT_TRUE(ska_linked_list_is_empty(list));
-    SKA_MEM_FREE(returnedNum2);
-
-    int32 numbers[5];
-    for (int32 i = 0; i < 5; i++) {
-        numbers[i] = i;
-        ska_linked_list_append(list, &i);
-    }
-    TEST_ASSERT_EQUAL_INT(5, list->size);
-
-    // For each loop test
-    SkaLinkedListNode* node = NULL;
-    int32 loopIndex = 0;
-    SKA_LINKED_LIST_FOR_EACH(list, node) {
-        const int32 indexNum = (int32)*(int32*)node->value;
-        TEST_ASSERT_EQUAL_INT(indexNum, numbers[loopIndex]);
-        loopIndex++;
-    }
-
-    const int32 indexThreeNum = (int32)*(int32*)ska_linked_list_get(list, 3);
-    TEST_ASSERT_EQUAL_INT(3, indexThreeNum);
-
-    // Insert Test
-    int32 insertNum1 = 10;
-    int32 insertNum2 = 20;
-    ska_linked_list_insert(list, &insertNum1, 3);
-    TEST_ASSERT_EQUAL_INT(6, list->size);
-    ska_linked_list_insert(list, &insertNum2, 1);
-    TEST_ASSERT_EQUAL_INT(7, list->size);
-    const int32 insertNumThree = (int32)*(int32*)ska_linked_list_get(list, 3);
-    TEST_ASSERT_EQUAL_INT(10, insertNumThree);
-    const int32 insertNumOne = (int32)*(int32*)ska_linked_list_get(list, 1);
-    TEST_ASSERT_EQUAL_INT(20, insertNumOne);
-
-    ska_linked_list_sort(list, linked_list_test_sort);
-    const int32 smallestNum = (int32)*(int32*)ska_linked_list_get_front(list);
-    const int32 highestNum = (int32)*(int32*)ska_linked_list_get_back(list);
-    TEST_ASSERT_EQUAL_INT(0, smallestNum);
-    TEST_ASSERT_EQUAL_INT(20, highestNum);
-
-    // Clear test
-    ska_linked_list_clear(list);
-    TEST_ASSERT_EQUAL_INT(0, list->size);
-
-    ska_linked_list_destroy(list);
-}
-
 void seika_array2d_test(void) {
     typedef struct TestArrayStruct {
         int value;
@@ -347,7 +279,8 @@ void seika_asset_file_loader_test(void) {
     ska_asset_file_loader_finalize();
 }
 
-// Observer Test
+//--- Observer Test ---//
+
 static bool hasObserved = false;
 
 void observer_func1(SkaSubjectNotifyPayload* payload) {
@@ -425,7 +358,7 @@ void seika_shader_instance_test(void) {
     SKA_STRING_HASH_MAP_FOR_EACH(shaderInstance.paramMap, iter) {
         SkaStringHashMapNode* node = iter.pair;
         SkaShaderParam* param = (SkaShaderParam*) node->value;
-        SKA_MEM_FREE(param->name);
+        SKA_FREE(param->name);
     }
     ska_string_hash_map_destroy(shaderInstance.paramMap);
 }
@@ -461,7 +394,7 @@ void seika_shader_file_parser_test(void) {
     ska_shader_file_parse_clear_parse_result(&result);
 }
 
-// ECS TEST
+#if SKA_ECS
 typedef struct TestValueComponent {
     int32 value;
 } TestValueComponent;
@@ -556,3 +489,93 @@ void seika_ecs_test(void) {
 
     ska_ecs_finalize();
 }
+#endif
+
+#if SKA_INPUT
+
+void seika_input_test(void) {
+    TEST_MESSAGE("Testing 'for each' and checking input type");
+    SKA_INPUT_KEY_GAMEPAD_FOR_EACH(key) {
+        TEST_ASSERT_TRUE(ska_input_is_gamepad_key(key));
+    }
+    SKA_INPUT_KEY_KEYBOARD_FOR_EACH(key) {
+        TEST_ASSERT_TRUE(ska_input_is_keyboard_key(key));
+    }
+    SKA_INPUT_KEY_MOUSE_FOR_EACH(key) {
+        TEST_ASSERT_TRUE(ska_input_is_mouse_key(key));
+    }
+
+    const char* backspaceKeyName = ska_input_key_to_string(SkaInputKey_KEYBOARD_BACKSPACE);
+    const SkaInputKey backSpaceKey = ska_input_string_to_key(backspaceKeyName);
+    TEST_ASSERT_EQUAL_STRING("Backspace", backspaceKeyName);
+    TEST_ASSERT_EQUAL_INT(SkaInputKey_KEYBOARD_BACKSPACE, backSpaceKey);
+
+    TEST_MESSAGE("Testing events");
+    ska_input_register_input_event3(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_BACKSPACE, SkaInputTriggerType_PRESSED);
+    TEST_ASSERT_TRUE(ska_input_is_key_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_TRUE(ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_FALSE(ska_input_is_key_just_released(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+
+    ska_input_register_input_event3(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_BACKSPACE, SkaInputTriggerType_PRESSED);
+    TEST_ASSERT_TRUE(ska_input_is_key_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_FALSE(ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_FALSE(ska_input_is_key_just_released(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+
+    ska_input_register_input_event3(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_BACKSPACE, SkaInputTriggerType_RELEASED);
+    TEST_ASSERT_FALSE(ska_input_is_key_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_FALSE(ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_TRUE(ska_input_is_key_just_released(SkaInputKey_KEYBOARD_BACKSPACE, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+
+    TEST_MESSAGE("Testing input get axis input");
+    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y, SkaInputTriggerType_AXIS_IN_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, -0.5f);
+    const SkaVector2 firstAxisInput = ska_input_get_axis_input(SkaInputAxis_LEFT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, firstAxisInput.x);
+    TEST_ASSERT_EQUAL_FLOAT(-0.5f, firstAxisInput.y);
+
+    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X, SkaInputTriggerType_AXIS_IN_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.25f);
+    const SkaVector2 secondAxisInput = ska_input_get_axis_input(SkaInputAxis_LEFT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+    TEST_ASSERT_EQUAL_FLOAT(0.25f, secondAxisInput.x);
+    TEST_ASSERT_EQUAL_FLOAT(-0.5f, secondAxisInput.y);
+
+    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X, SkaInputTriggerType_AXIS_STOPPED_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.25f);
+    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y, SkaInputTriggerType_AXIS_STOPPED_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.25f);
+    const SkaVector2 thirdAxisInput = ska_input_get_axis_input(SkaInputAxis_LEFT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, thirdAxisInput.x);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, thirdAxisInput.y);
+
+    ska_input_register_input_event(SkaInputSourceType_GAMEPAD, SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X, SkaInputTriggerType_AXIS_IN_MOTION, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 1.0f);
+    const SkaVector2 fourthAxisInput = ska_input_get_axis_input(SkaInputAxis_RIGHT, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+    TEST_ASSERT_EQUAL_FLOAT(1.0f, fourthAxisInput.x);
+    TEST_ASSERT_EQUAL_FLOAT(0.0f, fourthAxisInput.y);
+
+    TEST_MESSAGE("Testing input actions");
+    SkaInputActionHandle jumpActionHandle = ska_input_add_input_action(
+        "jump",
+        (SkaInputActionValue[]){ { .key = SkaInputKey_KEYBOARD_SPACE, .strengthThreshold = 0.5f }, { .key = SkaInputKey_KEYBOARD_RETURN, .strengthThreshold = 0.5f }, { SkaInputKey_INVALID } },
+        SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX
+    );
+    TEST_ASSERT_NOT_EQUAL_UINT32(SKA_INPUT_INVALID_INPUT_ACTION_HANDLE, jumpActionHandle);
+    jumpActionHandle = ska_input_find_input_action_handle("jump", SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+    TEST_ASSERT_NOT_EQUAL_UINT32(SKA_INPUT_INVALID_INPUT_ACTION_HANDLE, jumpActionHandle);
+
+    ska_input_register_input_event(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_RETURN, SkaInputTriggerType_PRESSED, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.0f);
+    TEST_ASSERT_TRUE(ska_input_is_input_action_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_TRUE(ska_input_is_input_action_just_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_FALSE(ska_input_is_input_action_just_released(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_EQUAL_FLOAT(1.0f, ska_input_get_input_action_strength(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+
+    ska_input_new_frame();
+    TEST_ASSERT_TRUE(ska_input_is_input_action_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_FALSE(ska_input_is_input_action_just_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_FALSE(ska_input_is_input_action_just_released(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+
+    ska_input_register_input_event(SkaInputSourceType_KEYBOARD, SkaInputKey_KEYBOARD_RETURN, SkaInputTriggerType_RELEASED, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX, 0.0f);
+    TEST_ASSERT_FALSE(ska_input_is_input_action_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_FALSE(ska_input_is_input_action_just_pressed(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+    TEST_ASSERT_TRUE(ska_input_is_input_action_just_released(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+
+    ska_input_remove_input_action(jumpActionHandle, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+    TEST_ASSERT_EQUAL_UINT32(SKA_INPUT_INVALID_INPUT_ACTION_HANDLE, ska_input_find_input_action_handle("jump", SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX));
+}
+
+#endif // if SKA_INPUT

@@ -1,11 +1,15 @@
 #include "asset_file_loader.h"
 
+#if SKA_RENDERING
 #include <stb_image/stb_image.h>
+
+#include "seika/memory.h"
+#endif
+
 #include <zip.h>
 
 #include "seika/string.h"
 #include "seika/file_system.h"
-#include "seika/memory.h"
 
 SkaAssetFileLoaderReadMode globalReadMode = SkaAssetFileLoaderReadMode_DISK;
 struct zip_t* packageArchive = NULL;
@@ -65,27 +69,6 @@ bool ska_asset_file_loader_is_asset_valid(SkaArchiveFileAsset* fileAsset) {
     return fileAsset != NULL && fileAsset->buffer != NULL;
 }
 
-SkaAssetFileImageData* ska_asset_file_loader_load_image_data(const char* filePath) {
-    SkaAssetFileImageData* imageData = NULL;
-    stbi_set_flip_vertically_on_load(false);
-    if (globalReadMode == SkaAssetFileLoaderReadMode_DISK) {
-        imageData = SKA_MEM_ALLOCATE(SkaAssetFileImageData);
-        imageData->data = stbi_load(filePath, &imageData->width, &imageData->height, &imageData->nrChannels, 0);
-    } else if (globalReadMode == SkaAssetFileLoaderReadMode_ARCHIVE) {
-        SkaArchiveFileAsset fileAsset = ska_asset_file_loader_get_asset(filePath);
-        if (ska_asset_file_loader_is_asset_valid(&fileAsset)) {
-            imageData = SKA_MEM_ALLOCATE(SkaAssetFileImageData);
-            imageData->data = stbi_load_from_memory(fileAsset.buffer, (int32)fileAsset.bufferSize, &imageData->width, &imageData->height, &imageData->nrChannels, 0);
-        }
-    }
-    return imageData;
-}
-
-void ska_asset_file_loader_free_image_data(SkaAssetFileImageData* data) {
-    stbi_image_free(data->data);
-    SKA_MEM_FREE(data);
-}
-
 char* ska_asset_file_loader_read_file_contents_as_string(const char* filePath, usize* size) {
     char* fileString = NULL;
     usize len = 0;
@@ -126,3 +109,26 @@ char* ska_asset_file_loader_read_file_contents_as_string_without_raw(const char*
     }
     return fileString;
 }
+
+#if SKA_RENDERING
+SkaAssetFileImageData* ska_asset_file_loader_load_image_data(const char* filePath) {
+    SkaAssetFileImageData* imageData = NULL;
+    stbi_set_flip_vertically_on_load(false);
+    if (globalReadMode == SkaAssetFileLoaderReadMode_DISK) {
+        imageData = SKA_ALLOC(SkaAssetFileImageData);
+        imageData->data = stbi_load(filePath, &imageData->width, &imageData->height, &imageData->nrChannels, 0);
+    } else if (globalReadMode == SkaAssetFileLoaderReadMode_ARCHIVE) {
+        SkaArchiveFileAsset fileAsset = ska_asset_file_loader_get_asset(filePath);
+        if (ska_asset_file_loader_is_asset_valid(&fileAsset)) {
+            imageData = SKA_ALLOC(SkaAssetFileImageData);
+            imageData->data = stbi_load_from_memory(fileAsset.buffer, (int32)fileAsset.bufferSize, &imageData->width, &imageData->height, &imageData->nrChannels, 0);
+        }
+    }
+    return imageData;
+}
+
+void ska_asset_file_loader_free_image_data(SkaAssetFileImageData* data) {
+    stbi_image_free(data->data);
+    SKA_FREE(data);
+}
+#endif // #if SKA_RENDERING

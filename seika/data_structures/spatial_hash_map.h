@@ -1,7 +1,7 @@
 #pragma once
 
 #include "seika/math/math.h"
-#include "hash_map.h"
+#include "seika/data_structures/hash_map.h"
 
 #define SKA_SPATIAL_HASH_GRID_SPACE_ENTITY_LIMIT 32
 #define SKA_SPATIAL_HASH_GRID_MAX_COLLISIONS 16

@@ -1,16 +1,16 @@
+#pragma once
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+
 #include <assert.h>
 #include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
 #include <string.h>
 
-#include "defines.h"
-#include "platform.h"
-#include "seika/string.h"
+#include "seika/defines.h"
+#include "seika/platform.h"
 
 #define SKA_ASSERT_FAIL_EXIT_CODE (-1)
 

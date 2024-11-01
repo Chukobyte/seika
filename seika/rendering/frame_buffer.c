@@ -1,3 +1,5 @@
+#if SKA_RENDERING
+
 #include "frame_buffer.h"
 
 #include "shader/shader.h"
@@ -179,3 +181,5 @@ void ska_frame_buffer_set_screen_shader(struct SkaShaderInstance *shaderInstance
 void ska_frame_buffer_reset_to_default_screen_shader() {
     currentScreenShader = &defaultScreenShader;
 }
+
+#endif // #if SKA_RENDERING

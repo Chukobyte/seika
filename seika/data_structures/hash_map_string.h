@@ -4,9 +4,6 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
-#include <stdbool.h>
-
 #include "seika/defines.h"
 
 #define SKA_STRING_HASH_MAP_SHRINK_THRESHOLD 0.25f

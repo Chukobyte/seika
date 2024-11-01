@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 /*
  * Shader Instance
  * ---------------------------------------------------------------------------------------------------------------------
@@ -70,3 +72,5 @@ f32 ska_shader_instance_param_get_float(SkaShaderInstance* shaderInstance, const
 SkaVector2 ska_shader_instance_param_get_float2(SkaShaderInstance* shaderInstance, const char* name);
 SkaVector3 ska_shader_instance_param_get_float3(SkaShaderInstance* shaderInstance, const char* name);
 SkaVector4 ska_shader_instance_param_get_float4(SkaShaderInstance* shaderInstance, const char* name);
+
+#endif // #if SKA_RENDERING

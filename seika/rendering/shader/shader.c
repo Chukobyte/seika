@@ -1,3 +1,5 @@
+#if SKA_RENDERING
+
 #include "shader.h"
 
 #include "seika/logger.h"
@@ -6,7 +8,7 @@
 static bool shader_check_compile_errors(uint32 shaderId, const char* type);
 
 SkaShader* ska_shader_compile_new_shader(const char* vertexSource, const char* fragmentSource) {
-    SkaShader* shader = SKA_MEM_ALLOCATE(SkaShader);
+    SkaShader* shader = SKA_ALLOC(SkaShader);
     GLuint vertex, fragment;
     // vertex
     vertex = glCreateShader(GL_VERTEX_SHADER);
@@ -34,7 +36,7 @@ SkaShader* ska_shader_compile_new_shader(const char* vertexSource, const char* f
 }
 
 void ska_shader_destroy(SkaShader* shader) {
-    SKA_MEM_FREE(shader);
+    SKA_FREE(shader);
 }
 
 bool shader_check_compile_errors(uint32 shaderId, const char* type) {
@@ -87,3 +89,5 @@ void ska_shader_set_vec4_float(SkaShader* shader, const char* name, f32 v1, f32 
 void ska_shader_set_mat4_float(SkaShader* shader, const char* name, mat4* value) {
     glUniformMatrix4fv(glGetUniformLocation(shader->id, name), 1, GL_FALSE, (f32*)value);
 }
+
+#endif // #if SKA_RENDERING

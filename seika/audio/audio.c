@@ -1,3 +1,7 @@
+#include "audio_manager.h"
+#include "seika/assert.h"
+#if SKA_AUDIO
+
 #include "audio.h"
 
 #define MINIAUDIO_IMPLEMENTATION
@@ -8,8 +12,22 @@
 #include "seika/asset/asset_file_loader.h"
 
 static uint32 audioWavSampleRate = SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE;
+static bool isAudioInitialized = false;
 
 static bool load_wav_data_from_file(const char* file_path, int32* sample_count, int32* channels, int32* sample_rate, void** samples);
+
+bool ska_audio_initialize() {
+    SKA_ASSERT(isAudioInitialized == false);
+    ska_audio_manager_init(SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE);
+    isAudioInitialized = true;
+    return true;
+}
+
+void ska_audio_finalize() {
+    SKA_ASSERT(isAudioInitialized);
+    ska_audio_manager_finalize();
+    isAudioInitialized = false;
+}
 
 void ska_audio_print_audio_source(SkaAudioSource* audioSource) {
     ska_logger_debug("audio source | channels = %d, sample rate = %d, sample count = %d, samples = %x",
@@ -33,7 +51,7 @@ SkaAudioSource* ska_audio_load_audio_source_wav(const char* fileName) {
         ska_logger_error("Failed to load audio wav file at '%s'", fileName);
         return NULL;
     }
-    SkaAudioSource* newAudioSource = (SkaAudioSource*)SKA_MEM_ALLOCATE_SIZE(sizeof(SkaAudioSource*) + (sampleCount * sizeof(int16_t*)));
+    SkaAudioSource* newAudioSource = (SkaAudioSource*)SKA_ALLOC_BYTES(sizeof(SkaAudioSource*) + (sampleCount * sizeof(int16_t*)));
     newAudioSource->file_path = fileName;
     newAudioSource->pitch = 1.0;
     newAudioSource->sample_count = sampleCount;
@@ -56,7 +74,7 @@ bool load_wav_data_from_file(const char* file_path, int32_t* sample_count, int32
 
     drwav_uint64 totalPcmFrameCount = 0;
     *samples =  drwav_open_memory_and_read_pcm_frames_s16(file_data, len, (uint32_t*)channels, (uint32_t*)sample_rate, &totalPcmFrameCount, NULL);
-    SKA_MEM_FREE(file_data);
+    SKA_FREE(file_data);
 
     if (!*samples) {
         *samples = NULL;
@@ -68,3 +86,5 @@ bool load_wav_data_from_file(const char* file_path, int32_t* sample_count, int32
 
     return true;
 }
+
+#endif // #if SKA_AUDIO

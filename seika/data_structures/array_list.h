@@ -26,7 +26,9 @@ void* ska_array_list_get(SkaArrayList* list, usize index);
 // Removes the first item from the list who is equal to the passed in value
 bool ska_array_list_remove(SkaArrayList* list, const void* value);
 bool ska_array_list_remove_by_index(SkaArrayList* list, usize index);
+// Returns true if the item exists within the list
+bool ska_array_list_has(const SkaArrayList* list, const void* value);
 // Returns true if the array list size == 0
-bool ska_array_list_is_empty(SkaArrayList *list);
+bool ska_array_list_is_empty(const SkaArrayList *list);
 // Will remove all items from the array list
 void ska_array_list_clear(SkaArrayList *list);

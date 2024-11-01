@@ -1,4 +1,10 @@
+#if SKA_INPUT
+
+#include <SDL3/SDL.h>
+
 #include "input.h"
+#include "sdl_input.h"
+#include "seika/string.h"
 #include "seika/assert.h"
 #include "seika/memory.h"
 
@@ -45,10 +51,44 @@ typedef struct SkaInputState {
 
 static SkaInputState inputState = DEFAULT_INPUT_STATE;
 static SkaMouse globalMouse = {0};
+static bool isInputActive = false;
 
 static SkaInputKey get_key_from_2d_axis_key(SkaInputKey axis2DKey, SkaAxisInputValues* axisInputValues, f32 axisValue);
 static void set_prev_input_axis_value(SkaInputKey key, SkaAxisInputValues* axisInputValues, f32 axisValue);
 static void update_axis_key_state(SkaInputKey key, SkaInputInteractionStatus interactionStatus, f32 axisValue, SkaInputDeviceIndex deviceIndex);
+
+bool ska_input_initialize() {
+    SKA_ASSERT(!isInputActive);
+    const bool isSDLInitialized = SDL_WasInit(0) != 0;
+    if (isSDLInitialized) {
+        if (SDL_InitSubSystem( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
+            return false;
+        }
+    } else {
+        if (SDL_Init( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
+            return false;
+        }
+    }
+
+
+    if (!ska_sdl_load_gamepad_mappings()) {
+        return false;
+    }
+
+    isInputActive = true;
+    return true;
+}
+
+void ska_input_finalize() {
+    SKA_ASSERT(isInputActive);
+    SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD);
+    const bool subsystemsStillInitialized = SDL_WasInit(0) != 0;
+    if (!subsystemsStillInitialized) {
+        SDL_Quit();
+    }
+
+    isInputActive = false;
+}
 
 const char* ska_input_key_to_string(SkaInputKey key) {
     static const char* keyNames[SkaInputKey_NUMBER_OF_KEYS] = {
@@ -388,7 +428,7 @@ SkaInputAction* ska_input_get_input_action(SkaInputActionHandle handle, SkaInput
 bool ska_input_remove_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
     SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
     if (actionData->handle != SKA_INPUT_INVALID_INPUT_ACTION_HANDLE) {
-        SKA_MEM_FREE(actionData->action.name);
+        SKA_FREE(actionData->action.name);
         actionData->action.name = NULL;
         actionData->handle = SKA_INPUT_INVALID_INPUT_ACTION_HANDLE;
         return true;
@@ -565,3 +605,5 @@ void update_axis_key_state(SkaInputKey key, SkaInputInteractionStatus interactio
         }
     }
 }
+
+#endif // if SKA_INPUT

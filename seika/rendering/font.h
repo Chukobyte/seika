@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 #include <stdbool.h>
 
 #include <glad/glad.h>
@@ -24,3 +26,5 @@ typedef struct SkaFont {
 SkaFont* ska_font_create_font(const char* fileName, int32 size, bool applyNearestNeighbor);
 SkaFont* ska_font_create_font_from_memory(const void* buffer, usize bufferSize, int32 size, bool applyNearestNeighbor);
 void ska_font_delete(SkaFont* font);
+
+#endif // #if SKA_RENDERING

@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stddef.h>
-
 #include "seika/defines.h"
 
 #define SKA_ARRAY_UTILS_REMOVE_ARRAY_ITEM(ARRAY, ARRAY_SIZE, ELEMENT, EMPTY_VALUE) \

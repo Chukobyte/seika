@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
@@ -14,3 +16,5 @@ typedef struct SkaRenderContext {
 void ska_render_context_initialize();
 void ska_render_context_finalize();
 SkaRenderContext* ska_render_context_get();
+
+#endif // #if SKA_RENDERING

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <stddef.h>
-#include <stdbool.h>
-
 #include "seika/defines.h"
 
 #define SKA_COMMAND_LINE_ARGS_KEY_LIMIT 8

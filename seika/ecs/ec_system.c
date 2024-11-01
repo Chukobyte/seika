@@ -1,6 +1,6 @@
-#include "ec_system.h"
+#if SKA_ECS
 
-#include <string.h>
+#include "ec_system.h"
 
 #include "seika/string.h"
 #include "seika/flag_utils.h"
@@ -52,14 +52,14 @@ void ska_ecs_system_finalize() {
 }
 
 SkaECSSystem* ska_ecs_system_create(const char* systemName) {
-    SkaECSSystem* newSystem = SKA_MEM_ALLOCATE(SkaECSSystem);
+    SkaECSSystem* newSystem = SKA_ALLOC_ZEROED(SkaECSSystem);
     newSystem->name = ska_strdup(systemName);
+    newSystem->entities = ska_array_list_create_default_capacity(sizeof(SkaEntity));
     return newSystem;
 }
 
 SkaECSSystem* ska_ecs_system_create_from_template(SkaECSSystemTemplate* systemTemplate) {
-    SkaECSSystem* newSystem = SKA_MEM_ALLOCATE(SkaECSSystem);
-    newSystem->name = ska_strdup(systemTemplate->name);
+    SkaECSSystem* newSystem = ska_ecs_system_create(systemTemplate->name);
     newSystem->on_ec_system_register = systemTemplate->on_ec_system_register;
     newSystem->on_ec_system_destroy = systemTemplate->on_ec_system_destroy;
     newSystem->on_entity_registered_func = systemTemplate->on_entity_registered_func;
@@ -127,7 +127,7 @@ void ska_ecs_system_destroy(SkaECSSystem* entitySystem) {
     if (entitySystem->on_ec_system_destroy) {
         entitySystem->on_ec_system_destroy(entitySystem);
     }
-    SKA_MEM_FREE(entitySystem);
+    SKA_FREE(entitySystem);
 }
 
 void ska_ecs_system_register(SkaECSSystem* system) {
@@ -206,23 +206,9 @@ void ska_ecs_system_event_entity_end(SkaEntity entity) {
             ecsSystem->on_entity_end_func(ecsSystem, entity);
         }
     }
-//    NodeComponent* nodeComponent = (NodeComponent*)ska_ecs_component_manager_get_component_unchecked(entity, CreComponentDataIndex_NODE);
-//    if (nodeComponent != NULL) {
-//        // Note: Node events should not be created during this time
-//        ska_event_notify_observers(&nodeComponent->onSceneTreeExit, &(SkaSubjectNotifyPayload) {
-//                .data = &entity
-//        });
-//    }
 }
 
 void ska_ecs_system_event_entity_entered_scene(SkaEntity entity) {
-    // Notify scene enter observers before calling it on systems
-//    NodeComponent* nodeComponent = (NodeComponent*) ska_ecs_component_manager_get_component_unchecked(entity, CreComponentDataIndex_NODE);
-//    if (nodeComponent != NULL) {
-//        ska_event_notify_observers(&nodeComponent->onSceneTreeEnter, &(SkaSubjectNotifyPayload) {
-//                .data = &entity
-//        });
-//    }
     const SkaComponentType entityComponentSignature = ska_ecs_component_manager_get_component_signature(entity);
     for (usize i = 0; i < entitySystemData.on_entity_entered_scene_systems_count; i++) {
         SkaECSSystem* ecsSystem = entitySystemData.on_entity_entered_scene_systems[i];
@@ -274,19 +260,21 @@ void ska_ecs_system_event_network_callback(const char* message) {
     }
 }
 
-// --- Internal Functions --- //
 bool ska_ecs_system_has_entity(SkaEntity entity, SkaECSSystem* system) {
-    for (usize i = 0; i < system->entity_count; i++) {
-        if (entity == system->entities[i]) {
-            return true;
-        }
-    }
-    return false;
+    return ska_array_list_has(system->entities, &entity);
 }
+
+void ska_ecs_system_remove_entity_from_all_systems(SkaEntity entity) {
+    for (usize i = 0; i < entitySystemData.entity_systems_count; i++) {
+        ska_ecs_system_remove_entity_from_system(entity, entitySystemData.entity_systems[i]);
+    }
+}
+
+// --- Internal Functions --- //
 
 void ska_ecs_system_insert_entity_into_system(SkaEntity entity, SkaECSSystem* system) {
     if (!ska_ecs_system_has_entity(entity, system)) {
-        system->entities[system->entity_count++] = entity;
+        ska_array_list_push_back(system->entities, &entity);
         if (system->on_entity_registered_func != NULL) {
             system->on_entity_registered_func(system, entity);
         }
@@ -296,36 +284,7 @@ void ska_ecs_system_insert_entity_into_system(SkaEntity entity, SkaECSSystem* sy
 }
 
 void ska_ecs_system_remove_entity_from_system(SkaEntity entity, SkaECSSystem* system) {
-    for (usize i = 0; i < system->entity_count; i++) {
-        if (entity == system->entities[i]) {
-            // Entity found
-            if (i + 1 < SKA_MAX_ENTITIES) {
-                system->entities[i] = SKA_NULL_ENTITY;
-            }
-            if (system->on_entity_unregistered_func != NULL) {
-                system->on_entity_unregistered_func(system, entity);
-            }
-
-            // Condense array
-            for (usize newIndex = i; i < system->entity_count; i++) {
-                if (system->entities[i] == SKA_NULL_ENTITY) {
-                    // Early exit if 2 consecutive nulls
-                    if (system->entities[i + 1] == SKA_NULL_ENTITY) {
-                        break;
-                    }
-                    system->entities[i] = system->entities[i + 1];
-                    system->entities[i + 1] = SKA_NULL_ENTITY;
-                }
-            }
-
-            system->entity_count--;
-            break;
-        }
-    }
+    ska_array_list_remove(system->entities, &entity);
 }
 
-void ska_ecs_system_remove_entity_from_all_systems(SkaEntity entity) {
-    for (usize i = 0; i < entitySystemData.entity_systems_count; i++) {
-        ska_ecs_system_remove_entity_from_system(entity, entitySystemData.entity_systems[i]);
-    }
-}
+#endif // if SKA_ECS

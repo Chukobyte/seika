@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include <stdbool.h>
+#include "seika/defines.h"
 
 #ifndef SKA_LOG_BUFFER_SIZE
 #define SKA_LOG_BUFFER_SIZE 512

@@ -1,6 +1,5 @@
 #include "command_line_args_util.h"
 
-#include <stddef.h>
 #include <string.h>
 #include <stdio.h>
 

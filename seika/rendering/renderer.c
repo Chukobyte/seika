@@ -1,3 +1,5 @@
+#if SKA_RENDERING
+
 #include "renderer.h"
 
 #include <stdlib.h>
@@ -608,3 +610,5 @@ void renderer_print_opengl_errors() {
 void ska_renderer_set_global_shader_param_time(f32 timeValue) {
     globalShaderParamTime = timeValue;
 }
+
+#endif // #if SKA_RENDERING

@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 #include "shader_instance_minimal.h"
 #include "shader_instance.h"
 
@@ -17,3 +19,5 @@ SkaShaderInstanceId ska_shader_cache_create_instance_and_add(const char* shaderP
 // Should be a modification to the base shaders found in 'shader_source.h'
 SkaShaderInstanceId ska_shader_cache_create_instance_and_add_from_raw(const char* vertexPath, const char* fragmentPath);
 SkaShaderInstanceId ska_shader_cache_create_instance_and_add_from_source(const char* vertexSource, const char* fragmentSource);
+
+#endif // #if SKA_RENDERING

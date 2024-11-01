@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -40,3 +42,5 @@ const char* ska_texture_get_wrap_t_string(const SkaTexture* texture);
 #ifdef __cplusplus
 }
 #endif
+
+#endif // #if SKA_RENDERING

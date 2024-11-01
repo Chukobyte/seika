@@ -8,7 +8,7 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "version_info.h"
+#include "seika/version_info.h"
 
 typedef size_t usize;
 

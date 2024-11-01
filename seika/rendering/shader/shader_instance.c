@@ -1,3 +1,5 @@
+#if SKA_RENDERING
+
 #include "shader_instance.h"
 
 #include <string.h>
@@ -14,7 +16,7 @@ SkaShaderInstance* ska_shader_instance_create(const char* vertexSource, const ch
     if (shader == NULL) {
         return NULL;
     }
-    SkaShaderInstance* instance = SKA_MEM_ALLOCATE(SkaShaderInstance);
+    SkaShaderInstance* instance = SKA_ALLOC(SkaShaderInstance);
     instance->shader = shader;
     instance->paramMap = ska_string_hash_map_create_default_capacity();
     instance->paramsDirty = true;
@@ -23,7 +25,7 @@ SkaShaderInstance* ska_shader_instance_create(const char* vertexSource, const ch
 
 SkaShaderInstance* ska_shader_instance_create_from_shader(SkaShader* shader) {
     SKA_ASSERT(shader != NULL);
-    SkaShaderInstance* instance = SKA_MEM_ALLOCATE(SkaShaderInstance);
+    SkaShaderInstance* instance = SKA_ALLOC(SkaShaderInstance);
     instance->shader = shader;
     instance->paramMap = ska_string_hash_map_create_default_capacity();
     instance->paramsDirty = true;
@@ -34,11 +36,11 @@ void ska_shader_instance_destroy(SkaShaderInstance* shaderInstance) {
     SKA_STRING_HASH_MAP_FOR_EACH(shaderInstance->paramMap, iter) {
         SkaStringHashMapNode* node = iter.pair;
         SkaShaderParam* param = (SkaShaderParam*)node->value;
-        SKA_MEM_FREE(param->name);
+        SKA_FREE(param->name);
     }
     ska_string_hash_map_destroy(shaderInstance->paramMap);
     ska_shader_destroy(shaderInstance->shader);
-    SKA_MEM_FREE(shaderInstance);
+    SKA_FREE(shaderInstance);
 }
 
 // Creation functions
@@ -195,3 +197,5 @@ SkaVector4 ska_shader_instance_param_get_float4(SkaShaderInstance* shaderInstanc
     SKA_ASSERT(param->type == SkaShaderParamType_FLOAT4);
     return param->value.float4Value;
 }
+
+#endif // #if SKA_RENDERING

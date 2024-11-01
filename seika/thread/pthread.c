@@ -210,7 +210,7 @@ static DWORD WINAPI win_thread_start(void* arg) {
     void* (*start_routine)(void*) = data->start_routine;
     void* start_arg = data->start_arg;
 
-    SKA_MEM_FREE(data);
+    SKA_FREE(data);
 
     start_routine(start_arg);
     return 0; // ERROR_SUCCESS

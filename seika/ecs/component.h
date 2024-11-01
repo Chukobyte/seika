@@ -1,11 +1,12 @@
 #pragma once
 
+#if SKA_ECS
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stddef.h>
-#include <stdbool.h>
+#include "seika/defines.h"
 
 #include "entity.h"
 
@@ -31,8 +32,6 @@ typedef struct SkaComponentTypeInfo {
     usize size;
 } SkaComponentTypeInfo;
 
-
-
 const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, usize componentSize);
 const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, usize componentSize);
 const SkaComponentTypeInfo* ska_ecs_component_find_type_info(const char* name);
@@ -49,9 +48,12 @@ void ska_ecs_component_manager_remove_all_components(SkaEntity entity);
 bool ska_ecs_component_manager_has_component(SkaEntity entity, SkaComponentIndex index);
 void ska_ecs_component_manager_set_component_signature(SkaEntity entity, SkaComponentType componentTypeSignature);
 SkaComponentType ska_ecs_component_manager_get_component_signature(SkaEntity entity);
+void ska_ecs_component_manager_reserve(SkaEntity lastEntity);
 
 const char* ska_ecs_component_get_component_data_index_string(SkaComponentIndex index);
 
 #ifdef __cplusplus
 }
 #endif
+
+#endif // if SKA_ECS

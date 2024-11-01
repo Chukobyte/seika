@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_SPRITE =
     "#version 330 core\n"
     "\n"
@@ -127,3 +129,5 @@ static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SCREEN =
     "    COLOR = texture(TEXTURE, UV);\n"
     "    //@@fragment()\n"
     "}\n";
+
+#endif // #if SKA_RENDERING

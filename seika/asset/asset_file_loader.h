@@ -4,9 +4,6 @@
 extern "C" {
 #endif
 
-#include <stddef.h>
-#include <stdbool.h>
-
 #include "seika/defines.h"
 
 typedef enum SkaAssetFileLoaderReadMode {
@@ -36,10 +33,13 @@ SkaArchiveFileAsset ska_asset_file_loader_load_asset_from_disk(const char* path)
 bool ska_asset_file_loader_is_asset_valid(SkaArchiveFileAsset* fileAsset);
 
 // Asset loading types
-SkaAssetFileImageData* ska_asset_file_loader_load_image_data(const char* filePath);
-void ska_asset_file_loader_free_image_data(SkaAssetFileImageData* data);
 char* ska_asset_file_loader_read_file_contents_as_string(const char* filePath, usize* size);
 char* ska_asset_file_loader_read_file_contents_as_string_without_raw(const char* filePath, usize* size);
+
+#if SKA_RENDERING
+SkaAssetFileImageData* ska_asset_file_loader_load_image_data(const char* filePath);
+void ska_asset_file_loader_free_image_data(SkaAssetFileImageData* data);
+#endif  // #if SKA_RENDERING
 
 #ifdef __cplusplus
 }

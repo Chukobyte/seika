@@ -23,13 +23,14 @@ void ska_asset_manager_finalize() {
     ska_string_hash_map_destroy(audioSourceMap);
 }
 
+#if SKA_RENDERING
 // --- Texture --- //
 SkaTexture* ska_asset_manager_load_texture(const char* fileName, const char* key) {
     SKA_ASSERT(texturesMap != NULL);
     SKA_ASSERT_FMT(!ska_string_hash_map_has(texturesMap, fileName), "Already loaded texture at file path '%'s!  Has key '%s'.", fileName, key);
     SkaTexture* texture = ska_texture_create_texture(fileName);
     ska_string_hash_map_add(texturesMap, key, texture, sizeof(SkaTexture));
-    SKA_MEM_FREE(texture);
+    SKA_FREE(texture);
     texture = (SkaTexture*) ska_string_hash_map_get(texturesMap, key);
     return texture;
 }
@@ -44,7 +45,7 @@ SkaTexture* ska_asset_manager_load_texture_ex(const char* fileName, const char* 
                              applyNearestNeighbor
                          );
     ska_string_hash_map_add(texturesMap, key, texture, sizeof(SkaTexture));
-    SKA_MEM_FREE(texture);
+    SKA_FREE(texture);
     texture = (SkaTexture*) ska_string_hash_map_get(texturesMap, key);
     return texture;
 }
@@ -63,7 +64,7 @@ SkaFont* ska_asset_manager_load_font(const char* fileName, const char* key, int 
     SkaFont* font = ska_font_create_font(fileName, size, applyNearestNeighbor);
     SKA_ASSERT_FMT(font != NULL, "Failed to load font! file_name: '%s', key: '%s', size: '%d'", fileName, key, size);
     ska_string_hash_map_add(fontMap, key, font, sizeof(SkaFont));
-    SKA_MEM_FREE(font);
+    SKA_FREE(font);
     font = (SkaFont*) ska_string_hash_map_get(fontMap, key);
     return font;
 }
@@ -73,7 +74,7 @@ SkaFont* ska_asset_manager_load_font_from_memory(const char* key, void* buffer, 
     SkaFont* font = ska_font_create_font_from_memory(buffer, bufferSize, size, applyNearestNeighbor);
     SKA_ASSERT_FMT(font != NULL, "Failed to load font! key: '%s', size: '%d'", key, size);
     ska_string_hash_map_add(fontMap, key, font, sizeof(SkaFont));
-    SKA_MEM_FREE(font);
+    SKA_FREE(font);
     font = (SkaFont*) ska_string_hash_map_get(fontMap, key);
     return  font;
 }
@@ -86,7 +87,9 @@ SkaFont* ska_asset_manager_get_font(const char* key) {
 bool ska_asset_manager_has_font(const char* key) {
     return ska_string_hash_map_has(fontMap, key);
 }
+#endif // #if SKA_RENDERING
 
+#if SKA_AUDIO
 // --- Audio Source --- //
 SkaAudioSource* ska_asset_manager_load_audio_source_wav(const char* fileName, const char* key) {
     SKA_ASSERT(audioSourceMap != NULL);
@@ -94,7 +97,7 @@ SkaAudioSource* ska_asset_manager_load_audio_source_wav(const char* fileName, co
     SkaAudioSource* newAudioSource = ska_audio_load_audio_source_wav(fileName);
     SKA_ASSERT_FMT(newAudioSource != NULL, "Audio source is null!  file_name = '%s', key = '%s'", fileName, key);
     ska_string_hash_map_add(audioSourceMap, key, newAudioSource, sizeof(SkaAudioSource));
-    SKA_MEM_FREE(newAudioSource);
+    SKA_FREE(newAudioSource);
     return newAudioSource;
 }
 
@@ -105,3 +108,4 @@ SkaAudioSource* ska_asset_manager_get_audio_source(const char* key) {
 bool ska_asset_manager_has_audio_source(const char* key) {
     return ska_string_hash_map_has(audioSourceMap, key);
 }
+#endif // #if SKA_AUDIO

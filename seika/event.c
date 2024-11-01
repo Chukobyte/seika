@@ -7,24 +7,24 @@
 //--- Observer ---//
 SkaObserver* ska_observer_new(SkaObserverOnNotify onNotifyFunc) {
     SKA_ASSERT(onNotifyFunc != NULL);
-    SkaObserver* observer = SKA_MEM_ALLOCATE(SkaObserver);
+    SkaObserver* observer = SKA_ALLOC_ZEROED(SkaObserver);
     observer->on_notify = onNotifyFunc;
     return observer;
 }
 
 void ska_observer_delete(SkaObserver* observer) {
-    SKA_MEM_FREE(observer);
+    SKA_FREE(observer);
 }
 
 //--- Event ---//
 SkaEvent* ska_event_new() {
-    SkaEvent* event = SKA_MEM_ALLOCATE(SkaEvent);
+    SkaEvent* event = SKA_ALLOC_ZEROED(SkaEvent);
     event->observerCount = 0;
     return event;
 }
 
 void ska_event_delete(SkaEvent* event) {
-    SKA_MEM_FREE(event);
+    SKA_FREE(event);
 }
 
 bool ska_event_register_observer(SkaEvent* event, SkaObserver* observer) {

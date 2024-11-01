@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_RENDERING
+
 #include "shader_instance.h"
 
 typedef struct SkaShaderFileParserFunction {
@@ -26,3 +28,5 @@ typedef struct SkaShaderFileParseResult {
 
 SkaShaderFileParseResult ska_shader_file_parser_parse_shader(const char* shaderSource);
 void ska_shader_file_parse_clear_parse_result(SkaShaderFileParseResult* result);
+
+#endif // #if SKA_RENDERING

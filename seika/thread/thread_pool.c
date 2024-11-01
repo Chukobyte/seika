@@ -10,7 +10,7 @@ static SkaThreadPoolWork* tpool_work_create(SkaThreadFunc func, void *arg) {
         return NULL;
     }
 
-    work = SKA_MEM_ALLOCATE_SIZE(sizeof(*work));
+    work = SKA_ALLOC_BYTES(sizeof(*work));
     work->func = func;
     work->arg = arg;
     work->next = NULL;
@@ -21,7 +21,7 @@ static void tpool_work_destroy(SkaThreadPoolWork* work) {
     if (work == NULL) {
         return;
     }
-    SKA_MEM_FREE(work);
+    SKA_FREE(work);
 }
 
 
@@ -95,7 +95,7 @@ SkaThreadPool* ska_tpool_create(usize num) {
         num = 2;
     }
 
-    tp = SKA_MEM_ALLOCATE_SIZE_ZERO(1, sizeof(*tp));
+    tp = SKA_ALLOC_BYTES_ZEROED(sizeof(*tp));
     tp->threadCount = num;
 
     pthread_mutex_init(&(tp->workMutex), NULL);
@@ -137,7 +137,7 @@ void ska_tpool_destroy(SkaThreadPool* tp) {
     pthread_cond_destroy(&(tp->workCond));
     pthread_cond_destroy(&(tp->workingCond));
 
-    SKA_MEM_FREE(tp);
+    SKA_FREE(tp);
 }
 
 bool ska_tpool_add_work(SkaThreadPool* tp, SkaThreadFunc func, void* arg) {

@@ -20,12 +20,12 @@ static void string_hash_map_rehash(SkaStringHashMap* hashMap, SkaStringHashMapNo
 static void string_hash_map_resize(SkaStringHashMap* hashMap, usize newCapacity);
 
 SkaStringHashMap* ska_string_hash_map_create(usize capacity) {
-    SkaStringHashMap* map = (SkaStringHashMap*)SKA_MEM_ALLOCATE(SkaStringHashMap);
+    SkaStringHashMap* map = (SkaStringHashMap*)SKA_ALLOC(SkaStringHashMap);
     map->capacity = capacity;
     map->size = 0;
     map->hashFunc = ska_default_hash_string;
     map->compareFunc = ska_default_compare_string;
-    map->nodes = (SkaStringHashMapNode**) SKA_MEM_ALLOCATE_SIZE(capacity * sizeof(SkaStringHashMapNode*));
+    map->nodes = (SkaStringHashMapNode**) SKA_ALLOC_BYTES(capacity * sizeof(SkaStringHashMapNode*));
     memset(map->nodes, 0, capacity * sizeof(SkaStringHashMapNode*)); // TODO: fix
     return map;
 }
@@ -35,9 +35,9 @@ SkaStringHashMap* ska_string_hash_map_create_default_capacity() {
 }
 
 SkaStringHashMapNode* hash_map_create_node_string(SkaStringHashMap* hashMap, const char* key, const void* value, usize valueSize, SkaStringHashMapNode* next) {
-    SkaStringHashMapNode* node = (SkaStringHashMapNode*) SKA_MEM_ALLOCATE_SIZE(sizeof(SkaStringHashMapNode));
+    SkaStringHashMapNode* node = (SkaStringHashMapNode*) SKA_ALLOC_BYTES(sizeof(SkaStringHashMapNode));
     node->key = ska_strdup(key);
-    node->value = SKA_MEM_ALLOCATE_SIZE(valueSize);
+    node->value = SKA_ALLOC_BYTES(valueSize);
     memcpy(node->value, value, valueSize);
     node->valueSize = valueSize;
     node->next = next;
@@ -56,7 +56,7 @@ bool ska_string_hash_map_destroy(SkaStringHashMap* hashMap) {
         }
     }
 
-    SKA_MEM_FREE(hashMap);
+    SKA_FREE(hashMap);
 
     return true;
 }
@@ -161,7 +161,7 @@ void string_hash_map_shrink_if_needed(SkaStringHashMap* hashMap) {
 }
 
 void string_hash_map_allocate(SkaStringHashMap* hashMap, usize capacity) {
-    hashMap->nodes = SKA_MEM_ALLOCATE_SIZE(capacity * sizeof(SkaStringHashMapNode*));
+    hashMap->nodes = SKA_ALLOC_BYTES(capacity * sizeof(SkaStringHashMapNode*));
     memset(hashMap->nodes, 0, capacity * sizeof(SkaStringHashMapNode*));
 
     hashMap->capacity = capacity;
@@ -197,7 +197,7 @@ void string_hash_map_resize(SkaStringHashMap* hashMap, usize newCapacity) {
 
     string_hash_map_rehash(hashMap, oldNode, oldCapacity);
 
-    SKA_MEM_FREE(oldNode);
+    SKA_FREE(oldNode);
 }
 
 // Int
@@ -213,7 +213,7 @@ int32 ska_string_hash_map_get_int(SkaStringHashMap* hashMap, const char* key) {
 bool ska_string_hash_map_add_string(SkaStringHashMap* hashMap, const char* key, const char* value) {
     char* stringVal = ska_strdup(value);
     bool result = ska_string_hash_map_add(hashMap, key, stringVal, strlen(value) + 1);
-    SKA_MEM_FREE(stringVal);
+    SKA_FREE(stringVal);
     return result;
 }
 
@@ -289,7 +289,7 @@ void hash_map_destroy_node_string(SkaStringHashMapNode* node) {
     SKA_ASSERT(node != NULL);
     SKA_ASSERT(node->value != NULL);
     SKA_ASSERT(node->key != NULL);
-    SKA_MEM_FREE(node->key);
-    SKA_MEM_FREE(node->value);
-    SKA_MEM_FREE(node);
+    SKA_FREE(node->key);
+    SKA_FREE(node->value);
+    SKA_FREE(node);
 }
