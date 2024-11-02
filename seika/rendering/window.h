@@ -2,6 +2,10 @@
 
 #if SKA_RENDERING
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "seika/defines.h"
 
 struct SkaColor;
@@ -19,6 +23,10 @@ bool ska_window_initialize(SkaWindowProperties props);
 void ska_window_finalize();
 void ska_window_render(const struct SkaColor* backgroundColor);
 bool ska_window_set_vsync(bool enabled);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // #if SKA_RENDERING
 
