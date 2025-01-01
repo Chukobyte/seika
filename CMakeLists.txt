@@ -12,6 +12,7 @@ option(SEIKA_ECS "Will enable ecs" ON)
 option(SEIKA_INPUT "Will enable input" ON)
 option(SEIKA_RENDERING "Will enable rendering" ON)
 option(SEIKA_AUDIO "Will enable audio" ON)
+option(SEIKA_UI "Will enable ui" ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -26,6 +27,7 @@ target_compile_definitions(seika
         SKA_INPUT=$<IF:$<BOOL:${SEIKA_INPUT}>,1,0>
         SKA_RENDERING=$<IF:$<BOOL:${SEIKA_RENDERING}>,1,0>
         SKA_AUDIO=$<IF:$<BOOL:${SEIKA_AUDIO}>,1,0>
+        SKA_UI=$<IF:$<BOOL:${SEIKA_UI}>,1,0>
 )
 
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")
