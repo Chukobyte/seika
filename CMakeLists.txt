@@ -51,6 +51,9 @@ if (SK_IS_MAIN)
             # Create test game executable
             add_executable(seika_test_game test/game/src/main.c)
             target_link_libraries(seika_test_game seika)
+            # Create test win executable
+            add_executable(win_test_game test/game/src/test_win.c test/game/src/win.c)
+            target_link_libraries(win_test_game seika)
         endif ()
     endif()
 endif()

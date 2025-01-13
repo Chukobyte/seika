@@ -6,6 +6,9 @@
 #include <seika/rendering/window.h>
 #include <seika/input/input.h>
 #include <seika/rendering/renderer.h>
+#include <seika/ui/ui.h>
+
+#include "seika/logger.h"
 
 static void game_initialize() {
     ska_window_initialize((SkaWindowProperties){
@@ -17,11 +20,13 @@ static void game_initialize() {
         .maintainAspectRatio = true,
     });
     ska_input_initialize();
+    sui_init();
 }
 
 static void game_finalize() {
     ska_window_finalize();
     ska_input_finalize();
+    sui_finalize();
 }
 
 static void game_run() {
@@ -31,6 +36,12 @@ static void game_run() {
         if (shouldQuit || ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_ESCAPE, 0)) {
             break;
         }
+
+        // UI Tests
+        if (sui_button("Okay")) {
+            ska_logger_message("Test");
+        }
+
         ska_window_render(&(SkaColor){ 0.2f, 0.2f, 0.2f, 1.0f });
         ska_delay(10);
     }
