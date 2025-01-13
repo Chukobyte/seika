@@ -38,6 +38,8 @@ do {} while (false)
 #define SKA_STRUCT_LITERAL(STRUCT_NAME)
 #endif
 
+#define SKA_SDL SKA_RENDERING || SKA_INPUT
+
 #ifdef __cplusplus
 }
 #endif

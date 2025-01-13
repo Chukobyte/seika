@@ -19,8 +19,9 @@
 
 #endif
 
-
+#if SKA_SDL
 #include <SDL3/SDL_filesystem.h>
+#endif
 
 #include "logger.h"
 #include "seika/string.h"
@@ -179,6 +180,7 @@ bool ska_fs_does_dir_exist(const char* dirPath) {
 #endif
 }
 
+#if SKA_SDL
 char* ska_fs_get_user_save_path(const char* orgName, const char* applicationName, const char* savePath) {
     char buffer[CHAR_ARRAY_MAX_BUFFER_SIZE];
     char* filePath = SDL_GetPrefPath(orgName, applicationName);
@@ -188,3 +190,4 @@ char* ska_fs_get_user_save_path(const char* orgName, const char* applicationName
     SDL_free(filePath);
     return fullUserSavePath;
 }
+#endif

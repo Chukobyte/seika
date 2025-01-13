@@ -19,7 +19,10 @@ char* ska_fs_read_file_contents_without_raw(const char* filePath, usize* sz);
 bool ska_fs_write_to_file(const char* filePath, const char* contents);
 bool ska_fs_does_file_exist(const char* filePath);
 bool ska_fs_does_dir_exist(const char* dirPath);
+
+#if SKA_SDL
 char* ska_fs_get_user_save_path(const char* orgName, const char* applicationName, const char* savePath);
+#endif SKA_SDL
 
 #ifdef __cplusplus
 }
