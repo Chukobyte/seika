@@ -1,3 +1,5 @@
+#if SKA_RENDERING || SKA_INPUT
+
 #include "ska_sdl.h"
 
 #include <SDL3/SDL.h>
@@ -40,3 +42,5 @@ bool ska_sdl_update() {
 #endif
     return shouldQuit;
 }
+
+#endif //#if SKA_RENDERING || SKA_INPUT

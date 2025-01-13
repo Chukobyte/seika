@@ -1,8 +1,8 @@
-#include "audio_manager.h"
-#include "seika/assert.h"
 #if SKA_AUDIO
 
 #include "audio.h"
+#include "audio_manager.h"
+#include "seika/assert.h"
 
 #define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
