@@ -22,7 +22,7 @@ bool ska_fs_does_dir_exist(const char* dirPath);
 
 #if SKA_SDL
 char* ska_fs_get_user_save_path(const char* orgName, const char* applicationName, const char* savePath);
-#endif SKA_SDL
+#endif
 
 #ifdef __cplusplus
 }
