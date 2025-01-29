@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_NETWORK
+
 #include <stdbool.h>
 
 #include "seika/defines.h"
@@ -22,3 +24,5 @@ typedef void (*ska_on_network_client_callback) (const char*);
 bool ska_udp_client_initialize(const char* serverAddr, int32 serverPort, ska_on_network_client_callback user_callback);
 bool ska_udp_client_send_message(const char* message);
 void ska_udp_client_finalize();
+
+#endif

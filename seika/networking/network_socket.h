@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
-
 #include "seika/defines.h"
 
 #ifdef _WIN32

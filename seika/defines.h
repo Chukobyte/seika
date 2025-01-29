@@ -10,6 +10,30 @@ extern "C" {
 
 #include "seika/version_info.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+#define PLATFORM_WINDOWS
+#elif defined(__linux__)
+#define PLATFORM_LINUX
+#elif defined(__APPLE__) && defined(__MACH__)
+#define PLATFORM_MACOS
+#elif defined(__EMSCRIPTEN__)
+#define PLATFORM_EMSCRIPTEN
+#else
+#define PLATFORM_UNKNOWN
+#endif
+
+#if defined(__linux__)
+#define PLATFORM_LINUX
+#endif
+
+#if defined(__APPLE__) && defined(__MACH__)
+#define PLATFORM_MACOS
+#endif
+
+#if defined(__EMSCRIPTEN__)
+#define PLATFORM_EMSCRIPTEN
+#endif
+
 typedef size_t usize;
 
 typedef int16_t int16;

@@ -1,7 +1,8 @@
 #pragma once
 
-#ifdef _WIN32
-#include <stdbool.h>
+#include "seika/defines.h"
+
+#if defined(PLATFORM_WINDOWS)
 #include <Windows.h>
 #include <time.h>
 
@@ -9,9 +10,7 @@
 #include <pthread.h>
 #endif
 
-#include "seika/defines.h"
-
-#ifdef _WIN32
+#if defined(PLATFORM_WINDOWS)
 typedef CRITICAL_SECTION pthread_mutex_t;
 typedef void pthread_mutexattr_t;
 typedef void pthread_condattr_t;
@@ -30,7 +29,7 @@ typedef struct {
 
 #endif
 
-#ifdef _WIN32
+#if defined(PLATFORM_WINDOWS)
 int pthread_create(pthread_t *thread, pthread_attr_t *attr, void *(*start_routine)(void *), void *arg);
 int pthread_join(pthread_t thread, void **value_ptr);
 int pthread_detach(pthread_t);

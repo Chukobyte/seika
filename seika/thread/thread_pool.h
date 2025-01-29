@@ -1,8 +1,5 @@
 #pragma once
 
-#include <stdbool.h>
-#include <stddef.h>
-
 #include "seika/thread/pthread.h"
 
 typedef void (*SkaThreadFunc)(void* arg);

@@ -1,3 +1,5 @@
+#if SKA_NETWORK
+
 #include "network.h"
 
 #include <stdio.h>
@@ -5,7 +7,6 @@
 
 #include "network_socket.h"
 #include "seika/logger.h"
-#include "seika/assert.h"
 
 //--- NETWORK ---//
 #define SKA_NETWORK_HANDSHAKE_MESSAGE "init"
@@ -141,3 +142,5 @@ void ska_udp_client_finalize() {
     ska_socket_close(&client_socket);
     ska_socket_system_finalize();
 }
+
+#endif // #if SKA_NETWORK

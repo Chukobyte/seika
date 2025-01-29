@@ -9,7 +9,7 @@
 
 //--- RBE Socket ---//
 static int ska_socket_get_last_error() {
-#ifdef _WIN32
+#if defined(PLATFORM_WINDOWS)
     return WSAGetLastError();
 #else
     return -1;
@@ -17,7 +17,7 @@ static int ska_socket_get_last_error() {
 }
 
 bool ska_socket_system_initialize() {
-#ifdef _WIN32
+#if defined(PLATFORM_WINDOWS)
     // Initialise winsock
     WSADATA wsa;
     ska_logger_debug("Initialising client Winsock...");
@@ -31,7 +31,7 @@ bool ska_socket_system_initialize() {
 }
 
 void ska_socket_system_finalize() {
-#ifdef _WIN32
+#if defined(PLATFORM_WINDOWS)
     WSACleanup();
 #endif
 }
@@ -108,7 +108,7 @@ SkaSocket ska_socket_create_client(const char* serverAddr, int32 serverPort, ska
     memset((char*) &sock.si_other, 0, sizeof(sock.si_other));
     sock.si_other.sin_family = AF_INET;
     sock.si_other.sin_port = htons(serverPort);
-#ifdef _WIN32
+#if defined(PLATFORM_WINDOWS)
     sock.si_other.sin_addr.S_un.S_addr = inet_addr(serverAddr);
 #else
     if (inet_aton(serverAddr, &sock.si_other.sin_addr) == 0) {
