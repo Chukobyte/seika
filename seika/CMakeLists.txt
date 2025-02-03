@@ -4,6 +4,13 @@ set(CMAKE_C_STANDARD 11)
 
 project(seika C)
 
+if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+    message(STATUS "Forcing GNU extensions for Seika under Emscripten")
+    set(CMAKE_C_FLAGS "-std=gnu11 ${CMAKE_C_FLAGS}" CACHE STRING "C Compiler Flags" FORCE)
+    set(CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}" CACHE STRING "C++ Compiler Flags" FORCE)
+endif()
+
+
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     list(APPEND flags "/W3" "/Zc:preprocessor")
 elseif (APPLE)
