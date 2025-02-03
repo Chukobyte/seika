@@ -4,21 +4,19 @@ set(CMAKE_C_STANDARD 11)
 
 project(seika C)
 
-if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
-    message(STATUS "Forcing GNU extensions for Seika under Emscripten")
-    set(CMAKE_C_FLAGS "-std=gnu11 ${CMAKE_C_FLAGS}" CACHE STRING "C Compiler Flags" FORCE)
-    set(CMAKE_CXX_FLAGS "-std=gnu++11 ${CMAKE_CXX_FLAGS}" CACHE STRING "C++ Compiler Flags" FORCE)
-endif()
-
-
 if (CMAKE_C_COMPILER_ID STREQUAL "MSVC")
     list(APPEND flags "/W3" "/Zc:preprocessor")
 elseif (APPLE)
     list(APPEND flags "-Wfatal-errors" "-Wall" "-Wextra" "-Wno-write-strings" "-Wno-deprecated-declarations"
             "-Wno-unused-variable" "-Wno-bad-function-cast" "-Wno-unused-parameter" "-Wno-missing-field-initializers")
 else ()
-    list(APPEND flags "-std=c11" "-Wfatal-errors" "-Wall" "-Wextra" "-Wno-write-strings" "-Wno-deprecated-declarations"
-            "-Wno-unused-variable" "-Wno-cast-function-type" "-Wno-unused-parameter" "-Wno-missing-field-initializers")
+    if("${CMAKE_SYSTEM_NAME}" STREQUAL "Emscripten")
+        list(APPEND flags "-std=gnu11" "-Wfatal-errors" "-Wall" "-Wextra" "-Wno-write-strings" "-Wno-deprecated-declarations"
+                "-Wno-unused-variable" "-Wno-cast-function-type" "-Wno-unused-parameter" "-Wno-missing-field-initializers")
+    else()
+        list(APPEND flags "-std=c11" "-Wfatal-errors" "-Wall" "-Wextra" "-Wno-write-strings" "-Wno-deprecated-declarations"
+                "-Wno-unused-variable" "-Wno-cast-function-type" "-Wno-unused-parameter" "-Wno-missing-field-initializers")
+    endif()
 endif ()
 
 file(GLOB_RECURSE SEIKA_SRC ./*.c ./*.h)
