@@ -79,7 +79,23 @@ void ska_audio_manager_finalize() {
     pthread_mutex_destroy(&audio_mutex);
 }
 
-void ska_audio_manager_play_sound(const char* filePath, bool loops) {
+void ska_audio_manager_play_sound(SkaAudioSource* audioSource, bool loops) {
+    pthread_mutex_lock(&audio_mutex);
+    // Create audio instance and add to instances array
+    static uint32 audioInstanceId = 0;  // TODO: temp id for now in case we need to grab a hold of an audio instance for roll back later...
+    SkaAudioInstance* audioInstance = SKA_ALLOC(SkaAudioInstance);
+    audioInstance->source = audioSource;
+    audioInstance->id = audioInstanceId++;
+    audioInstance->does_loop = loops;
+    audioInstance->sample_position = 0.0f;
+    audioInstance->is_playing = true; // Sets sound instance to be played
+
+    audio_instances->instances[audio_instances->count++] = audioInstance;
+    ska_logger_debug("Added audio instance from file path '%s' to play!", audioSource->file_path);
+    pthread_mutex_unlock(&audio_mutex);
+}
+
+void ska_audio_manager_play_sound2(const char* filePath, bool loops) {
     if (!ska_asset_manager_has_audio_source(filePath)) {
         ska_logger_error("Doesn't have audio source loaded at path '%s' loaded!  Aborting...", filePath);
         return;
@@ -87,32 +103,25 @@ void ska_audio_manager_play_sound(const char* filePath, bool loops) {
         ska_logger_warn("Reached max audio instances of '%d', not playing sound!", SKA_MAX_AUDIO_INSTANCES);
         return;
     }
-
-    pthread_mutex_lock(&audio_mutex);
-    // Create audio instance and add to instances array
-    static uint32 audioInstanceId = 0;  // TODO: temp id for now in case we need to grab a hold of an audio instance for roll back later...
-    SkaAudioInstance* audioInstance = SKA_ALLOC(SkaAudioInstance);
-    audioInstance->source = ska_asset_manager_get_audio_source(filePath);
-    audioInstance->id = audioInstanceId++;
-    audioInstance->does_loop = loops;
-    audioInstance->sample_position = 0.0f;
-    audioInstance->is_playing = true; // Sets sound instance to be played
-
-    audio_instances->instances[audio_instances->count++] = audioInstance;
-    ska_logger_debug("Added audio instance from file path '%s' to play!", filePath);
-    pthread_mutex_unlock(&audio_mutex);
+    SkaAudioSource* audioSource = ska_asset_manager_get_audio_source(filePath);
+    ska_audio_manager_play_sound(audioSource, loops);
 }
 
-void ska_audio_manager_stop_sound(const char* filePath) {
+void ska_audio_manager_stop_sound(SkaAudioSource* audioSource) {
     pthread_mutex_lock(&audio_mutex);
     for (usize i = 0; i < audio_instances->count; i++) {
         SkaAudioInstance* audioInst = audio_instances->instances[i];
-        if (strcmp(audioInst->source->file_path, filePath) == 0) {
+        if (audioInst->source == audioSource) {
             audioInst->is_playing = false;
             break;
         }
     }
     pthread_mutex_unlock(&audio_mutex);
+}
+
+void ska_audio_manager_stop_sound2(const char* filePath) {
+    SkaAudioSource* audioSource = ska_asset_manager_get_audio_source(filePath);
+    ska_audio_manager_stop_sound(audioSource);
 }
 
 // --- Mini Audio Callback --- //

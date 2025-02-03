@@ -44,7 +44,7 @@ static void game_run() {
             break;
         }
         if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_SPACE, 0)) {
-            ska_audio_manager_play_sound("orb", false);
+            ska_audio_manager_play_sound2("orb", false);
         }
         ska_window_render(&(SkaColor){ 0.2f, 0.2f, 0.2f, 1.0f });
         ska_delay(10);
