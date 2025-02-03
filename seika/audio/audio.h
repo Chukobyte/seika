@@ -10,8 +10,6 @@ extern "C" {
 
 #include "seika/defines.h"
 
-#define SKA_AUDIO_SOURCE_DEFAULT_WAV_SAMPLE_RATE 44100
-
 typedef struct SkaAudioSource {
     const char* file_path;
     f64 pitch;

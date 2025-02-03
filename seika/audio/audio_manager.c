@@ -38,10 +38,9 @@ typedef struct SkaAudioInstances {
 static SkaAudioInstances* audio_instances = NULL;
 
 // --- Audio Manager --- //
-bool ska_audio_manager_init(uint32 wavSampleRate) {
+bool ska_audio_manager_init() {
     audio_instances = SKA_ALLOC_ZEROED(SkaAudioInstances);
     pthread_mutex_init(&audio_mutex, NULL);
-    ska_audio_set_wav_sample_rate(wavSampleRate);
     // Device
     ma_device_config config = ma_device_config_init(ma_device_type_playback);
     config.playback.pDeviceID = NULL;
@@ -50,7 +49,7 @@ bool ska_audio_manager_init(uint32 wavSampleRate) {
     config.capture.pDeviceID = NULL;
     config.capture.format = ma_format_s16;
     config.capture.channels = 1;
-    config.sampleRate = wavSampleRate;
+    config.sampleRate = 0; // Allow miniaudio to choose sample rate
     config.dataCallback = audio_data_callback;
     config.pUserData = NULL;
     audio_device = SKA_ALLOC(ma_device);
@@ -63,6 +62,8 @@ bool ska_audio_manager_init(uint32 wavSampleRate) {
         ska_logger_error("Failed to start audio device!");
         return false;
     }
+
+    ska_audio_set_wav_sample_rate(audio_device->sampleRate);
 
     return true;
 }
@@ -89,7 +90,7 @@ void ska_audio_manager_play_sound(const char* filePath, bool loops) {
 
     pthread_mutex_lock(&audio_mutex);
     // Create audio instance and add to instances array
-    static unsigned int audioInstanceId = 0;  // TODO: temp id for now in case we need to grab a hold of an audio instance for roll back later...
+    static uint32 audioInstanceId = 0;  // TODO: temp id for now in case we need to grab a hold of an audio instance for roll back later...
     SkaAudioInstance* audioInstance = SKA_ALLOC(SkaAudioInstance);
     audioInstance->source = ska_asset_manager_get_audio_source(filePath);
     audioInstance->id = audioInstanceId++;
@@ -137,10 +138,10 @@ void audio_data_callback(ma_device* device, void* output, const void* input, ma_
         const f64 pitch = audioInst->source->pitch;
         int16* sampleOut = (int16*) output;
         int16* samples = (int16*) audioInst->source->samples;
-        uint64_t samplesToWrite = (uint64_t) frame_count;
+        uint64_t samplesToWrite = (uint64) frame_count;
 
         // Write to output
-        for (uint64_t writeSample = 0; writeSample < samplesToWrite; writeSample++) {
+        for (uint64 writeSample = 0; writeSample < samplesToWrite; writeSample++) {
             f64 startSamplePosition = audioInst->sample_position;
 
             f64 targetSamplePosition = startSamplePosition + (f64)channels * pitch;

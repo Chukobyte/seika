@@ -9,7 +9,7 @@ extern "C" {
 #include "seika/defines.h"
 
 // --- Audio Manager --- //
-bool ska_audio_manager_init(uint32 wavSampleRate);
+bool ska_audio_manager_init();
 void ska_audio_manager_finalize();
 // Process current jobs for resource manager
 void ska_audio_manager_play_sound(const char* filePath, bool loops);
