@@ -2,8 +2,8 @@
 
 #include "audio_manager.h"
 
-#include <stdint.h>
 #include <string.h>
+#include <math.h>
 
 #include <miniaudio.h>
 
@@ -80,6 +80,10 @@ void ska_audio_manager_finalize() {
 }
 
 void ska_audio_manager_play_sound(SkaAudioSource* audioSource, bool loops) {
+    if (audio_instances->count >= SKA_MAX_AUDIO_INSTANCES) {
+        ska_logger_warn("Reached max audio instances of '%d', not playing sound!", SKA_MAX_AUDIO_INSTANCES);
+        return;
+    }
     pthread_mutex_lock(&audio_mutex);
     // Create audio instance and add to instances array
     static uint32 audioInstanceId = 0;  // TODO: temp id for now in case we need to grab a hold of an audio instance for roll back later...
@@ -98,9 +102,6 @@ void ska_audio_manager_play_sound(SkaAudioSource* audioSource, bool loops) {
 void ska_audio_manager_play_sound2(const char* filePath, bool loops) {
     if (!ska_asset_manager_has_audio_source(filePath)) {
         ska_logger_error("Doesn't have audio source loaded at path '%s' loaded!  Aborting...", filePath);
-        return;
-    } else if (audio_instances->count >= SKA_MAX_AUDIO_INSTANCES) {
-        ska_logger_warn("Reached max audio instances of '%d', not playing sound!", SKA_MAX_AUDIO_INSTANCES);
         return;
     }
     SkaAudioSource* audioSource = ska_asset_manager_get_audio_source(filePath);
@@ -143,40 +144,35 @@ void audio_data_callback(ma_device* device, void* output, const void* input, ma_
             continue;
         }
 
-        const int32_t channels = audioInst->source->channels;
+        const int32 channels = audioInst->source->channels;
         const f64 pitch = audioInst->source->pitch;
         int16* sampleOut = (int16*) output;
         int16* samples = (int16*) audioInst->source->samples;
-        uint64_t samplesToWrite = (uint64) frame_count;
+        uint64 samplesToWrite = (uint64) frame_count;
 
         // Write to output
         for (uint64 writeSample = 0; writeSample < samplesToWrite; writeSample++) {
-            f64 startSamplePosition = audioInst->sample_position;
+            const f64 startSamplePosition = audioInst->sample_position;
 
-            f64 targetSamplePosition = startSamplePosition + (f64)channels * pitch;
-            if (targetSamplePosition >= audioInst->source->sample_count) {
-                targetSamplePosition -= (f64)audioInst->source->sample_count;
-            }
-
-            uint64 leftId = (uint64) startSamplePosition;
+            uint64 curIndex = (uint64) startSamplePosition;
             if (channels > 1) {
-                leftId &= ~((uint64)(0x01));
+                curIndex &= ~((uint64)0x01);
             }
-            const uint64 rightId = leftId + (uint64)(channels - 1);
-            const int16 startLeftSample = samples[leftId + channels];
-            const int16 startRightSample = samples[rightId + channels];
+            const uint64 nextIndex = (curIndex + channels) % audioInst->source->sample_count;
+            const uint64 leftIndexNext = nextIndex;
+            const uint64 rightIndexNext = nextIndex + 1;
+            const int16 sampleLeftNext = samples[leftIndexNext];
+            const int16 sampleRightNext = samples[rightIndexNext];
 
-            const int16 leftSample = (int16)(startLeftSample / channels);
-            const int16 rightSample = (int16)(startRightSample / channels);
+            *sampleOut++ += sampleLeftNext;
+            *sampleOut++ += sampleRightNext;
 
-            *sampleOut++ += leftSample;  // Left
-            *sampleOut++ += rightSample; // Right
+            // Update the instance's sample position and clamp it
+            const f64 targetSamplePosition = startSamplePosition + (f64)channels * pitch;
+            audioInst->sample_position = fmod(targetSamplePosition, audioInst->source->sample_count);
 
-            // Possibly need fixed sampling instead
-            audioInst->sample_position = targetSamplePosition;
-
-            const bool isAtEnd = audioInst->sample_position >= audioInst->source->sample_count - channels - 1;
-            if (isAtEnd) {
+            // Check if the raw target sample position has passed boundary
+            if (targetSamplePosition >= (f64)audioInst->source->sample_count - channels) {
                 audioInst->sample_position = 0;
                 if (!audioInst->does_loop) {
                     ska_logger_debug("Audio instance with id '%u' is queued for deletion!", audioInst->id);
