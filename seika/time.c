@@ -1,4 +1,4 @@
-#if SKA_INPUT || SKA_RENDERING
+#if SKA_SDL
 
 #include "seika/time.h"
 
@@ -12,4 +12,4 @@ void ska_delay(uint32 milliseconds) {
     SDL_Delay(milliseconds);
 }
 
-#endif // #if SKA_INPUT || SKA_RENDERING
+#endif // #if SKA_SDL

@@ -1,6 +1,6 @@
 #pragma once
 
-#if SKA_INPUT || SKA_RENDERING
+#if SKA_SDL
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,4 +15,4 @@ void ska_delay(uint32 milliseconds);
 }
 #endif
 
-#endif // #if SKA_INPUT || SKA_RENDERING
+#endif // #if SKA_SDL
