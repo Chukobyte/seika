@@ -13,6 +13,7 @@ option(SEIKA_INPUT "Will enable input" ON)
 option(SEIKA_RENDERING "Will enable rendering" ON)
 option(SEIKA_AUDIO "Will enable audio" ON)
 option(SEIKA_NETWORK "Will enable networking" ON)
+option(SEIKA_SDL "Will enable sdl" ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -28,6 +29,7 @@ target_compile_definitions(seika
         SKA_RENDERING=$<IF:$<BOOL:${SEIKA_RENDERING}>,1,0>
         SKA_AUDIO=$<IF:$<BOOL:${SEIKA_AUDIO}>,1,0>
         SKA_NETWORK=$<IF:$<BOOL:${SEIKA_NETWORK}>,1,0>
+        SKA_SDL=$<IF:$<BOOL:${SEIKA_SDL}>,1,0>
 )
 
 if ("${CMAKE_SOURCE_DIR}" STREQUAL "${CMAKE_CURRENT_SOURCE_DIR}")

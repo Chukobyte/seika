@@ -1,6 +1,6 @@
 #pragma once
 
-#if SKA_INPUT
+#if SKA_INPUT && SKA_SDL
 
 #include <SDL3/SDL.h>
 
@@ -24,4 +24,4 @@ void ska_sdl_process_event(SDL_Event event);
 // Call after looping through all sdl input events for a frame
 void ska_sdl_process_axis_events();
 
-#endif // if SKA_INPUT
+#endif // if SKA_INPUT && SKA_SDL

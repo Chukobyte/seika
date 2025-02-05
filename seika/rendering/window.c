@@ -1,4 +1,4 @@
-#if SKA_RENDERING
+#if SKA_RENDERING && SKA_SDL
 
 #include "window.h"
 
@@ -85,4 +85,4 @@ bool ska_window_set_vsync(bool enabled) {
     return SDL_GL_SetSwapInterval((int)enabled) == 0;
 }
 
-#endif // #if SKA_RENDERING
+#endif // #if SKA_RENDERING && SKA_SDL

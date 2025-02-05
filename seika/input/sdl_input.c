@@ -1,4 +1,4 @@
-#if SKA_INPUT
+#if SKA_INPUT && SKA_SDL
 
 #include "sdl_input.h"
 #include "sdl_gamepad_db.h"
@@ -201,7 +201,7 @@ void ska_sdl_process_event(SDL_Event event) {
         // Mouse
         case SDL_EVENT_MOUSE_MOTION: {
             SkaMouse* mouse = ska_input_get_mouse();
-            mouse->position = (SkaVector2){ .x = (f32)event.motion.x, .y = (f32)event.motion.y };
+            mouse->position = (SkaVector2i){ .x = (int32)event.motion.x, .y = (int32)event.motion.y };
             break;
         }
 
@@ -323,4 +323,4 @@ void ska_sdl_process_axis_events() {
 #undef SKA_MAX_AXIS_VALUES
 }
 
-#endif // #if SKA_INPUT
+#endif // #if SKA_INPUT && SKA_SDL

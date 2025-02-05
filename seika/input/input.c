@@ -1,6 +1,8 @@
 #if SKA_INPUT
 
+#if SKA_SDL
 #include <SDL3/SDL.h>
+#endif
 
 #include "input.h"
 #include "sdl_input.h"
@@ -59,6 +61,8 @@ static void update_axis_key_state(SkaInputKey key, SkaInputInteractionStatus int
 
 bool ska_input_initialize() {
     SKA_ASSERT(!isInputActive);
+
+#if SKA_SDL
     const bool isSDLInitialized = SDL_WasInit(0) != 0;
     if (isSDLInitialized) {
         if (SDL_InitSubSystem( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
@@ -74,6 +78,7 @@ bool ska_input_initialize() {
     if (!ska_sdl_load_gamepad_mappings()) {
         return false;
     }
+#endif // #if SKA_SDL
 
     isInputActive = true;
     return true;
@@ -81,11 +86,14 @@ bool ska_input_initialize() {
 
 void ska_input_finalize() {
     SKA_ASSERT(isInputActive);
+
+#if SKA_SDL
     SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD);
     const bool subsystemsStillInitialized = SDL_WasInit(0) != 0;
     if (!subsystemsStillInitialized) {
         SDL_Quit();
     }
+#endif // #if SKA_SDL
 
     isInputActive = false;
 }
@@ -278,6 +286,10 @@ void ska_input_register_gamepad_removed_event(SkaInputDeviceIndex deviceIndex) {
     ska_input_reset_gamepad(deviceIndex);
 }
 
+void ska_input_register_mouse_move_event(SkaVector2i newPosition) {
+    globalMouse.position = newPosition;
+}
+
 void ska_input_register_input_event3(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType) {
     ska_input_register_input_event2(sourceType, key, triggerType, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
 }
@@ -293,7 +305,7 @@ void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey k
     switch (triggerType) {
         case SkaInputTriggerType_PRESSED: {
             if (!keyState->isPressed) {
-                interactionStatus = SkaInputInteractionStatus_JUST_PRESSED;
+                // interactionStatus = SkaInputInteractionStatus_JUST_PRESSED;
                 keyState->isJustPressed = true;
                 SKA_ASSERT(inputState.cleanupKeyStateJustPressedCount + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
                 inputState.cleanupKeyStateJustPressed[inputState.cleanupKeyStateJustPressedCount++] = (SkaInputStateCleanup) { .key = key, .deviceIndex = deviceIndex };
@@ -313,7 +325,7 @@ void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey k
             keyState->isJustPressed = false;
             keyState->isJustReleased = true;
             keyState->strength = 0.0f;
-            interactionStatus = SkaInputInteractionStatus_JUST_RELEASED;
+            // interactionStatus = SkaInputInteractionStatus_JUST_RELEASED;
             SKA_ASSERT(inputState.cleanupKeyStateJustReleasedCount + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
             inputState.cleanupKeyStateJustReleased[inputState.cleanupKeyStateJustReleasedCount++] = (SkaInputStateCleanup) { .key = key, .deviceIndex = deviceIndex };
             break;

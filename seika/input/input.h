@@ -230,7 +230,7 @@ typedef enum SkaInputAxis {
 } SkaInputAxis;
 
 typedef struct SkaMouse {
-    SkaVector2 position;
+    SkaVector2i position;
 } SkaMouse;
 
 typedef struct SkaInputEvent {
@@ -265,6 +265,7 @@ bool ska_input_is_gamepad_key(SkaInputKey key);
 // Events
 void ska_input_register_gamepad_added_event(SkaInputDeviceIndex deviceIndex);
 void ska_input_register_gamepad_removed_event(SkaInputDeviceIndex deviceIndex);
+void ska_input_register_mouse_move_event(SkaVector2i newPosition);
 void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType, SkaInputDeviceIndex deviceIndex, f32 gamepadAxisValue);
 void ska_input_register_input_event2(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType, SkaInputDeviceIndex deviceIndex);
 void ska_input_register_input_event3(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType);

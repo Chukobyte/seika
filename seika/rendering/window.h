@@ -1,6 +1,6 @@
 #pragma once
 
-#if SKA_RENDERING
+#if SKA_RENDERING && SKA_SDL
 
 #ifdef __cplusplus
 extern "C" {
@@ -28,5 +28,5 @@ bool ska_window_set_vsync(bool enabled);
 }
 #endif
 
-#endif // #if SKA_RENDERING
+#endif // #if SKA_RENDERING && SKA_SDL
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#if SKA_INPUT
+#if SKA_INPUT && SKA_SDL
 
 const unsigned char SKA_GAMEPAD_DB_HEX[] = {
     0x23, 0x20, 0x47, 0x61, 0x6d, 0x65, 0x20, 0x43, 0x6f, 0x6e, 0x74, 0x72,
@@ -41988,4 +41988,4 @@ const unsigned char SKA_GAMEPAD_DB_HEX[] = {
 #define SKA_GAMEPAD_DB_STR (const char*)SKA_GAMEPAD_DB_HEX
 const unsigned int SKA_GAMEPAD_DB_SIZE = 503770;
 
-#endif // if SKA_INPUT
+#endif // #if SKA_INPUT && SKA_SDL
