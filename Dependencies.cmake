@@ -36,7 +36,7 @@ if (NOT TARGET unity)
     FetchContent_MakeAvailable(unity_content)
 endif()
 
-if (SEIKA_INPUT OR SEIKA_RENDERING)
+if (SEIKA_SDL AND (SEIKA_INPUT OR SEIKA_RENDERING))
     # https://github.com/libsdl-org/SDL
     if (NOT TARGET SDL3::SDL3-static)
         set(SDL_STATIC ${SEIKA_STATIC_LIB})
