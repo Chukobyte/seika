@@ -1,4 +1,4 @@
-#if SKA_RENDERING || SKA_INPUT
+#if SKA_SDL && (SKA_RENDINER || SKA_INPUT)
 
 #include "ska_sdl.h"
 
