@@ -10,6 +10,7 @@
 #include <seika/rendering/renderer.h>
 #include <seika/audio/audio.h>
 #include <seika/assert.h>
+#include <seika/logger.h>
 
 static SkaAudioSource* audioSource = NULL;
 
@@ -46,6 +47,14 @@ static void game_run() {
         if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_SPACE, 0)) {
             ska_audio_manager_play_sound2("orb", false);
         }
+
+        const f32 audioStreamPosition = ska_audio_manager_get_position(audioSource);
+        if (audioStreamPosition > 0.0f) {
+            ska_logger_message("audioStreamPosition = %f", audioStreamPosition);
+            const f32 audioStreamPositionSeconds = ska_audio_manager_get_position_seconds(audioSource);
+            ska_logger_message("audioStreamPositionSeconds = %f", audioStreamPositionSeconds);
+        }
+
         ska_window_render(&(SkaColor){ 0.2f, 0.2f, 0.2f, 1.0f });
         ska_delay(10);
     }

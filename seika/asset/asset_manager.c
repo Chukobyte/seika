@@ -97,7 +97,7 @@ SkaAudioSource* ska_asset_manager_load_audio_source_wav(const char* fileName, co
     SkaAudioSource* newAudioSource = ska_audio_load_audio_source_wav(fileName);
     SKA_ASSERT_FMT(newAudioSource != NULL, "Audio source is null!  file_name = '%s', key = '%s'", fileName, key);
     ska_string_hash_map_add(audioSourceMap, key, newAudioSource, sizeof(SkaAudioSource));
-    SKA_FREE(newAudioSource);
+    // SKA_FREE(newAudioSource);
     return newAudioSource;
 }
 

@@ -104,6 +104,7 @@ SkaAudioSource* ska_audio_load_audio_source_wav(const char* fileName) {
         newAudioSource->sample_rate = (int32)audioWavSampleRate;
         newAudioSource->sample_count = (int32)outFrames * channels;
     }
+    ska_audio_manager_register_source(newAudioSource);
     return newAudioSource;
 }
 
@@ -125,6 +126,11 @@ bool load_wav_data_from_file(const char* file_path, int32* sample_count, int32* 
     *sample_count = (int32)totalPcmFrameCount * *channels;
 
     return true;
+}
+
+void ska_audio_delete_audio_source_wav(SkaAudioSource* audioSource) {
+    ska_audio_manager_unregister_source(audioSource);
+    SKA_FREE(audioSource);
 }
 
 #endif // #if SKA_AUDIO

@@ -14,6 +14,7 @@
 #include "seika/asset/asset_manager.h"
 #include "seika/thread/pthread.h"
 
+#define SKA_MAX_AUDIO_SOURCES 64
 #define SKA_MAX_AUDIO_INSTANCES 32
 
 static void audio_data_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count);
@@ -21,7 +22,7 @@ static void audio_data_callback(ma_device* device, void* output, const void* inp
 static ma_device* audio_device = NULL;
 static pthread_mutex_t audio_mutex;
 
-// An instance of an RBE audio source
+// An instance of a Ska Audio Source
 typedef struct SkaAudioInstance {
     SkaAudioSource* source;
     uint32 id;
@@ -35,9 +36,21 @@ typedef struct SkaAudioInstances {
     usize count;
 } SkaAudioInstances;
 
+typedef struct SkaAudioSourceData {
+    SkaAudioSource* source;
+    SkaAudioInstance* lastSpawnedInstance;
+} SkaAudioSourceData;
+
 static SkaAudioInstances* audio_instances = NULL;
+static SkaAudioSourceData audioSourceData[SKA_MAX_AUDIO_SOURCES] = {0};
+static usize audioSourceCount = 0;
 
 // --- Audio Manager --- //
+
+static inline SkaAudioSourceData* getSourceData(SkaAudioSource* source) {
+    return &audioSourceData[source->dataId];
+}
+
 bool ska_audio_manager_init() {
     audio_instances = SKA_ALLOC_ZEROED(SkaAudioInstances);
     pthread_mutex_init(&audio_mutex, NULL);
@@ -79,6 +92,22 @@ void ska_audio_manager_finalize() {
     pthread_mutex_destroy(&audio_mutex);
 }
 
+void ska_audio_manager_register_source(SkaAudioSource* source) {
+    SKA_ASSERT(audioSourceCount < SKA_MAX_AUDIO_SOURCES);
+    source->dataId = audioSourceCount++;
+    SkaAudioSourceData* data = getSourceData(source);
+    data->source = source;
+    data->lastSpawnedInstance = NULL;
+}
+
+void ska_audio_manager_unregister_source(SkaAudioSource* source) {
+    // TODO: Implement
+    SkaAudioSourceData* data = getSourceData(source);
+    data->source = NULL;
+    data->lastSpawnedInstance = NULL;
+    audioSourceCount--;
+}
+
 void ska_audio_manager_play_sound(SkaAudioSource* audioSource, bool loops) {
     if (audio_instances->count >= SKA_MAX_AUDIO_INSTANCES) {
         ska_logger_warn("Reached max audio instances of '%d', not playing sound!", SKA_MAX_AUDIO_INSTANCES);
@@ -93,6 +122,9 @@ void ska_audio_manager_play_sound(SkaAudioSource* audioSource, bool loops) {
     audioInstance->does_loop = loops;
     audioInstance->sample_position = 0.0f;
     audioInstance->is_playing = true; // Sets sound instance to be played
+
+    SkaAudioSourceData* data = getSourceData(audioSource);
+    data->lastSpawnedInstance = audioInstance;
 
     audio_instances->instances[audio_instances->count++] = audioInstance;
     ska_logger_debug("Added audio instance from file path '%s' to play!", audioSource->file_path);
@@ -125,6 +157,26 @@ void ska_audio_manager_stop_sound2(const char* filePath) {
     ska_audio_manager_stop_sound(audioSource);
 }
 
+f32 ska_audio_manager_get_position(SkaAudioSource* audioSource) {
+    const SkaAudioSourceData* data = getSourceData(audioSource);
+    if (data->lastSpawnedInstance && data->lastSpawnedInstance->sample_position > 0.0) {
+        return (f32)(data->lastSpawnedInstance->sample_position / data->source->sample_count);
+    }
+    return 0.0f;
+}
+
+f32 ska_audio_manager_get_position_seconds(SkaAudioSource* audioSource) {
+    const SkaAudioSourceData* data = getSourceData(audioSource);
+    if (data->lastSpawnedInstance && data->lastSpawnedInstance->sample_position > 0.0) {
+        const int32 channels = data->source->channels;
+        const uint32 globalSampleRate = ska_audio_get_wav_sample_rate();
+        return (f32)data->lastSpawnedInstance->sample_position / (f32)(channels * globalSampleRate);
+    }
+    return 0.0f;
+}
+
+
+
 // --- Mini Audio Callback --- //
 void audio_data_callback(ma_device* device, void* output, const void* input, ma_uint32 frame_count) {
     if (audio_instances->count <= 0) {
@@ -146,9 +198,9 @@ void audio_data_callback(ma_device* device, void* output, const void* input, ma_
 
         const int32 channels = audioInst->source->channels;
         const f64 pitch = audioInst->source->pitch;
-        int16* sampleOut = (int16*) output;
-        int16* samples = (int16*) audioInst->source->samples;
-        uint64 samplesToWrite = (uint64) frame_count;
+        int16* sampleOut = (int16*)output;
+        const int16* samples = (int16*)audioInst->source->samples;
+        const uint64 samplesToWrite = (uint64)frame_count;
 
         // Write to output
         for (uint64 writeSample = 0; writeSample < samplesToWrite; writeSample++) {
@@ -173,13 +225,19 @@ void audio_data_callback(ma_device* device, void* output, const void* input, ma_
 
             // Check if the raw target sample position has passed boundary
             if (targetSamplePosition >= (f64)audioInst->source->sample_count - channels) {
-                audioInst->sample_position = 0;
+                audioInst->sample_position = 0.0;
+                SkaAudioSourceData* data = getSourceData(audioInst->source);
                 if (!audioInst->does_loop) {
                     ska_logger_debug("Audio instance with id '%u' is queued for deletion!", audioInst->id);
+                    if (audioInst == data->lastSpawnedInstance) {
+                        data->lastSpawnedInstance = NULL;
+                    }
                     audio_instances->instances[i] = NULL;
                     removedInstances++;
                     SKA_FREE(audioInst);
                     break;
+                } else {
+                    data->lastSpawnedInstance = audioInst;
                 }
             }
         }
