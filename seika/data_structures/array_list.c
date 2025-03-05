@@ -50,9 +50,24 @@ bool ska_array_list_remove(SkaArrayList* list, const void* value) {
             }
             list->size--;
             return true;
-        } else {
-            index++;
         }
+        index++;
+    }
+    return false;
+}
+
+bool ska_array_list_remove2(SkaArrayList* list, const void* value, SkaArrayListCmp compareFunc) {
+    usize index = 0;
+    while (index < list->size) {
+        if (compareFunc(value, (char*)list->data + index * list->valueSize)) {
+            // Found the element, remove it
+            for (usize i = index + 1; i < list->size; ++i) {
+                memcpy((char*)list->data + (i - 1) * list->valueSize, (char*)list->data + i * list->valueSize, list->valueSize);
+            }
+            list->size--;
+            return true;
+        }
+        index++;
     }
     return false;
 }
@@ -72,6 +87,15 @@ bool ska_array_list_remove_by_index(SkaArrayList* list, usize index) {
 bool ska_array_list_has(const SkaArrayList* list, const void* value) {
     for (usize i = 0; i < list->size; i++) {
         if (memcmp((char*)list->data + i * list->valueSize, value, list->valueSize) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool ska_array_list_has2(const SkaArrayList* list, const void* value, SkaArrayListCmp compareFunc) {
+    for (usize i = 0; i < list->size; i++) {
+        if (compareFunc(value, (char*)list->data + i * list->valueSize)) {
             return true;
         }
     }

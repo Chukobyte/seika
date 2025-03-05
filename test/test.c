@@ -80,18 +80,28 @@ void seika_mem_test(void) {
     TEST_ASSERT_FALSE(ska_mem_report_leaks());
 }
 
+static bool array_list_compare(const void* a, const void* b) {
+    return ((int32)*(int32*)a == (int32)*(int32*)b);
+}
+
 void seika_array_list_test(void) {
-    int listValues[] = { 8, 2, 3, 5 };
+    const int32 listValues[] = { 8, 2, 3, 5 };
     SkaArrayList* arrayList = ska_array_list_create_default_capacity(sizeof(int));
     TEST_ASSERT_TRUE(ska_array_list_is_empty(arrayList));
 
-    for (int i = 0; i < 4; i++) {
+    for (int32 i = 0; i < 4; i++) {
         ska_array_list_push_back(arrayList, &listValues[i]);
     }
     TEST_ASSERT_FALSE(ska_array_list_is_empty(arrayList));
-    int index = 0;
-    SKA_ARRAY_LIST_FOR_EACH(arrayList, int, i) {
-        const int value = (int)*(int*)ska_array_list_get(arrayList, index);
+    TEST_ASSERT_TRUE(ska_array_list_has2(arrayList, &(int32){8}, array_list_compare));
+    ska_array_list_remove2(arrayList, &(int32){5}, array_list_compare);
+    TEST_ASSERT_FALSE(ska_array_list_has2(arrayList, &(int32){5}, array_list_compare));
+    ska_array_list_push_back(arrayList, &(int32){5});
+    TEST_ASSERT_TRUE(ska_array_list_has2(arrayList, &(int32){5}, array_list_compare));
+
+    int32 index = 0;
+    SKA_ARRAY_LIST_FOR_EACH(arrayList, int32, i) {
+        const int value = (int32)*(int32*)ska_array_list_get(arrayList, index);
         TEST_ASSERT_EQUAL_INT(listValues[index], value);
         index++;
     }

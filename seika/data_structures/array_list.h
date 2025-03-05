@@ -5,6 +5,8 @@
 #define SKA_ARRAY_LIST_GET_ARRAY(LIST, TYPE) ((TYPE*)((LIST)->data))
 #define SKA_ARRAY_LIST_FOR_EACH(LIST, TYPE, VALUE) for(TYPE* VALUE = SKA_ARRAY_LIST_GET_ARRAY(LIST, TYPE), *VALUE##_end = VALUE + (LIST)->size; VALUE < VALUE##_end; VALUE++)
 
+typedef bool (*SkaArrayListCmp)(const void*, const void*);
+
 // Generic array list, use 'ska_array_list_create' to allocate on the heap
 typedef struct SkaArrayList {
     void* data;
@@ -25,9 +27,11 @@ void ska_array_list_push_back(SkaArrayList* list, const void* value);
 void* ska_array_list_get(SkaArrayList* list, usize index);
 // Removes the first item from the list who is equal to the passed in value
 bool ska_array_list_remove(SkaArrayList* list, const void* value);
+bool ska_array_list_remove2(SkaArrayList* list, const void* value, SkaArrayListCmp compareFunc);
 bool ska_array_list_remove_by_index(SkaArrayList* list, usize index);
 // Returns true if the item exists within the list
 bool ska_array_list_has(const SkaArrayList* list, const void* value);
+bool ska_array_list_has2(const SkaArrayList* list, const void* value, SkaArrayListCmp compareFunc);
 // Returns true if the array list size == 0
 bool ska_array_list_is_empty(const SkaArrayList *list);
 // Will remove all items from the array list
