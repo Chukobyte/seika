@@ -29,3 +29,5 @@ CTestTestfile.cmake
 _deps
 
 cmake-build-*
+builds
+out

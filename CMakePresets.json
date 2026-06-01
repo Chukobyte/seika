@@ -1,32 +1,27 @@
 {
-  "version": 6,
-  "cmakeMinimumRequired": {
-    "major": 3,
-    "minor": 27,
-    "patch": 0
-  },
-  "configurePresets": [
-    {
-      "name": "ninja-multi-vcpkg",
-      "displayName": "Ninja Multi-Config",
-      "description": "Configure with vcpkg toolchain and generate Ninja project files for all configurations",
-      "binaryDir": "${sourceDir}/builds",
-      "generator": "Ninja Multi-Config"
-    }
-  ],
-  "buildPresets": [
-    {
-      "name": "ninja-multi-vcpkg",
-      "configurePreset": "ninja-multi-vcpkg",
-      "displayName": "Build ninja-multi-vcpkg",
-      "description": "Build with Ninja the configuration specified with --config"
-    }
-  ],
-  "testPresets": [
-    {
-      "name": "ninja-multi-vcpkg",
-      "configurePreset": "ninja-multi-vcpkg",
-      "description": "Test with Ninja the provided configuration with --config"
-    }
-  ]
+    "version": 8,
+    "configurePresets": [
+        {
+            "name": "Visual Studio Community 2022 Release - x86",
+            "displayName": "Visual Studio Community 2022 Release - x86",
+            "description": "Using compilers for Visual Studio 17 2022 (x86 architecture)",
+            "generator": "Visual Studio 17 2022",
+            "toolset": "host=x86",
+            "architecture": "win32",
+            "binaryDir": "${sourceDir}/out/build/${presetName}",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
+                "CMAKE_C_COMPILER": "cl.exe",
+                "CMAKE_CXX_COMPILER": "cl.exe"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "Visual Studio Community 2022 Release - x86-debug",
+            "displayName": "Visual Studio Community 2022 Release - x86 - Debug",
+            "configurePreset": "Visual Studio Community 2022 Release - x86",
+            "configuration": "Debug"
+        }
+    ]
 }
