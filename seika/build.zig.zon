@@ -1,0 +1,7 @@
+.{
+    .name = .seika,
+    .fingerprint = 0x8f12793e7b1afa9b,
+    .version = "0.1.0",
+    .paths = .{"."},
+    .dependencies = .{},
+}

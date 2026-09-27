@@ -1,5 +1,8 @@
 #if SKA_RENDERING
 
+// Must precede renderer.h: windows.h (pulled in here) redefines APIENTRY before glad.h can guard it (C4005).
+#include "seika/window/window.h"
+
 #include "renderer.h"
 
 #include <stdlib.h>
@@ -8,7 +11,6 @@
 #include "shader/shader.h"
 #include "shader/shader_cache.h"
 #include "shader/shader_source.h"
-#include "seika/window/window.h"
 #include "seika/assert.h"
 #include "../logger.h"
 #include "seika/data_structures/static_array.h"
@@ -18,13 +20,13 @@
 #define SKA_RENDER_TEXTURE_LAYER_TEXTURE_MAX 64
 
 typedef struct SkaTextureCoordinates {
-    GLfloat sMin;
-    GLfloat sMax;
-    GLfloat tMin;
-    GLfloat tMax;
+    GLfloat s_min;
+    GLfloat s_max;
+    GLfloat t_min;
+    GLfloat t_max;
 } SkaTextureCoordinates;
 
-static SkaTextureCoordinates renderer_get_texture_coordinates(const SkaTexture* texture, const SkaRect2* drawSource, bool flipH, bool flipV);
+static SkaTextureCoordinates renderer_get_texture_coordinates(const SkaTexture* texture, const SkaRect2* draw_source, bool flip_h, bool flip_v);
 
 static void sprite_renderer_initialize();
 static void sprite_renderer_finalize();
@@ -35,30 +37,30 @@ static void font_renderer_finalize();
 static void font_renderer_update_resolution();
 static void font_renderer_draw_text(const SkaFont* font, const char* text, f32 x, f32 y, f32 scale, const SkaColor* color);
 
-static GLuint spriteQuadVAO;
-static GLuint spriteQuadVBO;
+static GLuint sprite_quad_vao;
+static GLuint sprite_quad_vbo;
 
 // 2D
-static SkaShader* spriteShader = NULL;
-static SkaShader* fontShader = NULL;
+static SkaShader* sprite_shader = NULL;
+static SkaShader* font_shader = NULL;
 
 // Global Shader Params
-static f32 globalShaderParamTime = 0.0f;
+static f32 global_shader_param_time = 0.0f;
 
-static f32 resolutionWidth = 800.0f;
-static f32 resolutionHeight = 600.0f;
-static SkaMatrix4 spriteProjection = {0};
+static f32 resolution_width = 800.0f;
+static f32 resolution_height = 600.0f;
+static SkaMatrix4 sprite_projection = {0};
 
 // Draw Batching
 typedef struct SpriteBatchItem {
     SkaTexture* texture;
-    SkaRect2 sourceRect;
-    SkaSize2D destSize;
+    SkaRect2 source_rect;
+    SkaSize2D dest_size;
     SkaColor color;
-    bool flipH;
-    bool flipV;
-    SkaRendererTransform2D transform2D;
-    SkaShaderInstance* shaderInstance;
+    bool flip_h;
+    bool flip_v;
+    SkaRendererTransform2D transform2_d;
+    SkaShaderInstance* shader_instance;
 } SpriteBatchItem;
 
 typedef struct FontBatchItem {
@@ -70,19 +72,19 @@ typedef struct FontBatchItem {
     SkaColor color;
 } FontBatchItem;
 
-void renderer_batching_draw_sprites(SpriteBatchItem items[], usize spriteCount);
+void renderer_batching_draw_sprites(SpriteBatchItem items[], usize sprite_count);
 
 // Render Layer - Arranges draw order by z index
 typedef struct RenderTextureLayer {
-    SpriteBatchItem spriteBatchItems[SKA_RENDER_LAYER_BATCH_ITEM_MAX];
-    usize spriteBatchItemCount;
+    SpriteBatchItem sprite_batch_items[SKA_RENDER_LAYER_BATCH_ITEM_MAX];
+    usize sprite_batch_item_count;
 } RenderTextureLayer;
 
 typedef struct RenderLayer {
-    RenderTextureLayer renderTextureLayers[SKA_RENDER_TEXTURE_LAYER_TEXTURE_MAX];
-    FontBatchItem fontBatchItems[SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX];
-    usize renderTextureLayerCount;
-    usize fontBatchItemCount;
+    RenderTextureLayer render_texture_layers[SKA_RENDER_TEXTURE_LAYER_TEXTURE_MAX];
+    FontBatchItem font_batch_items[SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX];
+    usize render_texture_layer_count;
+    usize font_batch_item_count;
 } RenderLayer;
 
 SKA_STATIC_ARRAY_CREATE(RenderLayer, SKA_RENDERER_MAX_Z_INDEX, render_layer_items);
@@ -99,75 +101,75 @@ void ska_renderer_deinit_2d() {
     sprite_renderer_finalize();
 }
 
-static inline void update_active_render_layer_index(int32 zIndex) {
-    const usize sizeBefore = SKA_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
-    SKA_STATIC_ARRAY_ADD_IF_UNIQUE(active_render_layer_items_indices, zIndex);
-    const usize sizeAfter = SKA_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
-    if (sizeBefore != sizeAfter) {
+static inline void update_active_render_layer_index(int32 z_index) {
+    const usize size_before = SKA_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
+    SKA_STATIC_ARRAY_ADD_IF_UNIQUE(active_render_layer_items_indices, z_index);
+    const usize size_after = SKA_STATIC_ARRAY_SIZE(active_render_layer_items_indices);
+    if (size_before != size_after) {
         SKA_STATIC_ARRAY_SORT_INT(active_render_layer_items_indices);
     }
 }
 
-static inline void ska_renderer_queue_sprite_draw_call(SpriteBatchItem* item, int32 zIndex) {
-    const int32 arrayZIndex = ska_math_clamp_int(zIndex + SKA_RENDERER_MAX_Z_INDEX / 2, 0, SKA_RENDERER_MAX_Z_INDEX - 1);
+static inline void ska_renderer_queue_sprite_draw_call(SpriteBatchItem* item, int32 z_index) {
+    const int32 array_z_index = ska_math_clamp_int(z_index + SKA_RENDERER_MAX_Z_INDEX / 2, 0, SKA_RENDERER_MAX_Z_INDEX - 1);
     // Get texture layer index for render texture
-    usize textureLayerIndex = render_layer_items[arrayZIndex].renderTextureLayerCount;
-    for (usize i = 0; i < render_layer_items[arrayZIndex].renderTextureLayerCount; i++) {
-        if (item->texture == render_layer_items[arrayZIndex].renderTextureLayers[i].spriteBatchItems[0].texture && item->shaderInstance == render_layer_items[arrayZIndex].renderTextureLayers[i].spriteBatchItems[0].shaderInstance) {
-            textureLayerIndex = i;
+    usize texture_layer_index = render_layer_items[array_z_index].render_texture_layer_count;
+    for (usize i = 0; i < render_layer_items[array_z_index].render_texture_layer_count; i++) {
+        if (item->texture == render_layer_items[array_z_index].render_texture_layers[i].sprite_batch_items[0].texture && item->shader_instance == render_layer_items[array_z_index].render_texture_layers[i].sprite_batch_items[0].shader_instance) {
+            texture_layer_index = i;
             break;
         }
     }
-    RenderTextureLayer* textureLayer =  &render_layer_items[arrayZIndex].renderTextureLayers[textureLayerIndex];
+    RenderTextureLayer* texture_layer =  &render_layer_items[array_z_index].render_texture_layers[texture_layer_index];
     // Increment render texture layer count if first sprite
-    if (textureLayer->spriteBatchItemCount == 0) {
-        render_layer_items[arrayZIndex].renderTextureLayerCount++;
+    if (texture_layer->sprite_batch_item_count == 0) {
+        render_layer_items[array_z_index].render_texture_layer_count++;
     }
     // Copy batch item into batch items array and increment item count
-    SKA_ASSERT_FMT(textureLayer->spriteBatchItemCount + 1 < SKA_RENDER_LAYER_BATCH_ITEM_MAX, "Exceeded SKA_RENDER_LAYER_BATCH_ITEM_MAX '%d'", SKA_RENDER_LAYER_BATCH_ITEM_MAX);
-    SpriteBatchItem* currentItem = &textureLayer->spriteBatchItems[textureLayer->spriteBatchItemCount++];
-    memcpy(currentItem, item, sizeof(SpriteBatchItem));
+    SKA_ASSERT_FMT(texture_layer->sprite_batch_item_count + 1 < SKA_RENDER_LAYER_BATCH_ITEM_MAX, "Exceeded SKA_RENDER_LAYER_BATCH_ITEM_MAX '%d'", SKA_RENDER_LAYER_BATCH_ITEM_MAX);
+    SpriteBatchItem* current_item = &texture_layer->sprite_batch_items[texture_layer->sprite_batch_item_count++];
+    memcpy(current_item, item, sizeof(SpriteBatchItem));
     // Update active render layer indices
-    update_active_render_layer_index(arrayZIndex);
+    update_active_render_layer_index(array_z_index);
 }
 
-void ska_renderer_queue_sprite_draw(SkaTexture* texture, SkaRect2 sourceRect, SkaSize2D destSize, SkaColor color, bool flipH, bool flipV, const SkaTransform2D* transform2D, int32 zIndex, SkaShaderInstance* shaderInstance) {
+void ska_renderer_queue_sprite_draw(SkaTexture* texture, SkaRect2 source_rect, SkaSize2D dest_size, SkaColor color, bool flip_h, bool flip_v, const SkaTransform2D* transform2_d, int32 z_index, SkaShaderInstance* shader_instance) {
     if (texture == NULL) {
         ska_logger_error("NULL texture, not submitting draw call!");
         return;
     }
     SpriteBatchItem item;
     item.texture = texture;
-    item.sourceRect = sourceRect;
-    item.destSize = destSize;
+    item.source_rect = source_rect;
+    item.dest_size = dest_size;
     item.color = color;
-    item.flipH = flipH;
-    item.flipV = flipV;
-    item.transform2D.model = SKA_MATRIX4_IDENTITY;
-    item.shaderInstance = shaderInstance;
-    ska_transform2d_transform_to_mat4(transform2D, &item.transform2D.model);
-    ska_renderer_queue_sprite_draw_call(&item, zIndex);
+    item.flip_h = flip_h;
+    item.flip_v = flip_v;
+    item.transform2_d.model = SKA_MATRIX4_IDENTITY;
+    item.shader_instance = shader_instance;
+    ska_transform2d_transform_to_mat4(transform2_d, &item.transform2_d.model);
+    ska_renderer_queue_sprite_draw_call(&item, z_index);
 }
 
-void ska_renderer_queue_sprite_draw2(SkaTexture* texture, SkaRect2 sourceRect, SkaSize2D destSize, SkaColor color, bool flipH, bool flipV, SkaMatrix4* trsMatrix, int32 zIndex, SkaShaderInstance* shaderInstance) {
+void ska_renderer_queue_sprite_draw2(SkaTexture* texture, SkaRect2 source_rect, SkaSize2D dest_size, SkaColor color, bool flip_h, bool flip_v, SkaMatrix4* trs_matrix, int32 z_index, SkaShaderInstance* shader_instance) {
     if (texture == NULL) {
         ska_logger_error("NULL texture, not submitting draw call!");
         return;
     }
     SpriteBatchItem item;
     item.texture = texture;
-    item.sourceRect = sourceRect;
-    item.destSize = destSize;
+    item.source_rect = source_rect;
+    item.dest_size = dest_size;
     item.color = color;
-    item.flipH = flipH;
-    item.flipV = flipV;
-    item.transform2D.model = SKA_MATRIX4_IDENTITY;
-    item.shaderInstance = shaderInstance;
-    ska_matrix4_copy_implace(trsMatrix, &item.transform2D.model);
-    ska_renderer_queue_sprite_draw_call(&item, zIndex);
+    item.flip_h = flip_h;
+    item.flip_v = flip_v;
+    item.transform2_d.model = SKA_MATRIX4_IDENTITY;
+    item.shader_instance = shader_instance;
+    ska_matrix4_copy_implace(trs_matrix, &item.transform2_d.model);
+    ska_renderer_queue_sprite_draw_call(&item, z_index);
 }
 
-void ska_renderer_queue_font_draw_call(SkaFont* font, const char* text, f32 x, f32 y, f32 scale, SkaColor color, int32 zIndex) {
+void ska_renderer_queue_font_draw_call(SkaFont* font, const char* text, f32 x, f32 y, f32 scale, SkaColor color, int32 z_index) {
     if (font == NULL) {
         ska_logger_error("NULL font, not submitting draw call!");
         return;
@@ -180,35 +182,35 @@ void ska_renderer_queue_font_draw_call(SkaFont* font, const char* text, f32 x, f
     item.y = y;
     item.scale = scale;
     item.color = color;
-    const int32 arrayZIndex = ska_math_clamp_int(zIndex + SKA_RENDERER_MAX_Z_INDEX / 2, 0, SKA_RENDERER_MAX_Z_INDEX - 1);
+    const int32 array_z_index = ska_math_clamp_int(z_index + SKA_RENDERER_MAX_Z_INDEX / 2, 0, SKA_RENDERER_MAX_Z_INDEX - 1);
     // Update font batch item on render layer
-    render_layer_items[arrayZIndex].fontBatchItems[render_layer_items[arrayZIndex].fontBatchItemCount++] = item;
+    render_layer_items[array_z_index].font_batch_items[render_layer_items[array_z_index].font_batch_item_count++] = item;
     // Update active render layer indices
-    update_active_render_layer_index(arrayZIndex);
+    update_active_render_layer_index(array_z_index);
 }
 
 void ska_renderer_flush_2d_batches() {
     for (usize i = 0; i < active_render_layer_items_indices_count; i++) {
-        const usize layerIndex = active_render_layer_items_indices[i];
+        const usize layer_index = active_render_layer_items_indices[i];
         // Sprite
-        for (usize renderTextureIndex = 0; renderTextureIndex < render_layer_items[layerIndex].renderTextureLayerCount; renderTextureIndex++) {
-            RenderTextureLayer* renderTextureLayer = &render_layer_items[layerIndex].renderTextureLayers[renderTextureIndex];
-            renderer_batching_draw_sprites(renderTextureLayer->spriteBatchItems, renderTextureLayer->spriteBatchItemCount);
-            renderTextureLayer->spriteBatchItemCount = 0;
+        for (usize render_texture_index = 0; render_texture_index < render_layer_items[layer_index].render_texture_layer_count; render_texture_index++) {
+            RenderTextureLayer* render_texture_layer = &render_layer_items[layer_index].render_texture_layers[render_texture_index];
+            renderer_batching_draw_sprites(render_texture_layer->sprite_batch_items, render_texture_layer->sprite_batch_item_count);
+            render_texture_layer->sprite_batch_item_count = 0;
         }
-        render_layer_items[layerIndex].renderTextureLayerCount = 0;
+        render_layer_items[layer_index].render_texture_layer_count = 0;
         // Font
-        for (usize fontIndex = 0; fontIndex < render_layer_items[layerIndex].fontBatchItemCount; fontIndex++) {
+        for (usize font_index = 0; font_index < render_layer_items[layer_index].font_batch_item_count; font_index++) {
             font_renderer_draw_text(
-                render_layer_items[layerIndex].fontBatchItems[fontIndex].font,
-                render_layer_items[layerIndex].fontBatchItems[fontIndex].text,
-                render_layer_items[layerIndex].fontBatchItems[fontIndex].x,
-                render_layer_items[layerIndex].fontBatchItems[fontIndex].y,
-                render_layer_items[layerIndex].fontBatchItems[fontIndex].scale,
-                &render_layer_items[layerIndex].fontBatchItems[fontIndex].color
+                render_layer_items[layer_index].font_batch_items[font_index].font,
+                render_layer_items[layer_index].font_batch_items[font_index].text,
+                render_layer_items[layer_index].font_batch_items[font_index].x,
+                render_layer_items[layer_index].font_batch_items[font_index].y,
+                render_layer_items[layer_index].font_batch_items[font_index].scale,
+                &render_layer_items[layer_index].font_batch_items[font_index].color
             );
         }
-        render_layer_items[layerIndex].fontBatchItemCount = 0;
+        render_layer_items[layer_index].font_batch_item_count = 0;
     }
 
     SKA_STATIC_ARRAY_EMPTY(render_layer_items);
@@ -231,13 +233,13 @@ void sprite_renderer_initialize() {
     };
 
     // Initialize render data
-    glGenVertexArrays(1, &spriteQuadVAO);
-    glGenBuffers(1, &spriteQuadVBO);
+    glGenVertexArrays(1, &sprite_quad_vao);
+    glGenBuffers(1, &sprite_quad_vbo);
 
-    glBindBuffer(GL_ARRAY_BUFFER, spriteQuadVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, sprite_quad_vbo);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_DYNAMIC_DRAW);
 
-    glBindVertexArray(spriteQuadVAO);
+    glBindVertexArray(sprite_quad_vao);
     // id attribute
     glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, VERTS_STRIDE * sizeof(GLfloat), (void*) NULL);
     glEnableVertexAttribArray(0);
@@ -258,10 +260,10 @@ void sprite_renderer_initialize() {
     glBindVertexArray(0);
 
     // compile shaders
-    spriteShader = ska_shader_compile_new_shader(SKA_OPENGL_SHADER_SOURCE_VERTEX_SPRITE,
-                                                 SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SPRITE);
+    sprite_shader = ska_shader_compile_new_shader(ska_opengl_shader_source_vertex_sprite,
+                                                 ska_opengl_shader_source_fragment_sprite);
     sprite_renderer_update_resolution();
-    ska_renderer_set_sprite_shader_default_params(spriteShader);
+    ska_renderer_set_sprite_shader_default_params(sprite_shader);
 }
 
 void sprite_renderer_finalize() {}
@@ -269,73 +271,73 @@ void sprite_renderer_finalize() {}
 void ska_renderer_set_sprite_shader_default_params(SkaShader* shader) {
     ska_shader_use(shader);
     ska_shader_set_int(shader, "TEXTURE", 0);
-    ska_shader_set_mat4_float(shader, "CRE_PROJECTION", &spriteProjection);
+    ska_shader_set_mat4_float(shader, "CRE_PROJECTION", &sprite_projection);
 }
 
 void sprite_renderer_update_resolution() {
-    spriteProjection = ska_matrix4_ortho(0.0f, resolutionWidth, resolutionHeight, 0.0f, -1.0f, 1.0f);
+    sprite_projection = ska_matrix4_ortho(0.0f, resolution_width, resolution_height, 0.0f, -1.0f, 1.0f);
 }
 
-void renderer_batching_draw_sprites(SpriteBatchItem items[], usize spriteCount) {
+void renderer_batching_draw_sprites(SpriteBatchItem items[], usize sprite_count) {
 #define MAX_SPRITE_COUNT 2000
 #define NUMBER_OF_VERTICES 6
 #define VERTEX_BUFFER_SIZE (VERTS_STRIDE * NUMBER_OF_VERTICES * MAX_SPRITE_COUNT)
 
-    if (spriteCount <= 0) {
+    if (sprite_count <= 0) {
         return;
     }
 
-    SKA_ASSERT(spriteCount <= MAX_SPRITE_COUNT);
+    SKA_ASSERT(sprite_count <= MAX_SPRITE_COUNT);
 
     glDepthMask(false);
 
-    glBindVertexArray(spriteQuadVAO);
-    glBindBuffer(GL_ARRAY_BUFFER, spriteQuadVBO);
+    glBindVertexArray(sprite_quad_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, sprite_quad_vbo);
 
     SkaTexture* texture = items[0].texture;
 
     GLfloat verts[VERTEX_BUFFER_SIZE];
-    for (usize i = 0; i < spriteCount; i++) {
-        if (items[i].shaderInstance != NULL) {
-            ska_shader_use(items[i].shaderInstance->shader);
-            ska_renderer_set_shader_instance_params(items[i].shaderInstance);
+    for (usize i = 0; i < sprite_count; i++) {
+        if (items[i].shader_instance != NULL) {
+            ska_shader_use(items[i].shader_instance->shader);
+            ska_renderer_set_shader_instance_params(items[i].shader_instance);
         } else {
-            ska_shader_use(spriteShader);
+            ska_shader_use(sprite_shader);
         }
 
-        ska_matrix4_scale(&items[i].transform2D.model, (SkaVector3) {
-            items[i].destSize.w, items[i].destSize.h, 1.0f
+        ska_matrix4_scale_and_mul(&items[i].transform2_d.model, (SkaVector3) {
+            items[i].dest_size.w, items[i].dest_size.h, 1.0f
         });
-        const f32 spriteId = (f32) i;
-        const f32 determinate = ska_matrix4_determinant(&items[i].transform2D.model);
-        const SkaTextureCoordinates textureCoords = renderer_get_texture_coordinates(texture, &items[i].sourceRect, items[i].flipH, items[i].flipV);
+        const f32 sprite_id = (f32) i;
+        const f32 determinate = ska_matrix4_determinant(&items[i].transform2_d.model);
+        const SkaTextureCoordinates texture_coords = renderer_get_texture_coordinates(texture, &items[i].source_rect, items[i].flip_h, items[i].flip_v);
         // concat CRE_MODELS[] string for uniform param
-        char modelsBuffer[24];
-        sprintf(modelsBuffer, "CRE_MODELS[%zu]", i);
-        ska_shader_set_mat4_float(spriteShader, modelsBuffer, &items[i].transform2D.model);
+        char models_buffer[24];
+        sprintf(models_buffer, "CRE_MODELS[%zu]", i);
+        ska_shader_set_mat4_float(sprite_shader, models_buffer, &items[i].transform2_d.model);
 
         // Loop over vertices
         for (int32 j = 0; j < NUMBER_OF_VERTICES; j++) {
-            bool isSMin;
-            bool isTMin;
+            bool is_s_min;
+            bool is_t_min;
             if (determinate >= 0.0f) {
-                isSMin = j == 0 || j == 2 || j == 3;
-                isTMin = j == 1 || j == 2 || j == 5;
+                is_s_min = j == 0 || j == 2 || j == 3;
+                is_t_min = j == 1 || j == 2 || j == 5;
             } else {
-                isSMin = j == 1 || j == 2 || j == 5;
-                isTMin = j == 0 || j == 2 || j == 3;
+                is_s_min = j == 1 || j == 2 || j == 5;
+                is_t_min = j == 0 || j == 2 || j == 3;
             }
             const int32 row = (j * VERTS_STRIDE) + ((int32) i * (VERTS_STRIDE * NUMBER_OF_VERTICES));
-            verts[row + 0] = spriteId;
-            verts[row + 1] = isSMin ? 0.0f : 1.0f;
-            verts[row + 2] = isTMin ? 0.0f : 1.0f;
-            verts[row + 3] = isSMin ? textureCoords.sMin : textureCoords.sMax;
-            verts[row + 4] = isTMin ? textureCoords.tMin : textureCoords.tMax;
+            verts[row + 0] = sprite_id;
+            verts[row + 1] = is_s_min ? 0.0f : 1.0f;
+            verts[row + 2] = is_t_min ? 0.0f : 1.0f;
+            verts[row + 3] = is_s_min ? texture_coords.s_min : texture_coords.s_max;
+            verts[row + 4] = is_t_min ? texture_coords.t_min : texture_coords.t_max;
             verts[row + 5] = items[i].color.r;
             verts[row + 6] = items[i].color.g;
             verts[row + 7] = items[i].color.b;
             verts[row + 8] = items[i].color.a;
-            verts[row + 9] = (f32)texture->applyNearestNeighbor;
+            verts[row + 9] = (f32)texture->apply_nearest_neighbor;
         }
     }
 
@@ -343,7 +345,7 @@ void renderer_batching_draw_sprites(SpriteBatchItem items[], usize spriteCount) 
     glBindTexture(GL_TEXTURE_2D, texture->id);
 
     glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) sizeof(verts), verts, GL_DYNAMIC_DRAW);
-    glDrawArrays(GL_TRIANGLES, 0, (GLsizei) (spriteCount * NUMBER_OF_VERTICES));
+    glDrawArrays(GL_TRIANGLES, 0, (GLsizei) (sprite_count * NUMBER_OF_VERTICES));
 
     ska_renderer_print_opengl_errors();
 
@@ -358,58 +360,60 @@ void renderer_batching_draw_sprites(SpriteBatchItem items[], usize spriteCount) 
 
 // --- Font Renderer --- //
 void font_renderer_initialize() {
-    if (FT_Init_FreeType(&ska_render_context_get()->freeTypeLibrary)) {
-        ska_logger_error("Unable to initialize FreeType library!");
-    }
-    fontShader = ska_shader_compile_new_shader(SKA_OPENGL_SHADER_SOURCE_VERTEX_FONT,
-                                               SKA_OPENGL_SHADER_SOURCE_FRAGMENT_FONT);
+  if (FT_Init_FreeType(&ska_render_context_get()->free_type_library)) {
+    ska_logger_error("Unable to initialize FreeType library!");
+  }
+    font_shader = ska_shader_compile_new_shader(ska_opengl_shader_source_vertex_font,
+                                               ska_opengl_shader_source_fragment_font);
     font_renderer_update_resolution();
 }
 
 void font_renderer_finalize() {
-    FT_Done_FreeType(ska_render_context_get()->freeTypeLibrary);
+  FT_Done_FreeType(ska_render_context_get()->free_type_library);
 }
 
 void font_renderer_update_resolution() {
-    SkaMatrix4 proj = ska_matrix4_ortho(0.0f, resolutionWidth, -resolutionHeight, 0.0f, -1.0f, 1.0f);
-    ska_shader_use(fontShader);
-    ska_shader_set_mat4_float(fontShader, "projection", &proj);
+    SkaMatrix4 proj = ska_matrix4_ortho(0.0f, resolution_width, resolution_height, 0.0f, -1.0f, 1.0f);
+    ska_shader_use(font_shader);
+    ska_shader_set_mat4_float(font_shader, "projection", &proj);
 }
 
 void font_renderer_draw_text(const SkaFont* font, const char* text, f32 x, f32 y, f32 scale, const SkaColor* color) {
-    SkaVector2 currentScale = {scale, scale };
-    ska_shader_use(fontShader);
-    ska_shader_set_vec4_float(fontShader, "textColor", color->r, color->g, color->b, color->a);
+    SkaVector2 current_scale = {scale, scale };
+    ska_shader_use(font_shader);
+    ska_shader_set_vec4_float(font_shader, "textColor", color->r, color->g, color->b, color->a);
     glActiveTexture(GL_TEXTURE0);
-    glBindVertexArray(font->VAO);
+    glBindVertexArray(font->vao);
 
     // Iterate through all characters
     char* c = (char*) &text[0];
-    const usize textLength = strlen(text);
-    for (usize i = 0; i < textLength; i++) {
+    const usize text_length = strlen(text);
+    for (usize i = 0; i < text_length; i++) {
         SkaFontCharacter ch = font->characters[(int32) *c];
-        const f32 xPos = x + (ch.bearing.x * currentScale.x);
-        const f32 yPos = -y - (ch.size.y - ch.bearing.y) * currentScale.x; // Invert Y because orthographic projection is flipped
-        const f32 w = ch.size.x * currentScale.x;
-        const f32 h = ch.size.y * currentScale.y;
+        const f32 x_pos = x + (ch.bearing.x * current_scale.x);
+        const f32 w = ch.size.x * current_scale.x;
+        const f32 h = ch.size.y * current_scale.y;
+        // (x, y) is top-left of the text line, matching the sprite renderer's convention.
+        const f32 top_y = y + (font->ascent - ch.bearing.y) * current_scale.y;
+        const f32 bottom_y = top_y + h;
         // Update VBO for each characters
         GLfloat verts[6][4] = {
-            {xPos,     yPos + h, 0.0f, 0.0f},
-            {xPos,     yPos,     0.0f, 1.0f},
-            {xPos + w, yPos,     1.0f, 1.0f},
+            {x_pos,     top_y,    0.0f, 0.0f},
+            {x_pos,     bottom_y, 0.0f, 1.0f},
+            {x_pos + w, bottom_y, 1.0f, 1.0f},
 
-            {xPos,     yPos + h, 0.0f, 0.0f},
-            {xPos + w, yPos,     1.0f, 1.0f},
-            {xPos + w, yPos + h, 1.0f, 0.0f}
+            {x_pos,     top_y,    0.0f, 0.0f},
+            {x_pos + w, bottom_y, 1.0f, 1.0f},
+            {x_pos + w, top_y,    1.0f, 0.0f}
         };
         // Render glyph texture over quad
-        glBindTexture(GL_TEXTURE_2D, ch.textureId);
+        glBindTexture(GL_TEXTURE_2D, ch.texture_id);
         // Update content of VBO memory
-        glBindBuffer(GL_ARRAY_BUFFER, font->VBO);
+        glBindBuffer(GL_ARRAY_BUFFER, font->vbo);
         glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(verts), verts);
         // Render
         glDrawArrays(GL_TRIANGLES, 0, 6);
-        x += (f32) (ch.advance >> 6) * currentScale.x; // bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+        x += (f32) (ch.advance >> 6) * current_scale.x; // bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
         ++c;
     }
     // Unbind
@@ -419,30 +423,30 @@ void font_renderer_draw_text(const SkaFont* font, const char* text, f32 x, f32 y
 }
 
 // --- Misc --- //
-SkaTextureCoordinates renderer_get_texture_coordinates(const SkaTexture* texture, const SkaRect2* drawSource, bool flipH, bool flipV) {
-    GLfloat sMin = 0.0f;
-    GLfloat sMax = 1.0f;
-    GLfloat tMin = 0.0f;
-    GLfloat tMax = 1.0f;
+SkaTextureCoordinates renderer_get_texture_coordinates(const SkaTexture* texture, const SkaRect2* draw_source, bool flip_h, bool flip_v) {
+    GLfloat s_min = 0.0f;
+    GLfloat s_max = 1.0f;
+    GLfloat t_min = 0.0f;
+    GLfloat t_max = 1.0f;
     // S
-    if (texture->width != (GLsizei)drawSource->w || texture->height != (GLsizei)drawSource->h) {
-        sMin = (drawSource->x + 0.5f) / (f32) texture->width;
-        sMax = (drawSource->x + drawSource->w - 0.5f) / (f32) texture->width;
-        tMin = (drawSource->y + 0.5f) / (f32) texture->height;
-        tMax = (drawSource->y + drawSource->h - 0.5f) / (f32) texture->height;
+    if (texture->width != (GLsizei)draw_source->w || texture->height != (GLsizei)draw_source->h) {
+        s_min = (draw_source->x + 0.5f) / (f32) texture->width;
+        s_max = (draw_source->x + draw_source->w - 0.5f) / (f32) texture->width;
+        t_min = (draw_source->y + 0.5f) / (f32) texture->height;
+        t_max = (draw_source->y + draw_source->h - 0.5f) / (f32) texture->height;
     }
-    if (flipH) {
-        const GLfloat tempSMin = sMin;
-        sMin = sMax;
-        sMax = tempSMin;
+    if (flip_h) {
+        const GLfloat temp_s_min = s_min;
+        s_min = s_max;
+        s_max = temp_s_min;
     }
-    if (flipV) {
-        const GLfloat tempTMin = tMin;
-        tMin = tMax;
-        tMax = tempTMin;
+    if (flip_v) {
+        const GLfloat temp_t_min = t_min;
+        t_min = t_max;
+        t_max = temp_t_min;
     }
     return (SkaTextureCoordinates) {
-        sMin, sMax, tMin, tMax
+        s_min, s_max, t_min, t_max
     };
 }
 

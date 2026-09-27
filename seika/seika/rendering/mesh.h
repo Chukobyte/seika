@@ -11,7 +11,7 @@
 typedef struct SkaVertex {
     SkaVector3 position;
     SkaVector3 normal;
-    SkaVector2 texCoords;
+    SkaVector2 tex_coords;
     // SkaVector3 tangent;
     // SkaVector3 bitTangent;
 } SkaVertex;
@@ -22,22 +22,27 @@ typedef struct SkaMesh {
     GLuint vao;
     GLuint vbo;
     GLuint ebo;
-    uint32 vertexCount;
-    uint32 indexCount;
-    bool hasIndices;
+    uint32 vertex_count;
+    uint32 index_count;
+    bool has_indices;
     SkaTexture* specular;
     SkaTexture* diffuse;
     SkaTexture* normal;
 } SkaMesh;
 
 typedef struct SkaModel {
-    SkaArrayList meshesList;
-    // SkaArrayList texturesList;
+  SkaArrayList meshes_list;
+  // SkaArrayList texturesList;
 } SkaModel;
 
 SkaMesh ska_mesh_create(const f32* vertices, uint32 vertex_count, const uint32* indices, uint32 index_count);
 SkaMesh ska_mesh_create2(const f32* vertices, uint32 vertex_count, const uint32* indices, uint32 index_count, SkaTexture* specular, SkaTexture* diffuse);
 void ska_mesh_destroy(SkaMesh* mesh);
+
+// Generates a UV sphere of radius 1 centered at the origin (scale it via the model matrix for a
+// different radius, same convention as SKA_CUBE_VERTICES below). rings/sectors control
+// tessellation -- 16/16 is a reasonable default for a primitive draw call, not a hero asset.
+SkaMesh ska_mesh_create_sphere(uint32 rings, uint32 sectors);
 
 SkaModel* ska_model_create();
 void ska_model_destroy(SkaModel* model);

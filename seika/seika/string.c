@@ -32,25 +32,25 @@ char* ska_strdup_a(SkaAllocator allocator, const char* string) {
 }
 
 char* ska_strdup_from_memory(void* data, usize size) {
-    char* newString = (char*)SKA_ALLOC_BYTES(size + 1);
-    memcpy(newString, data, size);
-    newString[size] = '\0';
-    return newString;
+    char* new_string = (char*)SKA_ALLOC_BYTES(size + 1);
+    memcpy(new_string, data, size);
+    new_string[size] = '\0';
+    return new_string;
 }
 
 void ska_strcpy(char* destination, const char* source) {
     strcpy(destination, source);
 }
 
-bool ska_strncpy(char* destination, usize sizeInBytes, const char* source, usize maxCount) {
+bool ska_strncpy(char* destination, usize size_in_bytes, const char* source, usize max_count) {
 #if defined(WIN32) || defined(WIN64)
-    if (strncpy_s(destination, sizeInBytes, source, maxCount) != 0) {
+    if (strncpy_s(destination, size_in_bytes, source, max_count) != 0) {
         return false;
     }
 #else
-    strncpy(destination, source, maxCount);
-    if (maxCount > 0) {
-        destination[maxCount] = '\0';
+    strncpy(destination, source, max_count);
+    if (max_count > 0) {
+        destination[max_count] = '\0';
     }
 #endif
     return true;
@@ -60,8 +60,8 @@ void ska_strcat(char* destination, const char* source) {
     strcat(destination, source);
 }
 
-void ska_strncat(char* destination, const char* source, usize sizeInBytes) {
-    strncat(destination, source, sizeInBytes);
+void ska_strncat(char* destination, const char* source, usize size_in_bytes) {
+    strncat(destination, source, size_in_bytes);
 }
 
 usize ska_strlen(const char* str) {
@@ -91,33 +91,33 @@ char* ska_str_to_lower_and_underscore_whitespace(char* str) {
     return str;
 }
 
-unsigned char* ska_str_convert_string_to_unsigned_char(const char* value, usize* outSize) {
-    const usize stringLength = strlen(value);
-    *outSize = stringLength + 1;
-    unsigned char* returnValue = (unsigned char*)SKA_ALLOC_BYTES(*outSize);
-    for (usize i = 0; i < stringLength; i++) {
-        returnValue[i] = (unsigned char)value[i];
+unsigned char* ska_str_convert_string_to_unsigned_char(const char* value, usize* out_size) {
+    const usize string_length = strlen(value);
+    *out_size = string_length + 1;
+    unsigned char* return_value = (unsigned char*)SKA_ALLOC_BYTES(*out_size);
+    for (usize i = 0; i < string_length; i++) {
+        return_value[i] = (unsigned char)value[i];
     }
-    returnValue[stringLength] = '\0';
-    return returnValue;
+    return_value[string_length] = '\0';
+    return return_value;
 }
 
 char* ska_str_trim(const char* value, char delimiter) {
-    char* newStr;
-    char* lastExt;
+    char* new_str;
+    char* last_ext;
     if (value == NULL) {
         return NULL;
     }
-    newStr = (char*)SKA_ALLOC_BYTES(strlen(value) + 1);
-    if (newStr == NULL) {
+    new_str = (char*)SKA_ALLOC_BYTES(strlen(value) + 1);
+    if (new_str == NULL) {
         return NULL;
     }
-    strcpy(newStr, value);
-    lastExt = strrchr(newStr, delimiter);
-    if (lastExt != NULL) {
-        *lastExt = '\0';
+    strcpy(new_str, value);
+    last_ext = strrchr(new_str, delimiter);
+    if (last_ext != NULL) {
+        *last_ext = '\0';
     }
-    return newStr;
+    return new_str;
 }
 
 void ska_str_trim_by_size(const char* value, char* output, usize size) {
@@ -127,23 +127,23 @@ void ska_str_trim_by_size(const char* value, char* output, usize size) {
     output[size] = '\0';
 }
 
-char* ska_str_trim_and_replace(const char* value, char delimiter, const char* replacementValue) {
+char* ska_str_trim_and_replace(const char* value, char delimiter, const char* replacement_value) {
 #define SE_TRIM_PATH_BUFFER 256
-    char* newValue = ska_str_trim(value, delimiter);
-    char pathBuffer[SE_TRIM_PATH_BUFFER];
-    strcpy(pathBuffer, newValue);
-    strcat(pathBuffer, replacementValue);
-    SKA_FREE(newValue);
-    newValue = ska_strdup(pathBuffer);
-    return newValue;
+    char* new_value = ska_str_trim(value, delimiter);
+    char path_buffer[SE_TRIM_PATH_BUFFER];
+    strcpy(path_buffer, new_value);
+    strcat(path_buffer, replacement_value);
+    SKA_FREE(new_value);
+    new_value = ska_strdup(path_buffer);
+    return new_value;
 #undef SE_TRIM_PATH_BUFFER
 }
 
-void ska_str_remove_char(char* string, char charToRemove) {
+void ska_str_remove_char(char* string, char char_to_remove) {
     char* dest = string;
 
     while (*string) {
-        if (*string != charToRemove) {
+        if (*string != char_to_remove) {
             *dest = *string;
             dest++;
         }
@@ -153,63 +153,63 @@ void ska_str_remove_char(char* string, char charToRemove) {
     *dest = '\0';
 }
 
-char* get_project_archive_name(const char* startingPath) {
-    if (startingPath == NULL) {
+char* get_project_archive_name(const char* starting_path) {
+    if (starting_path == NULL) {
         return NULL;
     }
-    char* validPath = ska_str_trim(startingPath, '.');
-    char pathBuffer[256];
-    strcpy(pathBuffer, validPath);
-    strcat(pathBuffer, ".zip");
-    SKA_FREE(validPath);
-    validPath = ska_strdup(pathBuffer);
-    return validPath;
+    char* valid_path = ska_str_trim(starting_path, '.');
+    char path_buffer[256];
+    strcpy(path_buffer, valid_path);
+    strcat(path_buffer, ".zip");
+    SKA_FREE(valid_path);
+    valid_path = ska_strdup(path_buffer);
+    return valid_path;
 }
 
 // --- SkaString (Dynamic String with SSO) Implementation ---
 
 SkaStringError ska_string_init(SkaString* str, const char* value, usize len) {
     str->len = 0;
-    str->isHeap = false;
+    str->is_heap = false;
     memset(&str->storage, 0, sizeof(str->storage));
     return ska_string_set(str, value, len);
 }
 
 void ska_string_init_empty(SkaString* str) {
     str->len = 0;
-    str->isHeap = false;
+    str->is_heap = false;
     memset(str->storage.sso, 0, SKA_STRING_SSO_CAPACITY);
 }
 
 void ska_string_deinit(SkaString* str) {
-    if (str->isHeap && str->storage.heap != NULL) {
-        SKA_FREE(str->storage.heap);
-        str->storage.heap = NULL;
-    }
+  if (str->is_heap && str->storage.heap != NULL) {
+    SKA_FREE(str->storage.heap);
+    str->storage.heap = NULL;
+  }
     str->len = 0;
-    str->isHeap = false;
+    str->is_heap = false;
 }
 
 const char* ska_string_as_slice(const SkaString* str) {
-    return str->isHeap ? str->storage.heap : str->storage.sso;
+  return str->is_heap ? str->storage.heap : str->storage.sso;
 }
 
 void ska_string_clear(SkaString* str) {
-    if (str->isHeap) {
-        SKA_FREE(str->storage.heap);
-        str->storage.heap = NULL;
-        str->isHeap = false;
-        memset(str->storage.sso, 0, SKA_STRING_SSO_CAPACITY);
-    }
+  if (str->is_heap) {
+    SKA_FREE(str->storage.heap);
+    str->storage.heap = NULL;
+    str->is_heap = false;
+    memset(str->storage.sso, 0, SKA_STRING_SSO_CAPACITY);
+  }
     str->len = 0;
 }
 
 SkaStringError ska_string_set(SkaString* str, const char* value, usize len) {
-    if (str->isHeap) {
-        SKA_FREE(str->storage.heap);
-        str->storage.heap = NULL;
-        str->isHeap = false;
-    }
+  if (str->is_heap) {
+    SKA_FREE(str->storage.heap);
+    str->storage.heap = NULL;
+    str->is_heap = false;
+  }
 
     str->len = len;
 
@@ -219,50 +219,51 @@ SkaStringError ska_string_set(SkaString* str, const char* value, usize len) {
             memset(str->storage.sso + len, 0, SKA_STRING_SSO_CAPACITY - len);
         }
     } else {
-        char* heapCopy = (char*)SKA_ALLOC_BYTES(len);
-        if (!heapCopy) {
+        char* heap_copy = (char*)SKA_ALLOC_BYTES(len);
+        if (!heap_copy) {
             str->len = 0;
             return SkaStringError_OUT_OF_MEMORY;
         }
-        memcpy(heapCopy, value, len);
-        str->storage.heap = heapCopy;
-        str->isHeap = true;
+        memcpy(heap_copy, value, len);
+        str->storage.heap = heap_copy;
+        str->is_heap = true;
     }
 
     return SkaStringError_OK;
 }
 
 SkaStringError ska_string_append(SkaString* str, const char* value, usize len) {
-    const usize newLen = str->len + len;
+    const usize new_len = str->len + len;
 
-    if (newLen <= SKA_STRING_SSO_CAPACITY && !str->isHeap) {
-        memcpy(str->storage.sso + str->len, value, len);
-        str->len = newLen;
-        if (newLen < SKA_STRING_SSO_CAPACITY) {
-            memset(str->storage.sso + newLen, 0, SKA_STRING_SSO_CAPACITY - newLen);
-        }
-        return SkaStringError_OK;
+    if (new_len <= SKA_STRING_SSO_CAPACITY && !str->is_heap) {
+      memcpy(str->storage.sso + str->len, value, len);
+      str->len = new_len;
+      if (new_len < SKA_STRING_SSO_CAPACITY) {
+        memset(str->storage.sso + new_len, 0,
+               SKA_STRING_SSO_CAPACITY - new_len);
+      }
+      return SkaStringError_OK;
     }
 
     char* buffer = NULL;
 
-    if (str->isHeap) {
-        buffer = (char*)ska_mem_global_reallocate(str->storage.heap, newLen);
-        if (!buffer) {
-            return SkaStringError_OUT_OF_MEMORY;
-        }
+    if (str->is_heap) {
+      buffer = (char *)ska_mem_global_reallocate(str->storage.heap, new_len);
+      if (!buffer) {
+        return SkaStringError_OUT_OF_MEMORY;
+      }
     } else {
-        buffer = (char*)SKA_ALLOC_BYTES(newLen);
-        if (!buffer) {
-            return SkaStringError_OUT_OF_MEMORY;
-        }
-        memcpy(buffer, str->storage.sso, str->len);
+      buffer = (char *)SKA_ALLOC_BYTES(new_len);
+      if (!buffer) {
+        return SkaStringError_OUT_OF_MEMORY;
+      }
+      memcpy(buffer, str->storage.sso, str->len);
     }
 
     memcpy(buffer + str->len, value, len);
     str->storage.heap = buffer;
-    str->len = newLen;
-    str->isHeap = true;
+    str->len = new_len;
+    str->is_heap = true;
 
     return SkaStringError_OK;
 }
@@ -271,22 +272,22 @@ bool ska_string_eql(const SkaString* a, const SkaString* b) {
     if (a->len != b->len) {
         return false;
     }
-    const char* aData = ska_string_as_slice(a);
-    const char* bData = ska_string_as_slice(b);
-    return memcmp(aData, bData, a->len) == 0;
+    const char* a_data = ska_string_as_slice(a);
+    const char* b_data = ska_string_as_slice(b);
+    return memcmp(a_data, b_data, a->len) == 0;
 }
 
 bool ska_string_eql_cstr(const SkaString* str, const char* cstr, usize len) {
     if (str->len != len) {
         return false;
     }
-    const char* strData = ska_string_as_slice(str);
-    return memcmp(strData, cstr, len) == 0;
+    const char* str_data = ska_string_as_slice(str);
+    return memcmp(str_data, cstr, len) == 0;
 }
 
 SkaStringError ska_string_copy(const SkaString* src, SkaString* dest) {
-    const char* srcData = ska_string_as_slice(src);
-    return ska_string_init(dest, srcData, src->len);
+    const char* src_data = ska_string_as_slice(src);
+    return ska_string_init(dest, src_data, src->len);
 }
 
 // --- New utility function implementations ---
@@ -330,19 +331,21 @@ usize ska_string_trim_whitespace(SkaString* str) {
 
     // If we're trimming from start, need to move data
     if (start > 0) {
-        if (str->isHeap) {
-            // For heap strings, move in-place
-            memmove(str->storage.heap, str->storage.heap + start, new_len);
-        } else {
-            // For SSO, move in-place
-            memmove(str->storage.sso, str->storage.sso + start, new_len);
-            memset(str->storage.sso + new_len, 0, SKA_STRING_SSO_CAPACITY - new_len);
-        }
+      if (str->is_heap) {
+        // For heap strings, move in-place
+        memmove(str->storage.heap, str->storage.heap + start, new_len);
+      } else {
+        // For SSO, move in-place
+        memmove(str->storage.sso, str->storage.sso + start, new_len);
+        memset(str->storage.sso + new_len, 0,
+               SKA_STRING_SSO_CAPACITY - new_len);
+      }
     } else {
         // Only trimming from end, just update length for heap
         // (SSO doesn't need zeroing if we're only shortening)
-        if (!str->isHeap && new_len < SKA_STRING_SSO_CAPACITY) {
-            memset(str->storage.sso + new_len, 0, SKA_STRING_SSO_CAPACITY - new_len);
+        if (!str->is_heap && new_len < SKA_STRING_SSO_CAPACITY) {
+          memset(str->storage.sso + new_len, 0,
+                 SKA_STRING_SSO_CAPACITY - new_len);
         }
     }
 
@@ -374,11 +377,11 @@ usize ska_string_trim_start(SkaString* str) {
     }
 
     // Move data to start
-    if (str->isHeap) {
-        memmove(str->storage.heap, str->storage.heap + start, new_len);
+    if (str->is_heap) {
+      memmove(str->storage.heap, str->storage.heap + start, new_len);
     } else {
-        memmove(str->storage.sso, str->storage.sso + start, new_len);
-        memset(str->storage.sso + new_len, 0, SKA_STRING_SSO_CAPACITY - new_len);
+      memmove(str->storage.sso, str->storage.sso + start, new_len);
+      memset(str->storage.sso + new_len, 0, SKA_STRING_SSO_CAPACITY - new_len);
     }
 
     str->len = new_len;
@@ -407,8 +410,8 @@ usize ska_string_trim_end(SkaString* str) {
     }
 
     // Just update length
-    if (!str->isHeap && end < SKA_STRING_SSO_CAPACITY) {
-        memset(str->storage.sso + end, 0, SKA_STRING_SSO_CAPACITY - end);
+    if (!str->is_heap && end < SKA_STRING_SSO_CAPACITY) {
+      memset(str->storage.sso + end, 0, SKA_STRING_SSO_CAPACITY - end);
     }
 
     str->len = end;
@@ -486,15 +489,15 @@ bool ska_string_ends_with(const SkaString* str, const char* suffix, usize suffix
 }
 
 char* ska_string_get_writable(SkaString* str) {
-    return str->isHeap ? str->storage.heap : str->storage.sso;
+  return str->is_heap ? str->storage.heap : str->storage.sso;
 }
 
 bool ska_string_ensure_null_terminated(SkaString* str) {
-    if (str->isHeap) {
-        // Heap strings don't have automatic null termination in current implementation
-        // Would need to reallocate with len + 1
-        return false;
-    }
+  if (str->is_heap) {
+    // Heap strings don't have automatic null termination in current
+    // implementation Would need to reallocate with len + 1
+    return false;
+  }
 
     if (str->len < SKA_STRING_SSO_CAPACITY) {
         str->storage.sso[str->len] = '\0';

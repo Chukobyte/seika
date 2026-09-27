@@ -9,7 +9,7 @@
 
 typedef struct SkaRenderContext {
     SkaSize2Di resolution;
-    FT_Library freeTypeLibrary;
+    FT_Library free_type_library;
 } SkaRenderContext;
 
 void ska_render_context_initialize(SkaSize2Di resolution);

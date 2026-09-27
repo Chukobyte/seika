@@ -7,15 +7,15 @@ static inline void ska_array_utils_swap(int32* xp, int32* yp) {
 }
 
 // Function to perform Selection Sort
-void ska_array_utils_selection_sort_int(int32 arr[], int32 arraySize) {
+void ska_array_utils_selection_sort_int(int32 arr[], int32 array_size) {
     int32 min_idx;
 
     // One by one move boundary of unsorted subarray
-    for (int32 i = 0; i < arraySize - 1; i++) {
+    for (int32 i = 0; i < array_size - 1; i++) {
 
         // Find the minimum element in unsorted array
         min_idx = i;
-        for (int32 j = i + 1; j < arraySize; j++) {
+        for (int32 j = i + 1; j < array_size; j++) {
             if (arr[j] < arr[min_idx]) {
                 min_idx = j;
             }
@@ -27,6 +27,6 @@ void ska_array_utils_selection_sort_int(int32 arr[], int32 arraySize) {
     }
 }
 
-void ska_array_utils_remove_item_uint32(uint32 array[], usize* size, uint32 item, uint32 emptyValue) {
-    SKA_ARRAY_UTILS_REMOVE_ARRAY_ITEM(array, *size, item, emptyValue);
+void ska_array_utils_remove_item_uint32(uint32 array[], usize* size, uint32 item, uint32 empty_value) {
+    SKA_ARRAY_UTILS_REMOVE_ARRAY_ITEM(array, *size, item, empty_value);
 }

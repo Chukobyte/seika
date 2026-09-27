@@ -59,8 +59,6 @@ void* ska_mem_global_allocate(usize bytes);
 void* ska_mem_global_allocate_zeroed(usize bytes);
 void* ska_mem_global_reallocate(void* memory, usize bytes);
 void ska_mem_global_free(void* memory);
-// void ska_mem_global_free_all();
-// bool ska_mem_global_report_leaks();
 
 #ifdef __cplusplus
 }

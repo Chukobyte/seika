@@ -5,121 +5,126 @@
 static usize ska_default_hash(void* raw_key, usize key_size);
 static int32 ska_default_compare(void* first_key, void* second_key, usize key_size);
 
-static SkaHashMapNode* hash_map_create_node(SkaHashMap* hashMap, void* key, void* value, SkaHashMapNode* next);
+static SkaHashMapNode* hash_map_create_node(SkaHashMap* hash_map, void* key, void* value, SkaHashMapNode* next);
 static void hash_map_destroy_node(SkaHashMap* map, SkaHashMapNode* node);
 
-static bool hash_map_push_front(SkaHashMap* hashMap, usize index, void* key, void* value);
-static void hash_map_grow_if_needed(SkaHashMap* hashMap);
-static void hash_map_shrink_if_needed(SkaHashMap* hashMap);
-static void hash_map_allocate(SkaHashMap* hashMap, usize capacity);
-static void hash_map_resize(SkaHashMap* hashMap, usize capacity);
+static bool hash_map_push_front(SkaHashMap* hash_map, usize index, void* key, void* value);
+static void hash_map_grow_if_needed(SkaHashMap* hash_map);
+static void hash_map_shrink_if_needed(SkaHashMap* hash_map);
+static void hash_map_allocate(SkaHashMap* hash_map, usize capacity);
+static void hash_map_resize(SkaHashMap* hash_map, usize capacity);
 
-SkaHashMap* ska_hash_map_init(usize keySize, usize valueSize, usize capacity) {
-    return ska_hash_map_init_a(ska_mem_get_global_allocator(), keySize, valueSize, capacity);
+SkaHashMap* ska_hash_map_init(usize key_size, usize value_size, usize capacity) {
+    return ska_hash_map_init_a(ska_mem_get_global_allocator(), key_size, value_size, capacity);
 }
 
-SkaHashMap* ska_hash_map_init_a(SkaAllocator allocator, usize keySize, usize valueSize, usize capacity) {
+SkaHashMap* ska_hash_map_init_a(SkaAllocator allocator, usize key_size, usize value_size, usize capacity) {
     SkaHashMap* map = SKA_ALLOC_A(allocator, SkaHashMap);
     map->allocator = allocator;
-    map->keySize = keySize;
-    map->valueSize = valueSize;
+    map->key_size = key_size;
+    map->value_size = value_size;
     map->size = 0;
-    map->initialCapacity = capacity;
-    map->hashFunc = ska_default_hash;
-    map->compareFunc = ska_default_compare;
+    map->initial_capacity = capacity;
+    map->hash_func = ska_default_hash;
+    map->compare_func = ska_default_compare;
     hash_map_allocate(map, capacity);
     return map;
 }
 
-SkaHashMapNode* hash_map_create_node(SkaHashMap* hashMap, void* key, void* value, SkaHashMapNode* next) {
-    SkaHashMapNode* node = (SkaHashMapNode*)SKA_ALLOC_A(hashMap->allocator, SkaHashMapNode);
-    node->key = SKA_ALLOC_BYTES_A(hashMap->allocator, hashMap->keySize);
-    node->value = SKA_ALLOC_BYTES_A(hashMap->allocator, hashMap->valueSize);
-    memcpy(node->key, key, hashMap->keySize);
-    memcpy(node->value, value, hashMap->valueSize);
+SkaHashMapNode* hash_map_create_node(SkaHashMap* hash_map, void* key, void* value, SkaHashMapNode* next) {
+    SkaHashMapNode* node = (SkaHashMapNode*)SKA_ALLOC_A(hash_map->allocator, SkaHashMapNode);
+    node->key = SKA_ALLOC_BYTES_A(hash_map->allocator, hash_map->key_size);
+    node->value = SKA_ALLOC_BYTES_A(hash_map->allocator, hash_map->value_size);
+    memcpy(node->key, key, hash_map->key_size);
+    memcpy(node->value, value, hash_map->value_size);
     node->next = next;
     return node;
 }
 
-bool ska_hash_map_deinit(SkaHashMap* hashMap) {
+bool ska_hash_map_deinit(SkaHashMap* hash_map) {
     SkaHashMapNode* node = NULL;
     SkaHashMapNode* next = NULL;
-    for (usize chain = 0; chain < hashMap->capacity; chain++) {
-        node = hashMap->nodes[chain];
+    for (usize chain = 0; chain < hash_map->capacity; chain++) {
+        node = hash_map->nodes[chain];
         while (node != NULL) {
             next = node->next;
-            hash_map_destroy_node(hashMap, node);
+            hash_map_destroy_node(hash_map, node);
             node = next;
         }
     }
 
-    SKA_FREE_A(hashMap->allocator, hashMap);
+    SKA_FREE_A(hash_map->allocator, hash_map->nodes);
+    SKA_FREE_A(hash_map->allocator, hash_map);
 
     return true;
 }
 
-bool hash_map_push_front(SkaHashMap* hashMap, usize index, void* key, void* value) {
-    hashMap->nodes[index] = hash_map_create_node(hashMap, key, value, hashMap->nodes[index]);
-    return hashMap->nodes[index] != NULL;
+bool hash_map_push_front(SkaHashMap* hash_map, usize index, void* key, void* value) {
+    hash_map->nodes[index] = hash_map_create_node(hash_map, key, value, hash_map->nodes[index]);
+    return hash_map->nodes[index] != NULL;
 }
 
-SkaHashMapAddResult ska_hash_map_add(SkaHashMap* hashMap, void* key, void* value) {
-    SKA_ASSERT(hashMap != NULL);
+SkaHashMapAddResult ska_hash_map_add(SkaHashMap* hash_map, const void* key, void* value) {
+    SKA_ASSERT(hash_map != NULL);
     SKA_ASSERT(key != NULL);
     SKA_ASSERT(value != NULL);
 
-    hash_map_grow_if_needed(hashMap);
+    hash_map_grow_if_needed(hash_map);
 
-    const usize index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
-    void* existingValue = ska_hash_map_get(hashMap, key);
-    if (existingValue) {
-        static bool shouldUpdate = false;
-        if (shouldUpdate) {
-            memcpy(existingValue, value, hashMap->valueSize);
+    const usize index = hash_map->hash_func((void*)key, hash_map->key_size) % hash_map->capacity;
+    void* existing_value = ska_hash_map_get(hash_map, key);
+    if (existing_value) {
+        static bool should_update = false;
+        if (should_update) {
+            memcpy(existing_value, value, hash_map->value_size);
         }
-        return (SkaHashMapAddResult){ .hash = index, .wasAdded = shouldUpdate }; // Updated Item (if shouldUpdate is true)
+        return (SkaHashMapAddResult){
+            .hash = index,
+            .was_added =
+                should_update}; // Updated Item (if shouldUpdate is true)
     }
 
-    if (!hash_map_push_front(hashMap, index, key, value)) {
+    if (!hash_map_push_front(hash_map, index, (void*)key, value)) {
         // return false; // Error
-        return (SkaHashMapAddResult){ .hash = index, .wasAdded = false }; // Error
+        return (SkaHashMapAddResult){.hash = index,
+                                     .was_added = false}; // Error
     }
 
-    hashMap->size++;
+    hash_map->size++;
     // Inserted
-    return (SkaHashMapAddResult){ .hash = index, .wasAdded = true };
+    return (SkaHashMapAddResult){.hash = index, .was_added = true};
 }
 
-bool ska_hash_map_has(const SkaHashMap* hashMap, void* key) {
-    SKA_ASSERT(hashMap != NULL);
+bool ska_hash_map_has(const SkaHashMap* hash_map, const void* key) {
+    SKA_ASSERT(hash_map != NULL);
     SKA_ASSERT(key != NULL);
 
-    if (hashMap->size == 0) return false;
+    if (hash_map->size == 0) return false;
 
-    const usize index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
-    for (const SkaHashMapNode* node = hashMap->nodes[index]; node; node = node->next) {
-        if (hashMap->compareFunc(key, node->key, hashMap->keySize) == 0) {
+    const usize index = hash_map->hash_func((void*)key, hash_map->key_size) % hash_map->capacity;
+    for (const SkaHashMapNode* node = hash_map->nodes[index]; node; node = node->next) {
+        if (hash_map->compare_func((void*)key, node->key, hash_map->key_size) == 0) {
             return true;
         }
     }
     return false;
 }
 
-void* ska_hash_map_get(const SkaHashMap* hashMap, void* key) {
-    SKA_ASSERT(hashMap != NULL);
-    const usize index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
-    for (SkaHashMapNode* node = hashMap->nodes[index]; node; node = node->next) {
-        if (hashMap->compareFunc(key, node->key, hashMap->keySize) == 0) {
+void* ska_hash_map_get(const SkaHashMap* hash_map, const void* key) {
+    SKA_ASSERT(hash_map != NULL);
+    const usize index = hash_map->hash_func((void*)key, hash_map->key_size) % hash_map->capacity;
+    for (SkaHashMapNode* node = hash_map->nodes[index]; node; node = node->next) {
+        if (hash_map->compare_func((void*)key, node->key, hash_map->key_size) == 0) {
             return node->value;
         }
     }
     return NULL;
 }
 
-void* ska_hash_map_get_with_hash(const SkaHashMap* hashMap, void* key, usize hash) {
-    SKA_ASSERT(hashMap != NULL);
-    for (SkaHashMapNode* node = hashMap->nodes[hash]; node; node = node->next) {
-        if (hashMap->compareFunc(key, node->key, hashMap->keySize) == 0) {
+void* ska_hash_map_get_with_hash(const SkaHashMap* hash_map, const void* key, usize hash) {
+    SKA_ASSERT(hash_map != NULL);
+    for (SkaHashMapNode* node = hash_map->nodes[hash]; node; node = node->next) {
+        if (hash_map->compare_func((void*)key, node->key, hash_map->key_size) == 0) {
             return node->value;
         }
     }
@@ -127,24 +132,24 @@ void* ska_hash_map_get_with_hash(const SkaHashMap* hashMap, void* key, usize has
 }
 
 
-bool ska_hash_map_erase(SkaHashMap* hashMap, void* key) {
-    SKA_ASSERT(hashMap != NULL);
+bool ska_hash_map_erase(SkaHashMap* hash_map, const void* key) {
+    SKA_ASSERT(hash_map != NULL);
     SKA_ASSERT(key != NULL);
 
-    const usize index = hashMap->hashFunc(key, hashMap->keySize) % hashMap->capacity;
-    SkaHashMapNode* node = hashMap->nodes[index];
+    const usize index = hash_map->hash_func((void*)key, hash_map->key_size) % hash_map->capacity;
+    SkaHashMapNode* node = hash_map->nodes[index];
     for (SkaHashMapNode* previous = NULL; node; previous = node, node = node->next) {
-        if (hashMap->compareFunc(key, node->key, hashMap->keySize) == 0) {
+        if (hash_map->compare_func((void*)key, node->key, hash_map->key_size) == 0) {
             if (previous != NULL) {
                 previous->next = node->next;
             } else {
-                hashMap->nodes[index] = node->next;
+                hash_map->nodes[index] = node->next;
             }
 
-            hash_map_destroy_node(hashMap, node);
-            hashMap->size--;
+            hash_map_destroy_node(hash_map, node);
+            hash_map->size--;
 
-            hash_map_shrink_if_needed(hashMap);
+            hash_map_shrink_if_needed(hash_map);
 
             return true;
         }
@@ -153,22 +158,22 @@ bool ska_hash_map_erase(SkaHashMap* hashMap, void* key) {
     return false;
 }
 
-void ska_hash_map_clear(SkaHashMap* hashMap) {
-    SKA_ASSERT(hashMap != NULL);
+void ska_hash_map_clear(SkaHashMap* hash_map) {
+    SKA_ASSERT(hash_map != NULL);
 
     // Free all nodes
-    for (usize chain = 0; chain < hashMap->capacity; chain++) {
-        SkaHashMapNode* node = hashMap->nodes[chain];
+    for (usize chain = 0; chain < hash_map->capacity; chain++) {
+        SkaHashMapNode* node = hash_map->nodes[chain];
         while (node != NULL) {
             SkaHashMapNode* next = node->next;
-            hash_map_destroy_node(hashMap, node);
+            hash_map_destroy_node(hash_map, node);
             node = next;
         }
-        hashMap->nodes[chain] = NULL;
+        hash_map->nodes[chain] = NULL;
     }
 
     // Reset size
-    hashMap->size = 0;
+    hash_map->size = 0;
 
     // Optionally shrink back to minimum capacity
     // if (hashMap->capacity > SKA_HASH_MAP_MIN_CAPACITY) {
@@ -176,44 +181,44 @@ void ska_hash_map_clear(SkaHashMap* hashMap) {
     // }
 }
 
-void hash_map_grow_if_needed(SkaHashMap* hashMap) {
-    if (hashMap->size >= hashMap->capacity) {
-        hash_map_resize(hashMap, hashMap->size * 2);
+void hash_map_grow_if_needed(SkaHashMap* hash_map) {
+    if (hash_map->size >= hash_map->capacity) {
+        hash_map_resize(hash_map, hash_map->size * 2);
     }
 }
 
-void hash_map_shrink_if_needed(SkaHashMap* hashMap) {
-    const usize shrinkCapacity = (usize)((float) hashMap->capacity * SKA_HASH_MAP_SHRINK_THRESHOLD);
-    if (hashMap->size <= shrinkCapacity && hashMap->size > hashMap->initialCapacity) {
-        hash_map_resize(hashMap, shrinkCapacity);
+void hash_map_shrink_if_needed(SkaHashMap* hash_map) {
+    const usize shrink_capacity = (usize)((float) hash_map->capacity * SKA_HASH_MAP_SHRINK_THRESHOLD);
+    if (hash_map->size <= shrink_capacity && hash_map->size > hash_map->initial_capacity) {
+        hash_map_resize(hash_map, shrink_capacity);
     }
 }
 
-void hash_map_allocate(SkaHashMap* hashMap, usize capacity) {
+void hash_map_allocate(SkaHashMap* hash_map, usize capacity) {
     // hashMap->nodes = (SkaHashMapNode**)SKA_ALLOC_BYTES(capacity * sizeof(SkaHashMapNode*));
-    hashMap->nodes = (SkaHashMapNode**)SKA_ALLOC_BYTES_A(hashMap->allocator, capacity * sizeof(SkaHashMapNode*));
-    memset(hashMap->nodes, 0, capacity * sizeof(SkaHashMapNode*));
+    hash_map->nodes = (SkaHashMapNode**)SKA_ALLOC_BYTES_A(hash_map->allocator, capacity * sizeof(SkaHashMapNode*));
+    memset(hash_map->nodes, 0, capacity * sizeof(SkaHashMapNode*));
 
-    hashMap->capacity = capacity;
+    hash_map->capacity = capacity;
 }
 
-void hash_map_rehash(SkaHashMap* hashMap, SkaHashMapNode** oldNode, usize oldCapacity) {
-    for (usize chain = 0; chain < oldCapacity; chain++) {
-        for (SkaHashMapNode* node = oldNode[chain]; node != NULL;) {
+void hash_map_rehash(SkaHashMap* hash_map, SkaHashMapNode** old_node, usize old_capacity) {
+    for (usize chain = 0; chain < old_capacity; chain++) {
+        for (SkaHashMapNode* node = old_node[chain]; node != NULL;) {
             SkaHashMapNode* next = node->next;
 
-            usize newIndex = hashMap->hashFunc(node->key, hashMap->keySize) % hashMap->capacity;
-            node->next = hashMap->nodes[newIndex];
-            hashMap->nodes[newIndex] = node;
+            usize new_index = hash_map->hash_func(node->key, hash_map->key_size) % hash_map->capacity;
+            node->next = hash_map->nodes[new_index];
+            hash_map->nodes[new_index] = node;
 
             node = next;
         }
     }
 }
 
-void hash_map_resize(SkaHashMap* hashMap, usize capacity) {
+void hash_map_resize(SkaHashMap* hash_map, usize capacity) {
     if (capacity < SKA_HASH_MAP_MIN_CAPACITY) {
-        if (hashMap->capacity > SKA_HASH_MAP_MIN_CAPACITY) {
+        if (hash_map->capacity > SKA_HASH_MAP_MIN_CAPACITY) {
             capacity = SKA_HASH_MAP_MIN_CAPACITY;
         } else {
             // Do nothing since the passed in capacity is too low and the current map's capacity is already at min limit
@@ -221,39 +226,39 @@ void hash_map_resize(SkaHashMap* hashMap, usize capacity) {
         }
     }
 
-    SkaHashMapNode** oldNode = hashMap->nodes;
-    usize oldCapacity = hashMap->capacity;
-    hash_map_allocate(hashMap, capacity);
+    SkaHashMapNode** old_node = hash_map->nodes;
+    usize old_capacity = hash_map->capacity;
+    hash_map_allocate(hash_map, capacity);
 
-    hash_map_rehash(hashMap, oldNode, oldCapacity);
+    hash_map_rehash(hash_map, old_node, old_capacity);
 
-    SKA_FREE_A(hashMap->allocator, oldNode);
+    SKA_FREE_A(hash_map->allocator, old_node);
 }
 
 // --- Iterator --- //
-SkaHashMapIterator ska_hash_map_iter_create(SkaHashMap* hashMap) {
+SkaHashMapIterator ska_hash_map_iter_create(SkaHashMap* hash_map) {
     // Get initial node if exists
-    SkaHashMapNode* initialNode = NULL;
-    usize initialIndex = 0;
-    for (usize chain = 0; chain < hashMap->capacity; chain++) {
-        SkaHashMapNode* node = hashMap->nodes[chain];
+    SkaHashMapNode* initial_node = NULL;
+    usize initial_index = 0;
+    for (usize chain = 0; chain < hash_map->capacity; chain++) {
+        SkaHashMapNode* node = hash_map->nodes[chain];
         if (node != NULL) {
-            initialNode = node;
-            initialIndex = chain + 1;
+            initial_node = node;
+            initial_index = chain + 1;
             break;
         }
     }
-    usize iteratorCount = initialNode != NULL ? 1 : 0;
-    SkaHashMapIterator iterator = { .count = iteratorCount, .end = hashMap->capacity, .index = initialIndex, .pair = initialNode };
+    usize iterator_count = initial_node != NULL ? 1 : 0;
+    SkaHashMapIterator iterator = { .count = iterator_count, .end = hash_map->capacity, .index = initial_index, .pair = initial_node };
     return iterator;
 }
 
-bool ska_hash_map_iter_is_valid(SkaHashMap* hashMap, SkaHashMapIterator* iterator) {
-    return iterator->pair != NULL && iterator->count <= hashMap->size;
+bool ska_hash_map_iter_is_valid(SkaHashMap* hash_map, SkaHashMapIterator* iterator) {
+    return iterator->pair != NULL && iterator->count <= hash_map->size;
 }
 
-void ska_hash_map_iter_advance(SkaHashMap* hashMap, SkaHashMapIterator* iterator) {
-    if (ska_hash_map_iter_is_valid(hashMap, iterator)) {
+void ska_hash_map_iter_advance(SkaHashMap* hash_map, SkaHashMapIterator* iterator) {
+    if (ska_hash_map_iter_is_valid(hash_map, iterator)) {
         if (iterator->pair->next != NULL) {
             iterator->pair = iterator->pair->next;
             iterator->count++;
@@ -261,8 +266,8 @@ void ska_hash_map_iter_advance(SkaHashMap* hashMap, SkaHashMapIterator* iterator
         }
 
         // Search nodes array if there are no more linked pairs
-        for (usize chain = iterator->index; chain < hashMap->capacity; chain++) {
-            SkaHashMapNode* node = hashMap->nodes[chain];
+        for (usize chain = iterator->index; chain < hash_map->capacity; chain++) {
+            SkaHashMapNode* node = hash_map->nodes[chain];
             if (node != NULL) {
                 iterator->pair = node;
                 iterator->index = chain + 1;

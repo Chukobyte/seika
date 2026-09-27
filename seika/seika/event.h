@@ -15,12 +15,12 @@ typedef struct SkaObserver {
     SkaObserverOnNotify on_notify;
 } SkaObserver;
 
-SkaObserver* ska_observer_new(SkaObserverOnNotify onNotifyFunc);
+SkaObserver* ska_observer_new(SkaObserverOnNotify on_notify_func);
 void ska_observer_delete(SkaObserver* observer);
 
 // A subscribable event
 typedef struct SkaEvent {
-    usize observerCount;
+    usize observer_count;
     SkaObserver* observers[SKA_MAX_OBSERVERS];
 } SkaEvent;
 

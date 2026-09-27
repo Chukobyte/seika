@@ -9,66 +9,66 @@ static inline usize align_size(usize size, usize alignment) {
     return (size + alignment - 1) & ~(alignment - 1);
 }
 
-SkaPool* ska_pool_init(usize blockSize, usize blockCount) {
-    SKA_ASSERT(blockSize > 0);
-    SKA_ASSERT(blockCount > 0);
+SkaPool* ska_pool_init(usize block_size, usize block_count) {
+    SKA_ASSERT(block_size > 0);
+    SKA_ASSERT(block_count > 0);
     
     // Ensure block size is at least big enough for the free list pointer
     // and is properly aligned
-    usize alignedBlockSize = align_size(blockSize, sizeof(void*));
-    alignedBlockSize = SKA_MATH_MAX(alignedBlockSize, sizeof(SkaPoolBlock));
+    usize aligned_block_size = align_size(block_size, sizeof(void*));
+    aligned_block_size = SKA_MATH_MAX(aligned_block_size, sizeof(SkaPoolBlock));
 
     // Allocate the pool structure
     SkaPool* pool = SKA_ALLOC(SkaPool);
     
     // Allocate the buffer for all blocks
-    usize bufferSize = alignedBlockSize * blockCount;
-    pool->buffer = ska_mem_global_allocate(bufferSize);
-    pool->blockSize = alignedBlockSize;
-    pool->blockCount = blockCount;
-    pool->usedCount = 0;
-    pool->ownsBuffer = true;
+    usize buffer_size = aligned_block_size * block_count;
+    pool->buffer = ska_mem_global_allocate(buffer_size);
+    pool->block_size = aligned_block_size;
+    pool->block_count = block_count;
+    pool->used_count = 0;
+    pool->owns_buffer = true;
     
     // Initialize free list - thread all blocks together
-    pool->freeList = NULL;
-    for (usize i = 0; i < blockCount; i++) {
-        void* block = (char*)pool->buffer + (i * alignedBlockSize);
-        SkaPoolBlock* poolBlock = (SkaPoolBlock*)block;
-        poolBlock->next = pool->freeList;
-        pool->freeList = poolBlock;
+    pool->free_list = NULL;
+    for (usize i = 0; i < block_count; i++) {
+        void* block = (char*)pool->buffer + (i * aligned_block_size);
+        SkaPoolBlock* pool_block = (SkaPoolBlock*)block;
+        pool_block->next = pool->free_list;
+        pool->free_list = pool_block;
     }
     
     return pool;
 }
 
-SkaPool* ska_pool_init_from_buffer(void* buffer, usize bufferSize, usize blockSize) {
+SkaPool* ska_pool_init_from_buffer(void* buffer, usize buffer_size, usize block_size) {
     SKA_ASSERT(buffer);
-    SKA_ASSERT(bufferSize > 0);
-    SKA_ASSERT(blockSize > 0);
+    SKA_ASSERT(buffer_size > 0);
+    SKA_ASSERT(block_size > 0);
     
     // Align block size
-    usize alignedBlockSize = align_size(blockSize, sizeof(void*));
-    alignedBlockSize = SKA_MATH_MAX(alignedBlockSize, sizeof(SkaPoolBlock));
+    usize aligned_block_size = align_size(block_size, sizeof(void*));
+    aligned_block_size = SKA_MATH_MAX(aligned_block_size, sizeof(SkaPoolBlock));
 
     // Calculate how many blocks fit
-    usize blockCount = bufferSize / alignedBlockSize;
-    SKA_ASSERT_FMT(blockCount > 0, "Buffer too small for even one block");
+    usize block_count = buffer_size / aligned_block_size;
+    SKA_ASSERT_FMT(block_count > 0, "Buffer too small for even one block");
     
     // Allocate pool structure
     SkaPool* pool = SKA_ALLOC(SkaPool);
     pool->buffer = buffer;
-    pool->blockSize = alignedBlockSize;
-    pool->blockCount = blockCount;
-    pool->usedCount = 0;
-    pool->ownsBuffer = false;
+    pool->block_size = aligned_block_size;
+    pool->block_count = block_count;
+    pool->used_count = 0;
+    pool->owns_buffer = false;
     
     // Initialize free list
-    pool->freeList = NULL;
-    for (usize i = 0; i < blockCount; i++) {
-        void* block = (char*)pool->buffer + (i * alignedBlockSize);
-        SkaPoolBlock* poolBlock = (SkaPoolBlock*)block;
-        poolBlock->next = pool->freeList;
-        pool->freeList = poolBlock;
+    pool->free_list = NULL;
+    for (usize i = 0; i < block_count; i++) {
+        void* block = (char*)pool->buffer + (i * aligned_block_size);
+        SkaPoolBlock* pool_block = (SkaPoolBlock*)block;
+        pool_block->next = pool->free_list;
+        pool->free_list = pool_block;
     }
     
     return pool;
@@ -77,7 +77,7 @@ SkaPool* ska_pool_init_from_buffer(void* buffer, usize bufferSize, usize blockSi
 void ska_pool_deinit(SkaPool* pool) {
     if (!pool) return;
     
-    if (pool->ownsBuffer && pool->buffer) {
+    if (pool->owns_buffer && pool->buffer) {
         SKA_FREE(pool->buffer);
     }
     
@@ -88,26 +88,26 @@ void ska_pool_reset(SkaPool* pool) {
     SKA_ASSERT(pool);
     
     // Re-thread all blocks into free list
-    pool->freeList = NULL;
-    pool->usedCount = 0;
+    pool->free_list = NULL;
+    pool->used_count = 0;
     
-    for (usize i = 0; i < pool->blockCount; i++) {
-        void* block = (char*)pool->buffer + (i * pool->blockSize);
-        SkaPoolBlock* poolBlock = (SkaPoolBlock*)block;
-        poolBlock->next = pool->freeList;
-        pool->freeList = poolBlock;
+    for (usize i = 0; i < pool->block_count; i++) {
+        void* block = (char*)pool->buffer + (i * pool->block_size);
+        SkaPoolBlock* pool_block = (SkaPoolBlock*)block;
+        pool_block->next = pool->free_list;
+        pool->free_list = pool_block;
     }
 }
 
 void* ska_pool_alloc(SkaPool* pool) {
     SKA_ASSERT(pool);
-    if (!pool->freeList) return NULL; // Allocation failed, no more free blocks
+    if (!pool->free_list) return NULL; // Allocation failed, no more free blocks
     // SKA_ASSERT_REL_FMT(pool->freeList, "No more free blocks, pool is full! Used: %zu / %zu blocks", pool->usedCount, pool->blockCount);
 
     // Pop from free list
-    void* block = pool->freeList;
-    pool->freeList = pool->freeList->next;
-    pool->usedCount++;
+    void* block = pool->free_list;
+    pool->free_list = pool->free_list->next;
+    pool->used_count++;
     
     return block;
 }
@@ -120,35 +120,35 @@ void ska_pool_free(SkaPool* pool, void* block) {
     SKA_ASSERT_FMT(ska_pool_owns_block(pool, block), "Block does not belong to this pool!");
 
     // Push to free list
-    SkaPoolBlock* poolBlock = (SkaPoolBlock*)block;
-    poolBlock->next = pool->freeList;
-    pool->freeList = poolBlock;
-    pool->usedCount--;
+    SkaPoolBlock* pool_block = (SkaPoolBlock*)block;
+    pool_block->next = pool->free_list;
+    pool->free_list = pool_block;
+    pool->used_count--;
 }
 
 usize ska_pool_get_used_count(const SkaPool* pool) {
     SKA_ASSERT(pool);
-    return pool->usedCount;
+    return pool->used_count;
 }
 
 usize ska_pool_get_free_count(const SkaPool* pool) {
     SKA_ASSERT(pool);
-    return pool->blockCount - pool->usedCount;
+    return pool->block_count - pool->used_count;
 }
 
 usize ska_pool_get_total_count(const SkaPool* pool) {
     SKA_ASSERT(pool);
-    return pool->blockCount;
+    return pool->block_count;
 }
 
 bool ska_pool_is_full(const SkaPool* pool) {
     SKA_ASSERT(pool);
-    return pool->usedCount >= pool->blockCount;
+    return pool->used_count >= pool->block_count;
 }
 
 bool ska_pool_is_empty(const SkaPool* pool) {
     SKA_ASSERT(pool);
-    return pool->usedCount == 0;
+    return pool->used_count == 0;
 }
 
 bool ska_pool_owns_block(const SkaPool* pool, const void* block) {
@@ -156,26 +156,26 @@ bool ska_pool_owns_block(const SkaPool* pool, const void* block) {
     
     if (!block) return false;
     
-    usize blockAddr = (usize)block;
-    usize bufferStart = (usize)pool->buffer;
-    usize bufferEnd = bufferStart + (pool->blockSize * pool->blockCount);
+    usize block_addr = (usize)block;
+    usize buffer_start = (usize)pool->buffer;
+    usize buffer_end = buffer_start + (pool->block_size * pool->block_count);
     
     // Check if address is within buffer range
-    if (blockAddr < bufferStart || blockAddr >= bufferEnd) {
+    if (block_addr < buffer_start || block_addr >= buffer_end) {
         return false;
     }
     
     // Check if address is aligned to block boundary
-    usize offset = blockAddr - bufferStart;
-    return (offset % pool->blockSize) == 0;
+    usize offset = block_addr - buffer_start;
+    return (offset % pool->block_size) == 0;
 }
 
 // ============================================================================
 // Allocator interface implementation
 // ============================================================================
 
-SkaAllocator ska_mem_pool_allocator_init(usize blockSize, usize blockCount) {
-    SkaPool* pool = ska_pool_init(blockSize, blockCount);
+SkaAllocator ska_mem_pool_allocator_init(usize block_size, usize block_count) {
+    SkaPool* pool = ska_pool_init(block_size, block_count);
     
     SkaAllocator allocator = {
         .context = pool,
@@ -200,7 +200,7 @@ void* ska_mem_pool_allocator_allocate(SkaAllocator* allocator, usize bytes) {
     
     SkaPool* pool = (SkaPool*)allocator->context;
     
-    SKA_ASSERT_FMT(bytes <= pool->blockSize, "Requested size %zu exceeds pool block size %zu", bytes, pool->blockSize);
+    SKA_ASSERT_FMT(bytes <= pool->block_size, "Requested size %zu exceeds pool block size %zu", bytes, pool->block_size);
     
     return ska_pool_alloc(pool);
 }
@@ -209,7 +209,7 @@ void* ska_mem_pool_allocator_allocate_zeroed(SkaAllocator* allocator, usize byte
     void* block = ska_mem_pool_allocator_allocate(allocator, bytes);
     if (block) {
         SkaPool* pool = (SkaPool*)allocator->context;
-        memset(block, 0, pool->blockSize);
+        memset(block, 0, pool->block_size);
     }
     return block;
 }

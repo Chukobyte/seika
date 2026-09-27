@@ -19,13 +19,13 @@ typedef struct SkaTimer {
     LARGE_INTEGER frequency;
     LARGE_INTEGER start;
 #elif defined(PLATFORM_EMSCRIPTEN)
-    double start = 0.0;
+    double start;
 #else
     // POSIX: Use clock_gettime with CLOCK_MONOTONIC
     struct timespec start;
 #endif
 
-    bool hasStarted;
+    bool has_started;
 } SkaTimer;
 
 // Will make the CPU sleep for the length of the milliseconds param

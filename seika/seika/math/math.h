@@ -35,6 +35,13 @@ bool ska_math_vec2_equals(const SkaVector2* v1, const SkaVector2* v2);
 SkaVector2 ska_math_vec2_lerp(const SkaVector2* v1, const SkaVector2* v2, f32 alpha);
 f32 ska_math_vec2_angle(const SkaVector2* v);
 
+SkaVector2 ska_vector2_add(SkaVector2 a, SkaVector2 b);
+SkaVector2 ska_vector2_sub(SkaVector2 a, SkaVector2 b);
+SkaVector2 ska_vector2_mult(SkaVector2 a, SkaVector2 b);
+f32 ska_vector2_dot(SkaVector2 a, SkaVector2 b);
+f32 ska_vector2_length(SkaVector2 v);
+SkaVector2 ska_vector2_normalize(SkaVector2 v);
+
 // --- SkaVector2i --- //
 typedef struct SkaVector2i {
     int32 x;
@@ -74,7 +81,7 @@ typedef struct SkaRect2 {
 
 #define SKA_RECT2D_ZERO SKA_STRUCT_LITERAL(SkaRect2){ 0.0f, 0.0f, 0.0f, 0.0f }
 
-bool se_rect2_does_rectangles_overlap(const SkaRect2* sourceRect, const SkaRect2* targetRect);
+bool se_rect2_does_rectangles_overlap(const SkaRect2* source_rect, const SkaRect2* target_rect);
 
 //--- SkaTransform2D ---//
 typedef struct SkaTransform2D {
@@ -85,7 +92,7 @@ typedef struct SkaTransform2D {
 
 void ska_transform2d_mat4_to_transform(const SkaMatrix4* matrix, SkaTransform2D* transform);
 void ska_transform2d_transform_to_mat4(const SkaTransform2D* transform, SkaMatrix4* matrix);
-SkaTransform2D ska_transform2d_lerp(const SkaTransform2D* tA, const SkaTransform2D* tB, f32 alpha);
+SkaTransform2D ska_transform2d_lerp(const SkaTransform2D* t_a, const SkaTransform2D* t_b, f32 alpha);
 
 #define SKA_TRANSFORM_IDENTITY SKA_STRUCT_LITERAL(SkaTransform2D){ \
     .position = SKA_VECTOR2_ZERO, \
@@ -97,12 +104,12 @@ typedef struct SkaTransformModel2D {
     SkaVector2 position;
     SkaVector2 scale;
     f32 rotation; // degrees
-    int32 zIndex;
-    SkaVector2 scaleSign;
+    int32 z_index;
+    SkaVector2 scale_sign;
     SkaMatrix4 model;
 } SkaTransformModel2D;
 
-SkaTransform2D ska_transform2d_model_convert_to_transform(const SkaTransformModel2D* transformModel2D);
+SkaTransform2D ska_transform2d_model_convert_to_transform(const SkaTransformModel2D* transform_model2_d);
 
 #define SKA_TRANSFORM_MODEL_IDENTITY SKA_STRUCT_LITERAL(SkaTransformModel2D){ \
     .position = SKA_VECTOR2_ZERO, \
@@ -126,6 +133,7 @@ SkaVector3 ska_vector3_cross(SkaVector3 a, SkaVector3 b);
 f32 ska_vector3_dot(SkaVector3 a, SkaVector3 b);
 f32 ska_vector3_length(SkaVector3 v);
 SkaVector3 ska_vector3_normalize(SkaVector3 v);
+SkaVector3 ska_vector3_lerp(SkaVector3 a, SkaVector3 b, f32 alpha);
 
 #define SKA_VECTOR3_ZERO SKA_STRUCT_LITERAL(SkaVector3){ .x = 0.0f, .y = 0.0f, .z = 0.0f }
 #define SKA_VECTOR3_ONE SKA_STRUCT_LITERAL(SkaVector3){ .x = 1.0f, .y = 1.0f, .z = 1.0f }
@@ -142,6 +150,17 @@ typedef struct SkaVector4 {
     f32 z;
     f32 w;
 } SkaVector4;
+
+SkaVector4 ska_vector4_add(SkaVector4 a, SkaVector4 b);
+SkaVector4 ska_vector4_sub(SkaVector4 a, SkaVector4 b);
+SkaVector4 ska_vector4_mult(SkaVector4 a, SkaVector4 b);
+f32 ska_vector4_dot(SkaVector4 a, SkaVector4 b);
+f32 ska_vector4_length(SkaVector4 v);
+SkaVector4 ska_vector4_normalize(SkaVector4 v);
+SkaVector4 ska_vector4_lerp(SkaVector4 a, SkaVector4 b, f32 alpha);
+
+#define SKA_VECTOR4_ZERO SKA_STRUCT_LITERAL(SkaVector4){ .x = 0.0f, .y = 0.0f, .z = 0.0f, .w = 0.0f }
+#define SKA_VECTOR4_ONE SKA_STRUCT_LITERAL(SkaVector4){ .x = 1.0f, .y = 1.0f, .z = 1.0f, .w = 1.0f }
 
 // --- SkaColor --- //
 typedef struct SkaColor {
@@ -214,7 +233,7 @@ void ska_matrix4_scale(SkaMatrix4* self, SkaVector3 v);
 void ska_matrix4_scale_and_mul(SkaMatrix4* self, SkaVector3 v);
 f32 ska_matrix4_determinant(const SkaMatrix4* self);
 SkaMatrix4 ska_matrix4_inverse(const SkaMatrix4* self);
-SkaMatrix4 ska_matrix4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 nearZ, f32 farZ);
+SkaMatrix4 ska_matrix4_ortho(f32 left, f32 right, f32 bottom, f32 top, f32 near_z, f32 far_z);
 SkaMatrix4 ska_matrix4_perspective(f32 fov_radians, f32 aspect_ratio, f32 near_plane, f32 far_plane);
 SkaMatrix4 ska_matrix4_look_at(SkaVector3 eye, SkaVector3 center, SkaVector3 up);
 
@@ -224,10 +243,10 @@ SkaMatrix4 ska_matrix4_look_at(SkaVector3 eye, SkaVector3 center, SkaVector3 up)
 #define SKA_MATH_CLAMP(VAL, MIN_VAL, MAX_VAL) ((VAL) < (MIN_VAL) ? (MIN_VAL) : (VAL) > (MAX_VAL) ? (MAX_VAL) : (VAL))
 
 f32 ska_math_lerpf(f32 a, f32 b, f32 alpha);
-f32 ska_math_map_to_range(f32 input, f32 inputMin, f32 inputMax, f32 outputMin, f32 outputMax);
-f32 ska_math_map_to_unit(f32 input, f32 inputMin, f32 inputMax);
-f64 ska_math_map_to_range_double(f64 input, f64 inputMin, f64 inputMax, f64 outputMin, f64 outputMax);
-f64 ska_math_map_to_unit_double(f64 input, f64 inputMin, f64 inputMax);
+f32 ska_math_map_to_range(f32 input, f32 input_min, f32 input_max, f32 output_min, f32 output_max);
+f32 ska_math_map_to_unit(f32 input, f32 input_min, f32 input_max);
+f64 ska_math_map_to_range_double(f64 input, f64 input_min, f64 input_max, f64 output_min, f64 output_max);
+f64 ska_math_map_to_unit_double(f64 input, f64 input_min, f64 input_max);
 f32 ska_math_signf(f32 value);
 SkaVector2 ska_math_signvec2(SkaVector2* value);
 int32 ska_math_clamp_int(int32 value, int32 min, int32 max);

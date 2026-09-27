@@ -12,6 +12,8 @@ extern "C" {
 
 #if defined(_WIN32) || defined(_WIN64)
 #define PLATFORM_WINDOWS
+#elif defined(__ANDROID__)
+#define PLATFORM_ANDROID
 #elif defined(__linux__)
 #define PLATFORM_LINUX
 #elif defined(__APPLE__) && defined(__MACH__)
@@ -22,7 +24,12 @@ extern "C" {
 #define PLATFORM_UNKNOWN
 #endif
 
-#if defined(__linux__)
+// The NDK compiler defines both __ANDROID__ and __linux__ -- must check __ANDROID__ first here too,
+// or this redefinition block would leave PLATFORM_LINUX defined alongside PLATFORM_ANDROID and
+// silently break every PLATFORM_LINUX-gated file (window_x11.c, input_x11.c).
+#if defined(__ANDROID__)
+#define PLATFORM_ANDROID
+#elif defined(__linux__)
 #define PLATFORM_LINUX
 #endif
 

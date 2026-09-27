@@ -11,11 +11,11 @@ typedef struct SkaIdQueue {
     SKA_QUEUE_T* array;
 } SkaIdQueue;
 
-SkaIdQueue* ska_id_queue_create(usize initialCapacity);
+SkaIdQueue* ska_id_queue_create(usize initial_capacity);
 void ska_id_queue_destroy(SkaIdQueue* queue);
 bool ska_id_queue_is_full(SkaIdQueue* queue);
 bool ska_id_queue_is_empty(SkaIdQueue* queue);
 bool ska_id_queue_enqueue(SkaIdQueue* queue, SKA_QUEUE_T item);
-bool ska_id_queue_dequeue(SkaIdQueue* queue, SKA_QUEUE_T* outId);
-bool ska_id_queue_front(SkaIdQueue* queue, SKA_QUEUE_T* outId);
-bool ska_id_queue_rear(SkaIdQueue* queue, SKA_QUEUE_T* outId);
+bool ska_id_queue_dequeue(SkaIdQueue* queue, SKA_QUEUE_T* out_id);
+bool ska_id_queue_front(SkaIdQueue* queue, SKA_QUEUE_T* out_id);
+bool ska_id_queue_rear(SkaIdQueue* queue, SKA_QUEUE_T* out_id);

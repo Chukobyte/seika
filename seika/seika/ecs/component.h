@@ -32,23 +32,28 @@ typedef struct SkaComponentTypeInfo {
     usize size;
 } SkaComponentTypeInfo;
 
-const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, usize componentSize);
-const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, usize componentSize);
+const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, usize component_size);
+const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, usize component_size);
 const SkaComponentTypeInfo* ska_ecs_component_find_type_info(const char* name);
-SkaComponentType ska_ecs_component_get_type_flag(const char* name, usize componentSize);
+SkaComponentType ska_ecs_component_get_type_flag(const char* name, usize component_size);
 
 // --- Component Manager --- //
 void ska_ecs_component_manager_initialize();
 void ska_ecs_component_manager_finalize();
+// Returned pointer is only valid until the next 'set_component'/'reserve' call for the same component
+// type (storage is a contiguous, entity-indexed pool that can reallocate on growth) -- re-fetch rather
+// than holding onto it across such calls.
 void* ska_ecs_component_manager_get_component(SkaEntity entity, SkaComponentIndex index);
 void* ska_ecs_component_manager_get_component_unchecked(SkaEntity entity, SkaComponentIndex index); // No check, will probably consolidate later...
+// Copies 'component's bytes into storage -- caller retains ownership of the passed-in pointer (safe to
+// pass a stack-local temporary).
 void ska_ecs_component_manager_set_component(SkaEntity entity, SkaComponentIndex index, void* component);
 void ska_ecs_component_manager_remove_component(SkaEntity entity, SkaComponentIndex index);
 void ska_ecs_component_manager_remove_all_components(SkaEntity entity);
 bool ska_ecs_component_manager_has_component(SkaEntity entity, SkaComponentIndex index);
-void ska_ecs_component_manager_set_component_signature(SkaEntity entity, SkaComponentType componentTypeSignature);
+void ska_ecs_component_manager_set_component_signature(SkaEntity entity, SkaComponentType component_type_signature);
 SkaComponentType ska_ecs_component_manager_get_component_signature(SkaEntity entity);
-void ska_ecs_component_manager_reserve(SkaEntity lastEntity);
+void ska_ecs_component_manager_reserve(SkaEntity last_entity);
 
 const char* ska_ecs_component_get_component_data_index_string(SkaComponentIndex index);
 

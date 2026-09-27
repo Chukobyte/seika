@@ -1,5 +1,8 @@
 #if SKA_RENDERING
 
+#include <math.h>
+#include <stddef.h>
+
 #include "renderer.h"
 #include "render_context.h"
 #include "seika/assert.h"
@@ -10,6 +13,7 @@
 #define SKA_RENDER_SPOT_LIGHT_MAX 16
 #define SKA_RENDER_DIRECTIONAL_LIGHT_MAX 16
 #define SKA_RENDER_MESH_MAX 64
+#define SKA_RENDER_DEBUG_LINE_MAX 1024
 
 typedef struct DirectionalLightBatchItem {
     SkaVector3 direction;
@@ -42,41 +46,56 @@ typedef struct SpotLightDrawBatchItem {
     float linear;
     float quadratic;
     float constant;
-    bool isAttachedToCamera;
+    bool is_attached_to_camera;
     // cutoff and outCutoff are in radians
     float cutoff;
-    float outerCutoff;
+    float outer_cutoff;
 } SpotLightDrawBatchItem;
 
 #define SKA_DEFAULT_SPOT_LIGHT_BATCH_ITEM (SpotLightDrawBatchItem){ .position = { .x = 0.0f, .y = 0.0f, .z = 0.0f }, .direction = { .x = 0.0f, .y = 0.0f, -1.0f }, .ambient = { .x = 0.05f, .y = 0.05f, .z = 0.05f }, .diffuse = { .x = 1.0f, .y = 1.0f, .z = 1.0f }, .specular = { .x = 1.0f, .y = 1.0f, .z = 1.0f }, .linear = 0.09f, .quadratic = 0.032f, .constant = 1.0f, .cutoff = 12.5f, .outerCutoff = 15.0f }
 
 typedef struct MeshBatchItem {
     SkaMesh* mesh;
-    SkaMatrix4 modelMatrix;
-    SkaShaderInstance* shaderInstance;
+    SkaMatrix4 model_matrix;
+    SkaShaderInstance* shader_instance;
+    SkaRenderCullMode cull_mode;
+    // tintColor uniform; opaque white (no-op) unless set via ska_renderer_queue_mesh_draw_tinted.
+    SkaColor tint;
 } MeshBatchItem;
 
+// Position + color interleaved, matching the debug-line vertex shader's two attributes.
+typedef struct DebugLineVertex {
+    SkaVector3 position;
+    SkaColor color;
+} DebugLineVertex;
+
 typedef struct LightBatchItems {
-    DirectionalLightBatchItem directionalLights[SKA_RENDER_DIRECTIONAL_LIGHT_MAX];
-    PointLightDrawBatchItem pointLights[SKA_RENDER_POINT_LIGHT_MAX];
-    SpotLightDrawBatchItem spotLights[SKA_RENDER_SPOT_LIGHT_MAX];
-    usize directionalLightCount;
-    usize pointLightCount;
-    usize spotLightCount;
+    DirectionalLightBatchItem directional_lights[SKA_RENDER_DIRECTIONAL_LIGHT_MAX];
+    PointLightDrawBatchItem point_lights[SKA_RENDER_POINT_LIGHT_MAX];
+    SpotLightDrawBatchItem spot_lights[SKA_RENDER_SPOT_LIGHT_MAX];
+    usize directional_light_count;
+    usize point_light_count;
+    usize spot_light_count;
 } LightBatchItems;
 
-static void renderer_batching_draw_meshes(MeshBatchItem items[], usize meshCount);
+static void renderer_batching_draw_meshes(MeshBatchItem items[], usize mesh_count);
 
-static GLuint pointLightVAO;
-static GLuint pointLightVBO;
-static SkaShader* meshShader = NULL;
-static SkaShader* pointLightShader = NULL;
-static SkaMatrix4 viewMatrix = {0};
-static SkaMatrix4 projectionMatrix = {0};
-static SkaCamera3D currentCamera3D = {0};
-static LightBatchItems lightBatchItems = {0};
-static MeshBatchItem meshBatchItems[SKA_RENDER_MESH_MAX] = {{0}};
-static usize meshBatchItemCount = 0;
+static GLuint point_light_vao;
+static GLuint point_light_vbo;
+static SkaShader* mesh_shader = NULL;
+static SkaShader* point_light_shader = NULL;
+static SkaMatrix4 view_matrix = {0};
+static SkaMatrix4 projection_matrix = {0};
+static SkaCamera3D current_camera3_d = {0};
+static LightBatchItems light_batch_items = {0};
+static MeshBatchItem mesh_batch_items[SKA_RENDER_MESH_MAX] = {{0}};
+static usize mesh_batch_item_count = 0;
+
+static GLuint debug_line_vao;
+static GLuint debug_line_vbo;
+static SkaShader* debug_line_shader = NULL;
+static DebugLineVertex debug_line_batch_items[SKA_RENDER_DEBUG_LINE_MAX * 2] = {{0}};
+static usize debug_line_batch_vertex_count = 0;
 
 // --- Mesh Renderer --- //
 
@@ -84,19 +103,21 @@ static usize meshBatchItemCount = 0;
 void ska_renderer_init_3d(SkaRenderer3DInitProps props) {
 // void ska_renderer_init_3d(float fov, float nearPlane, float farPlane) {
     // Compile 3D shaders
-    // meshShader = ska_shader_compile_new_shader(SKA_OPENGL_SHADER_SOURCE_VERTEX_MESH, SKA_OPENGL_SHADER_SOURCE_FRAGMENT_MESH);
-    meshShader = ska_shader_compile_new_shader(SKA_OPENGL_SHADER_SOURCE_VERTEX_MESH, SKA_OPENGL_SHADER_SOURCE_FRAGMENT_MESH);
-    pointLightShader = ska_shader_compile_new_shader(OPENGL_SHADER_SOURCE_POINT_LIGHT_VERTEX, OPENGL_SHADER_SOURCE_POINT_LIGHT_FRAGMENT);
-    SKA_ASSERT(meshShader);
-    SKA_ASSERT(pointLightShader);
+    // meshShader = ska_shader_compile_new_shader(ska_opengl_shader_source_vertex_mesh, ska_opengl_shader_source_fragment_mesh);
+    mesh_shader = ska_shader_compile_new_shader(ska_opengl_shader_source_vertex_mesh, ska_opengl_shader_source_fragment_mesh);
+    point_light_shader = ska_shader_compile_new_shader(opengl_shader_source_point_light_vertex, opengl_shader_source_point_light_fragment);
+    debug_line_shader = ska_shader_compile_new_shader(opengl_shader_source_debug_line_vertex, opengl_shader_source_debug_line_fragment);
+    SKA_ASSERT(mesh_shader);
+    SKA_ASSERT(point_light_shader);
+    SKA_ASSERT(debug_line_shader);
 
     // Setup point light stuff
-    glGenVertexArrays(1, &pointLightVAO);
-    glBindVertexArray(pointLightVAO);
-    glGenBuffers(1, &pointLightVBO);
+    glGenVertexArrays(1, &point_light_vao);
+    glBindVertexArray(point_light_vao);
+    glGenBuffers(1, &point_light_vbo);
 
     // TODO: Figure out if we'll need to buffer the data afterwards
-    glBindBuffer(GL_ARRAY_BUFFER, pointLightVBO);
+    glBindBuffer(GL_ARRAY_BUFFER, point_light_vbo);
     // Vertices for a cube (commonly used for point light visualization)
     const GLfloat vertices[] = {
         // positions
@@ -148,32 +169,45 @@ void ska_renderer_init_3d(SkaRenderer3DInitProps props) {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(GLfloat), (void*)NULL);
     glEnableVertexAttribArray(0);
 
+    // Dynamic VBO, re-uploaded whole each flush - line volume per frame is too low to need better.
+    glGenVertexArrays(1, &debug_line_vao);
+    glBindVertexArray(debug_line_vao);
+    glGenBuffers(1, &debug_line_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, debug_line_vbo);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(debug_line_batch_items), NULL, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(DebugLineVertex), (void*)offsetof(DebugLineVertex, position));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(DebugLineVertex), (void*)offsetof(DebugLineVertex, color));
+    glEnableVertexAttribArray(1);
+    glBindVertexArray(0);
+
     // Setup projection matrix
     const SkaSize2Di resolution = ska_render_context_get()->resolution;
-    const f32 aspectRatio = (f32)resolution.w / (f32)resolution.h;
-    projectionMatrix = ska_matrix4_perspective(
-        SKA_DEG_2_RAD(props.fov),
-        aspectRatio,
-        props.nearPlane,
-        props.farPlane
+    const f32 aspect_ratio = (f32)resolution.w / (f32)resolution.h;
+    projection_matrix = ska_matrix4_perspective(
+        SKA_DEG_2_RADF(props.fov),
+        aspect_ratio,
+        props.near_plane,
+        props.far_plane
     );
 
-    currentCamera3D.position.x = 0.0f;
-    currentCamera3D.position.y = 0.0f;
-    currentCamera3D.position.z = 0.0f;
-    currentCamera3D.rotation.x = 0.0f;
-    currentCamera3D.rotation.y = 0.0f;
-    currentCamera3D.rotation.z = 0.0f;
-    currentCamera3D.up.x = 0.0f;
-    currentCamera3D.up.y = 1.0f;
-    currentCamera3D.up.z = 0.0f;
-    currentCamera3D.front.x = 0.0f;
-    currentCamera3D.front.y = 0.0f;
-    currentCamera3D.front.z = 0.0f;
+    current_camera3_d.position.x = 0.0f;
+    current_camera3_d.position.y = 0.0f;
+    current_camera3_d.position.z = 0.0f;
+    current_camera3_d.rotation.x = 0.0f;
+    current_camera3_d.rotation.y = 0.0f;
+    current_camera3_d.rotation.z = 0.0f;
+    current_camera3_d.up.x = 0.0f;
+    current_camera3_d.up.y = 1.0f;
+    current_camera3_d.up.z = 0.0f;
+    // Must be non-zero (look_at degenerates when front==0) and match set_camera_rotation(0,0)'s output.
+    current_camera3_d.front.x = 0.0f;
+    current_camera3_d.front.y = 0.0f;
+    current_camera3_d.front.z = -1.0f;
 
-    currentCamera3D.fov = props.fov;
-    currentCamera3D.nearPlane = props.nearPlane;
-    currentCamera3D.farPlane = props.farPlane;
+    current_camera3_d.fov = props.fov;
+    current_camera3_d.near_plane = props.near_plane;
+    current_camera3_d.far_plane = props.far_plane;
 
     // Enable depth testing for 3D
     glEnable(GL_DEPTH_TEST);
@@ -181,14 +215,22 @@ void ska_renderer_init_3d(SkaRenderer3DInitProps props) {
 }
 
 void ska_renderer_set_view_matrix(const SkaMatrix4* view) {
-    ska_matrix4_copy_implace(&viewMatrix, view);
+    ska_matrix4_copy_implace(&view_matrix, view);
 }
 
 void ska_renderer_set_projection_matrix(const SkaMatrix4* projection) {
-    ska_matrix4_copy_implace(&projectionMatrix, projection);
+    ska_matrix4_copy_implace(&projection_matrix, projection);
 }
 
-void ska_renderer_queue_mesh_draw(SkaMesh* mesh, const SkaMatrix4* model, SkaShaderInstance* shaderInstance) {
+void ska_renderer_queue_mesh_draw(SkaMesh* mesh, const SkaMatrix4* model, SkaShaderInstance* shader_instance) {
+    ska_renderer_queue_mesh_draw_ex(mesh, model, shader_instance, SkaRenderCullMode_NONE);
+}
+
+void ska_renderer_queue_mesh_draw_ex(SkaMesh* mesh, const SkaMatrix4* model, SkaShaderInstance* shader_instance, SkaRenderCullMode cull_mode) {
+    ska_renderer_queue_mesh_draw_tinted(mesh, model, shader_instance, cull_mode, (SkaColor){ 1.0f, 1.0f, 1.0f, 1.0f });
+}
+
+void ska_renderer_queue_mesh_draw_tinted(SkaMesh* mesh, const SkaMatrix4* model, SkaShaderInstance* shader_instance, SkaRenderCullMode cull_mode, SkaColor tint) {
     if (mesh == NULL) {
         ska_logger_error("NULL mesh, not submitting draw call!");
         return;
@@ -198,26 +240,28 @@ void ska_renderer_queue_mesh_draw(SkaMesh* mesh, const SkaMatrix4* model, SkaSha
 
     MeshBatchItem item;
     item.mesh = mesh;
-    item.modelMatrix = SKA_MATRIX4_IDENTITY;
-    item.shaderInstance = shaderInstance;
-    ska_matrix4_copy_implace(&item.modelMatrix, model);
+    item.model_matrix = SKA_MATRIX4_IDENTITY;
+    item.shader_instance = shader_instance;
+    item.cull_mode = cull_mode;
+    item.tint = tint;
+    ska_matrix4_copy_implace(&item.model_matrix, model);
 
-    SKA_ASSERT(meshBatchItemCount < SKA_RENDER_MESH_MAX);
-    meshBatchItems[meshBatchItemCount++] = item;
+    SKA_ASSERT(mesh_batch_item_count < SKA_RENDER_MESH_MAX);
+    mesh_batch_items[mesh_batch_item_count++] = item;
 }
 
 void ska_renderer_queue_directional_light_draw(SkaDirectionalLightQueueProps props) {
-    SKA_ASSERT(lightBatchItems.directionalLightCount < SKA_RENDER_DIRECTIONAL_LIGHT_MAX);
+    SKA_ASSERT(light_batch_items.directional_light_count < SKA_RENDER_DIRECTIONAL_LIGHT_MAX);
     DirectionalLightBatchItem item;
     item.direction = props.direction;
     item.ambient = props.ambient;
     item.diffuse = props.diffuse;
     item.specular = props.specular;
-    lightBatchItems.directionalLights[lightBatchItems.directionalLightCount++] = item;
+    light_batch_items.directional_lights[light_batch_items.directional_light_count++] = item;
 }
 
 void ska_renderer_queue_point_light_draw(SkaPointLightQueueProps props) {
-    SKA_ASSERT(lightBatchItems.pointLightCount < SKA_RENDER_POINT_LIGHT_MAX);
+    SKA_ASSERT(light_batch_items.point_light_count < SKA_RENDER_POINT_LIGHT_MAX);
     PointLightDrawBatchItem item = {
         .position = props.position,
         .scale = props.scale,
@@ -228,11 +272,11 @@ void ska_renderer_queue_point_light_draw(SkaPointLightQueueProps props) {
         .quadratic = props.quadratic,
         .constant = props.constant
     };
-    lightBatchItems.pointLights[lightBatchItems.pointLightCount++] = item;
+    light_batch_items.point_lights[light_batch_items.point_light_count++] = item;
 }
 
 void ska_renderer_queue_spot_light_draw(SkaSpotLightQueueProps props) {
-    SKA_ASSERT(lightBatchItems.spotLightCount < SKA_RENDER_SPOT_LIGHT_MAX);
+    SKA_ASSERT(light_batch_items.spot_light_count < SKA_RENDER_SPOT_LIGHT_MAX);
     const SpotLightDrawBatchItem item = {
         .position = props.position,
         .direction = props.direction,
@@ -242,132 +286,151 @@ void ska_renderer_queue_spot_light_draw(SkaSpotLightQueueProps props) {
         .linear = props.linear,
         .quadratic = props.quadratic,
         .constant = props.constant,
-        .isAttachedToCamera = props.isAttachedToCamera,
+        .is_attached_to_camera = props.is_attached_to_camera,
         .cutoff = props.cutoff,
-        .outerCutoff = props.outerCutoff
+        .outer_cutoff = props.outer_cutoff
     };
-    lightBatchItems.spotLights[lightBatchItems.spotLightCount++] = item;
+    light_batch_items.spot_lights[light_batch_items.spot_light_count++] = item;
 }
 
-void renderer_batching_draw_meshes(MeshBatchItem items[], usize meshCount) {
+void ska_renderer_queue_debug_line_draw(SkaVector3 from, SkaVector3 to, SkaColor color) {
+    if (debug_line_batch_vertex_count + 2 > SKA_RENDER_DEBUG_LINE_MAX * 2) {
+        ska_logger_error("Debug line batch full, not submitting line draw!");
+        return;
+    }
+    debug_line_batch_items[debug_line_batch_vertex_count++] = (DebugLineVertex){ .position = from, .color = color };
+    debug_line_batch_items[debug_line_batch_vertex_count++] = (DebugLineVertex){ .position = to, .color = color };
+}
+
+void renderer_batching_draw_meshes(MeshBatchItem items[], usize mesh_count) {
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
 
-    for (usize i = 0; i < meshCount; i++) {
+    for (usize i = 0; i < mesh_count; i++) {
         MeshBatchItem* item = &items[i];
+
+        // Set explicitly every draw since items in the same batch can have different cull modes.
+        if (item->cull_mode == SkaRenderCullMode_NONE) {
+            glDisable(GL_CULL_FACE);
+        } else {
+            glEnable(GL_CULL_FACE);
+            glCullFace(item->cull_mode == SkaRenderCullMode_FRONT ? GL_FRONT : GL_BACK);
+        }
 
         // Use shader
         // TODO: Can group setting shader uniform when they have the same instance
-        SkaShader* shader = item->shaderInstance ? item->shaderInstance->shader : meshShader;
+        SkaShader* shader = item->shader_instance ? item->shader_instance->shader : mesh_shader;
         ska_shader_use(shader);
 
         // Set matrices
-        ska_shader_set_mat4_float(shader, "model", &item->modelMatrix);
-        ska_shader_set_mat4_float(shader, "view", &viewMatrix);
-        ska_shader_set_mat4_float(shader, "projection", &projectionMatrix);
-        ska_shader_set_vec3_float(shader, "viewPos", currentCamera3D.position.x, currentCamera3D.position.y, currentCamera3D.position.z);
-        ska_shader_set_int(shader, "numberOfDirectionalLights", (int32)lightBatchItems.directionalLightCount);
-        ska_shader_set_int(shader, "numberOfPointLights", (int32)lightBatchItems.pointLightCount);
-        ska_shader_set_int(shader, "numberOfSpotLights", (int32)lightBatchItems.spotLightCount);
+        ska_shader_set_mat4_float(shader, "model", &item->model_matrix);
+        ska_shader_set_mat4_float(shader, "view", &view_matrix);
+        ska_shader_set_mat4_float(shader, "projection", &projection_matrix);
+        ska_shader_set_vec3_float(shader, "viewPos", current_camera3_d.position.x, current_camera3_d.position.y, current_camera3_d.position.z);
+        ska_shader_set_int(shader, "numberOfDirectionalLights", (int32)light_batch_items.directional_light_count);
+        ska_shader_set_int(shader, "numberOfPointLights", (int32)light_batch_items.point_light_count);
+        ska_shader_set_int(shader, "numberOfSpotLights", (int32)light_batch_items.spot_light_count);
         ska_shader_set_int(shader, "material.diffuse", 0);
         ska_shader_set_int(shader, "material.specular", 1);
         ska_shader_set_float(shader, "material.shininess", 0.8f);
+        // Harmless no-op on custom shader_instances: unknown uniform locations are silently ignored.
+        ska_shader_set_vec4_float(shader, "tintColor", item->tint.r, item->tint.g, item->tint.b, item->tint.a);
 
         // Lights
         // TODO: Can batch lights once we make sure all meshes in batch have the same shader instance
 
         // Directional Lights
-        for (usize dirIdx = 0; dirIdx < lightBatchItems.directionalLightCount; dirIdx++) {
-            char uniformName[128];
-            const DirectionalLightBatchItem* dirLight = &lightBatchItems.directionalLights[dirIdx];
+        for (usize dir_idx = 0; dir_idx < light_batch_items.directional_light_count; dir_idx++) {
+            char uniform_name[128];
+            const DirectionalLightBatchItem* dir_light = &light_batch_items.directional_lights[dir_idx];
 
-            snprintf(uniformName, sizeof(uniformName), "directionalLights[%zu].direction", dirIdx);
-            ska_shader_set_vec3_float(shader, uniformName, dirLight->direction.x, dirLight->direction.y, dirLight->direction.z);
+            snprintf(uniform_name, sizeof(uniform_name), "directionalLights[%zu].direction", dir_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, dir_light->direction.x, dir_light->direction.y, dir_light->direction.z);
 
-            snprintf(uniformName, sizeof(uniformName), "directionalLights[%zu].ambient", dirIdx);
-            ska_shader_set_vec3_float(shader, uniformName, dirLight->ambient.x, dirLight->ambient.y, dirLight->ambient.z);
+            snprintf(uniform_name, sizeof(uniform_name), "directionalLights[%zu].ambient", dir_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, dir_light->ambient.x, dir_light->ambient.y, dir_light->ambient.z);
 
-            snprintf(uniformName, sizeof(uniformName), "directionalLights[%zu].diffuse", dirIdx);
-            ska_shader_set_vec3_float(shader, uniformName, dirLight->diffuse.x, dirLight->diffuse.y, dirLight->diffuse.z);
+            snprintf(uniform_name, sizeof(uniform_name), "directionalLights[%zu].diffuse", dir_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, dir_light->diffuse.x, dir_light->diffuse.y, dir_light->diffuse.z);
 
-            snprintf(uniformName, sizeof(uniformName), "directionalLights[%zu].specular", dirIdx);
-            ska_shader_set_vec3_float(shader, uniformName, dirLight->specular.x, dirLight->specular.y, dirLight->specular.z);
+            snprintf(uniform_name, sizeof(uniform_name), "directionalLights[%zu].specular", dir_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, dir_light->specular.x, dir_light->specular.y, dir_light->specular.z);
         }
 
         // Point Lights
-        for (usize pointIdx = 0; pointIdx < lightBatchItems.pointLightCount; pointIdx++) {
-            char uniformName[128];
-            const PointLightDrawBatchItem* pointLight = &lightBatchItems.pointLights[pointIdx];
+        for (usize point_idx = 0; point_idx < light_batch_items.point_light_count; point_idx++) {
+            char uniform_name[128];
+            const PointLightDrawBatchItem* point_light = &light_batch_items.point_lights[point_idx];
 
-            snprintf(uniformName, sizeof(uniformName), "pointLights[%zu].position", pointIdx);
-            ska_shader_set_vec3_float(shader, uniformName, pointLight->position.x, pointLight->position.y, pointLight->position.z);
+            snprintf(uniform_name, sizeof(uniform_name), "pointLights[%zu].position", point_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, point_light->position.x, point_light->position.y, point_light->position.z);
 
-            snprintf(uniformName, sizeof(uniformName), "pointLights[%zu].ambient", pointIdx);
-            ska_shader_set_vec3_float(shader, uniformName, pointLight->ambient.x, pointLight->ambient.y, pointLight->ambient.z);
+            snprintf(uniform_name, sizeof(uniform_name), "pointLights[%zu].ambient", point_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, point_light->ambient.x, point_light->ambient.y, point_light->ambient.z);
 
-            snprintf(uniformName, sizeof(uniformName), "pointLights[%zu].diffuse", pointIdx);
-            ska_shader_set_vec3_float(shader, uniformName, pointLight->diffuse.x, pointLight->diffuse.y, pointLight->diffuse.z);
+            snprintf(uniform_name, sizeof(uniform_name), "pointLights[%zu].diffuse", point_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, point_light->diffuse.x, point_light->diffuse.y, point_light->diffuse.z);
 
-            snprintf(uniformName, sizeof(uniformName), "pointLights[%zu].specular", pointIdx);
-            ska_shader_set_vec3_float(shader, uniformName, pointLight->specular.x, pointLight->specular.y, pointLight->specular.z);
+            snprintf(uniform_name, sizeof(uniform_name), "pointLights[%zu].specular", point_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, point_light->specular.x, point_light->specular.y, point_light->specular.z);
 
-            snprintf(uniformName, sizeof(uniformName), "pointLights[%zu].constant", pointIdx);
-            ska_shader_set_float(shader, uniformName, pointLight->constant);
+            snprintf(uniform_name, sizeof(uniform_name), "pointLights[%zu].constant", point_idx);
+            ska_shader_set_float(shader, uniform_name, point_light->constant);
 
-            snprintf(uniformName, sizeof(uniformName), "pointLights[%zu].linear", pointIdx);
-            ska_shader_set_float(shader, uniformName, pointLight->linear);
+            snprintf(uniform_name, sizeof(uniform_name), "pointLights[%zu].linear", point_idx);
+            ska_shader_set_float(shader, uniform_name, point_light->linear);
 
-            snprintf(uniformName, sizeof(uniformName), "pointLights[%zu].quadratic", pointIdx);
-            ska_shader_set_float(shader, uniformName, pointLight->quadratic);
+            snprintf(uniform_name, sizeof(uniform_name), "pointLights[%zu].quadratic", point_idx);
+            ska_shader_set_float(shader, uniform_name, point_light->quadratic);
         }
 
         // Spot Lights
-        for (usize spotIdx = 0; spotIdx < lightBatchItems.spotLightCount; spotIdx++) {
-            char uniformName[128];
-            const SpotLightDrawBatchItem* spotLight = &lightBatchItems.spotLights[spotIdx];
-            SkaVector3 spotLightPosition = spotLight->position;
-            SkaVector3 spotLightDirection = spotLight->direction;
+        for (usize spot_idx = 0; spot_idx < light_batch_items.spot_light_count; spot_idx++) {
+            char uniform_name[128];
+            const SpotLightDrawBatchItem* spot_light = &light_batch_items.spot_lights[spot_idx];
+            SkaVector3 spot_light_position = spot_light->position;
+            SkaVector3 spot_light_direction = spot_light->direction;
 
             // TODO: temp work around, implement in system
-            if (spotLight->isAttachedToCamera) {
-                spotLightPosition = currentCamera3D.position;
-                spotLightDirection = currentCamera3D.front;
+            if (spot_light->is_attached_to_camera) {
+                spot_light_position = current_camera3_d.position;
+                spot_light_direction = current_camera3_d.front;
             }
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].position", spotIdx);
-            ska_shader_set_vec3_float(shader, uniformName, spotLightPosition.x, spotLightPosition.y, spotLightPosition.z);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].position", spot_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, spot_light_position.x, spot_light_position.y, spot_light_position.z);
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].direction", spotIdx);
-            ska_shader_set_vec3_float(shader, uniformName, spotLightDirection.x, spotLightDirection.y, spotLightDirection.z);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].direction", spot_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, spot_light_direction.x, spot_light_direction.y, spot_light_direction.z);
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].ambient", spotIdx);
-            ska_shader_set_vec3_float(shader, uniformName, spotLight->ambient.x, spotLight->ambient.y, spotLight->ambient.z);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].ambient", spot_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, spot_light->ambient.x, spot_light->ambient.y, spot_light->ambient.z);
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].diffuse", spotIdx);
-            ska_shader_set_vec3_float(shader, uniformName, spotLight->diffuse.x, spotLight->diffuse.y, spotLight->diffuse.z);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].diffuse", spot_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, spot_light->diffuse.x, spot_light->diffuse.y, spot_light->diffuse.z);
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].specular", spotIdx);
-            ska_shader_set_vec3_float(shader, uniformName, spotLight->specular.x, spotLight->specular.y, spotLight->specular.z);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].specular", spot_idx);
+            ska_shader_set_vec3_float(shader, uniform_name, spot_light->specular.x, spot_light->specular.y, spot_light->specular.z);
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].constant", spotIdx);
-            ska_shader_set_float(shader, uniformName, spotLight->constant);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].constant", spot_idx);
+            ska_shader_set_float(shader, uniform_name, spot_light->constant);
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].linear", spotIdx);
-            ska_shader_set_float(shader, uniformName, spotLight->linear);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].linear", spot_idx);
+            ska_shader_set_float(shader, uniform_name, spot_light->linear);
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].quadratic", spotIdx);
-            ska_shader_set_float(shader, uniformName, spotLight->quadratic);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].quadratic", spot_idx);
+            ska_shader_set_float(shader, uniform_name, spot_light->quadratic);
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].cutOff", spotIdx);
-            ska_shader_set_float(shader, uniformName, spotLight->cutoff);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].cutOff", spot_idx);
+            ska_shader_set_float(shader, uniform_name, spot_light->cutoff);
 
-            snprintf(uniformName, sizeof(uniformName), "spotLights[%zu].outerCutOff", spotIdx);
-            ska_shader_set_float(shader, uniformName, spotLight->outerCutoff);
+            snprintf(uniform_name, sizeof(uniform_name), "spotLights[%zu].outerCutOff", spot_idx);
+            ska_shader_set_float(shader, uniform_name, spot_light->outer_cutoff);
         }
 
         // Set shader instance params if available
-        if (item->shaderInstance) {
-            ska_renderer_set_shader_instance_params(item->shaderInstance);
+        if (item->shader_instance) {
+            ska_renderer_set_shader_instance_params(item->shader_instance);
         }
 
         // bind diffuse map
@@ -390,10 +453,11 @@ void renderer_batching_draw_meshes(MeshBatchItem items[], usize meshCount) {
         glBindVertexArray(item->mesh->vao);
         glBindBuffer(GL_ARRAY_BUFFER, item->mesh->vbo);
 
-        if (item->mesh->hasIndices) {
-            glDrawElements(GL_TRIANGLES, (GLsizei)item->mesh->indexCount, GL_UNSIGNED_INT, 0);
+        if (item->mesh->has_indices) {
+          glDrawElements(GL_TRIANGLES, (GLsizei)item->mesh->index_count,
+                         GL_UNSIGNED_INT, 0);
         } else {
-            glDrawArrays(GL_TRIANGLES, 0, (GLsizei)item->mesh->vertexCount);
+          glDrawArrays(GL_TRIANGLES, 0, (GLsizei)item->mesh->vertex_count);
         }
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -404,27 +468,41 @@ void renderer_batching_draw_meshes(MeshBatchItem items[], usize meshCount) {
 }
 
 void renderer_draw_queued_pointLights() {
-    ska_shader_use(pointLightShader);
-    ska_shader_set_mat4_float(pointLightShader, "projection", &projectionMatrix);
-    ska_shader_set_mat4_float(pointLightShader, "view", &viewMatrix);
+    ska_shader_use(point_light_shader);
+    ska_shader_set_mat4_float(point_light_shader, "projection", &projection_matrix);
+    ska_shader_set_mat4_float(point_light_shader, "view", &view_matrix);
 
-    glBindVertexArray(pointLightVAO);
-    for (usize i = 0; i < lightBatchItems.pointLightCount; i++) {
-        const PointLightDrawBatchItem* item = &lightBatchItems.pointLights[i];
+    glBindVertexArray(point_light_vao);
+    for (usize i = 0; i < light_batch_items.point_light_count; i++) {
+        const PointLightDrawBatchItem* item = &light_batch_items.point_lights[i];
         SkaMatrix4 model = SKA_MATRIX4_IDENTITY;
         ska_matrix4_translate(&model, item->position);
         ska_matrix4_scale(&model, item->scale);
-        ska_shader_set_mat4_float(pointLightShader, "model", &model);
+        ska_shader_set_mat4_float(point_light_shader, "model", &model);
         glDrawArrays(GL_TRIANGLES, 0, 36);
     }
 }
 
 void ska_renderer_set_camera_position(SkaVector3 position) {
-    currentCamera3D.position = position;
+    current_camera3_d.position = position;
+}
+
+void ska_renderer_set_camera_rotation(SkaVector3 rotation) {
+    current_camera3_d.rotation = rotation;
+    // Yaw measured from -Z (not +X) so (0,0,0) matches the default front vector; already unit length.
+    const f32 yaw_rad = SKA_DEG_2_RADF(rotation.y);
+    const f32 pitch_rad = SKA_DEG_2_RADF(rotation.x);
+    current_camera3_d.front.x = sinf(yaw_rad) * cosf(pitch_rad);
+    current_camera3_d.front.y = sinf(pitch_rad);
+    current_camera3_d.front.z = -cosf(yaw_rad) * cosf(pitch_rad);
+}
+
+void ska_renderer_set_camera_fov(f32 fov_degrees) {
+    current_camera3_d.fov = fov_degrees;
 }
 
 SkaCamera3D* ska_renderer_get_active_camera() {
-    return &currentCamera3D;
+    return &current_camera3_d;
 }
 
 void ska_renderer_get_camera_view_matrix(const SkaCamera3D* camera, SkaMatrix4* matrix4) {
@@ -437,24 +515,44 @@ void ska_renderer_get_camera_view_matrix(const SkaCamera3D* camera, SkaMatrix4* 
 
 void ska_renderer_get_camera_projection_matrix(const SkaCamera3D* camera, SkaMatrix4* matrix4) {
     const SkaSize2Di resolution = ska_render_context_get()->resolution;
-    const f32 aspectRatio = (f32)resolution.w / (f32)resolution.h;
-    *matrix4 = ska_matrix4_perspective(SKA_DEG_2_RADF(camera->fov), aspectRatio, camera->nearPlane, camera->farPlane);
+    const f32 aspect_ratio = (f32)resolution.w / (f32)resolution.h;
+    *matrix4 = ska_matrix4_perspective(SKA_DEG_2_RADF(camera->fov), aspect_ratio, camera->near_plane, camera->far_plane);
 }
 
 void ska_renderer_flush_meshes() {
     // ska_renderer_get_camera_projection_matrix(ska_renderer_get_active_camera(), &projectionMatrix);
     // ska_renderer_get_camera_view_matrix(ska_renderer_get_active_camera(), &viewMatrix);
-    if (meshBatchItemCount == 0) return;
+    if (mesh_batch_item_count == 0) return;
 
-    renderer_batching_draw_meshes(meshBatchItems, meshBatchItemCount);
-    meshBatchItemCount = 0;
+    renderer_batching_draw_meshes(mesh_batch_items, mesh_batch_item_count);
+    mesh_batch_item_count = 0;
 }
 
 void ska_renderer_flush_lights() {
     renderer_draw_queued_pointLights();
-    lightBatchItems.directionalLightCount = 0;
-    lightBatchItems.pointLightCount = 0;
-    lightBatchItems.spotLightCount = 0;
+    light_batch_items.directional_light_count = 0;
+    light_batch_items.point_light_count = 0;
+    light_batch_items.spot_light_count = 0;
+}
+
+void ska_renderer_flush_debug_lines() {
+    if (debug_line_batch_vertex_count == 0) {
+        return;
+    }
+
+    ska_shader_use(debug_line_shader);
+    ska_shader_set_mat4_float(debug_line_shader, "view", &view_matrix);
+    ska_shader_set_mat4_float(debug_line_shader, "projection", &projection_matrix);
+
+    glBindVertexArray(debug_line_vao);
+    glBindBuffer(GL_ARRAY_BUFFER, debug_line_vbo);
+    // glBufferSubData, not glBufferData: VBO already sized to max at init, no need to reallocate.
+    glBufferSubData(GL_ARRAY_BUFFER, 0, (GLsizeiptr)(debug_line_batch_vertex_count * sizeof(DebugLineVertex)), debug_line_batch_items);
+    glDrawArrays(GL_LINES, 0, (GLsizei)debug_line_batch_vertex_count);
+    glBindVertexArray(0);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    debug_line_batch_vertex_count = 0;
 }
 
 #endif // #if SKA_RENDERING

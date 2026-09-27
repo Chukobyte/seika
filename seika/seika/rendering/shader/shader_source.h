@@ -1,9 +1,20 @@
 #pragma once
 
+// GLSL 330 core isn't valid under GLES -- Android/Emscripten need "#version 300 es" plus mandatory
+// fragment-shader precision qualifiers (vertex shaders default float/int to highp already, so
+// precision is only added to the fragment macro).
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_EMSCRIPTEN)
+#define SKA_GLSL_VERSION_VERTEX   "#version 300 es\n"
+#define SKA_GLSL_VERSION_FRAGMENT "#version 300 es\n" "precision mediump float;\n" "precision mediump sampler2D;\n"
+#else
+#define SKA_GLSL_VERSION_VERTEX   "#version 330 core\n"
+#define SKA_GLSL_VERSION_FRAGMENT "#version 330 core\n"
+#endif
+
 #if SKA_RENDERING
 
-static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_SPRITE =
-    "#version 330 core\n"
+static const char* ska_opengl_shader_source_vertex_sprite =
+    SKA_GLSL_VERSION_VERTEX
     "\n"
     "layout (location = 0) in float ID;\n"
     "layout (location = 1) in vec2 CRE_VERTEX;\n"
@@ -15,7 +26,13 @@ static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_SPRITE =
     "out vec4 TEXTURE_MODULATE;\n"
     "out float USING_NEAREST_NEIGHBOR;\n"
     "\n"
-    "uniform float TIME;\n"
+    // Explicit highp: GLSL ES vertex shaders default float to highp, but the fragment shaders
+    // here set "precision mediump float" globally -- without an explicit qualifier, TIME ends up
+    // highp in one stage and mediump in the other, which strict GLES/WebGL linkers (unlike
+    // desktop GL) reject with "not linkable between attached shaders". highp is also just the
+    // correct precision for a monotonically-increasing time value regardless -- mediump risks
+    // visible precision loss/jitter the longer the app has been running.
+    "uniform highp float TIME;\n"
     "uniform sampler2D TEXTURE;\n"
     "uniform mat4 CRE_MODELS[100];\n"
     "uniform mat4 CRE_PROJECTION;\n"
@@ -34,8 +51,8 @@ static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_SPRITE =
     "    gl_Position = CRE_PROJECTION * CRE_MODELS[CRE_SPRITE_INT_ID] * vec4(VERTEX, 0.0f, 1.0f);\n"
     "}\n";
 
-static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SPRITE =
-    "#version 330 core\n"
+static const char* ska_opengl_shader_source_fragment_sprite =
+    SKA_GLSL_VERSION_FRAGMENT
     "\n"
     "in vec2 UV;\n"
     "in vec4 TEXTURE_MODULATE;\n"
@@ -43,7 +60,13 @@ static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SPRITE =
     "\n"
     "out vec4 COLOR;\n"
     "\n"
-    "uniform float TIME;\n"
+    // Explicit highp: GLSL ES vertex shaders default float to highp, but the fragment shaders
+    // here set "precision mediump float" globally -- without an explicit qualifier, TIME ends up
+    // highp in one stage and mediump in the other, which strict GLES/WebGL linkers (unlike
+    // desktop GL) reject with "not linkable between attached shaders". highp is also just the
+    // correct precision for a monotonically-increasing time value regardless -- mediump risks
+    // visible precision loss/jitter the longer the app has been running.
+    "uniform highp float TIME;\n"
     "uniform sampler2D TEXTURE;\n"
     "\n"
     "//@@UNIFORMS\n"
@@ -59,14 +82,14 @@ static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SPRITE =
     "//@@FUNCTIONS\n"
     "\n"
     "void main() {\n"
-    "    vec2 TEXTURE_SIZE = textureSize(TEXTURE, 0);\n"
+    "    vec2 TEXTURE_SIZE = vec2(textureSize(TEXTURE, 0));\n"
     "    vec2 CRE_SPRITE_UV = mix(UV, CRE_APPLY_NEAREST_NEIGHBOR(UV, TEXTURE_SIZE), USING_NEAREST_NEIGHBOR);\n"
     "    COLOR = TEXTURE_MODULATE * texture(TEXTURE, CRE_SPRITE_UV);\n"
     "    //@@fragment()\n"
     "}\n";
 
-static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_FONT =
-    "#version 330 core\n"
+static const char* ska_opengl_shader_source_vertex_font =
+    SKA_GLSL_VERSION_VERTEX
     "layout (location = 0) in vec4 vertex; // (pos, tex)\n"
     "\n"
     "out vec2 texCoords;\n"
@@ -78,8 +101,8 @@ static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_FONT =
     "    texCoords = vertex.zw;\n"
     "}\n";
 
-static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_FONT =
-    "#version 330 core\n"
+static const char* ska_opengl_shader_source_fragment_font =
+    SKA_GLSL_VERSION_FRAGMENT
     "in vec2 texCoords;\n"
     "out vec4 color;\n"
     "\n"
@@ -91,14 +114,20 @@ static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_FONT =
     "    color = textColor * sampled;\n"
     "}\n";
 
-static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_SCREEN =
-    "#version 330 core\n"
+static const char* ska_opengl_shader_source_vertex_screen =
+    SKA_GLSL_VERSION_VERTEX
     "layout (location = 0) in vec2 CRE_VERTEX;\n"
     "layout (location = 1) in vec2 CRE_TEXTURE_COORDS;\n"
     "\n"
     "out vec2 UV;\n"
     "\n"
-    "uniform float TIME;\n"
+    // Explicit highp: GLSL ES vertex shaders default float to highp, but the fragment shaders
+    // here set "precision mediump float" globally -- without an explicit qualifier, TIME ends up
+    // highp in one stage and mediump in the other, which strict GLES/WebGL linkers (unlike
+    // desktop GL) reject with "not linkable between attached shaders". highp is also just the
+    // correct precision for a monotonically-increasing time value regardless -- mediump risks
+    // visible precision loss/jitter the longer the app has been running.
+    "uniform highp float TIME;\n"
     "uniform sampler2D TEXTURE;\n"
     "\n"
     "//@@UNIFORMS\n"
@@ -112,13 +141,19 @@ static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_SCREEN =
     "    gl_Position = vec4(VERTEX, 0.0f, 1.0f);\n"
     "}\n";
 
-static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SCREEN =
-    "#version 330 core\n"
+static const char* ska_opengl_shader_source_fragment_screen =
+    SKA_GLSL_VERSION_FRAGMENT
     "out vec4 COLOR;\n"
     "\n"
     "in vec2 UV;\n"
     "\n"
-    "uniform float TIME;\n"
+    // Explicit highp: GLSL ES vertex shaders default float to highp, but the fragment shaders
+    // here set "precision mediump float" globally -- without an explicit qualifier, TIME ends up
+    // highp in one stage and mediump in the other, which strict GLES/WebGL linkers (unlike
+    // desktop GL) reject with "not linkable between attached shaders". highp is also just the
+    // correct precision for a monotonically-increasing time value regardless -- mediump risks
+    // visible precision loss/jitter the longer the app has been running.
+    "uniform highp float TIME;\n"
     "uniform sampler2D TEXTURE;\n"
     "\n"
     "//@@UNIFORMS\n"
@@ -132,8 +167,8 @@ static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_SCREEN =
 
 #endif // #if SKA_RENDERING
 
-static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_MESH =
-    "#version 330 core\n"
+static const char* ska_opengl_shader_source_vertex_mesh =
+    SKA_GLSL_VERSION_VERTEX
     "layout (location = 0) in vec3 aPos;\n"
     "layout (location = 1) in vec3 aNormal;\n"
     "layout (location = 2) in vec2 aTexCoords;\n"
@@ -153,8 +188,8 @@ static const char* SKA_OPENGL_SHADER_SOURCE_VERTEX_MESH =
     "    gl_Position = projection * view * vec4(FragPos, 1.0);\n"
     "}\n";
 
-static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_MESH =
-    "#version 330 core\n"
+static const char* ska_opengl_shader_source_fragment_mesh =
+    SKA_GLSL_VERSION_FRAGMENT
     "out vec4 FragColor;\n"
     "\n"
     "struct Material {\n"
@@ -214,6 +249,10 @@ static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_MESH =
     "uniform SpotLight spotLights[MAX_SPOT_LIGHTS];\n"
     "uniform int numberOfSpotLights;\n"
     "uniform Material material;\n"
+    // Multiplies the lit result -- defaults to opaque white (a no-op) for existing callers that
+    // never set it (ska_renderer_queue_mesh_draw/_ex). Lets ska_renderer_queue_mesh_draw_tinted
+    // tint a plain diffuse texture (e.g. a solid-color one) without needing a dedicated shader.
+    "uniform vec4 tintColor;\n"
     "\n"
     "// function prototypes\n"
     "vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir);\n"
@@ -245,7 +284,7 @@ static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_MESH =
     "        result += CalcSpotLight(spotLights[i], norm, FragPos, viewDir);\n"
     "    }\n"
     "\n"
-    "    FragColor = vec4(result, 1.0);\n"
+    "    FragColor = vec4(result * tintColor.rgb, tintColor.a);\n"
     "}\n"
     "\n"
     "// calculates the color when using a directional light.\n"
@@ -309,8 +348,8 @@ static const char* SKA_OPENGL_SHADER_SOURCE_FRAGMENT_MESH =
     "    return (ambient + diffuse + specular);\n"
     "}\n";
 
-static const char* OPENGL_SHADER_SOURCE_POINT_LIGHT_VERTEX =
-    "#version 330 core\n"
+static const char* opengl_shader_source_point_light_vertex =
+    SKA_GLSL_VERSION_VERTEX
     "layout (location = 0) in vec3 aPos;\n"
     "\n"
     "uniform mat4 model;\n"
@@ -321,10 +360,39 @@ static const char* OPENGL_SHADER_SOURCE_POINT_LIGHT_VERTEX =
     "    gl_Position = projection * view * model * vec4(aPos, 1.0);\n"
     "}\n";
 
-static const char* OPENGL_SHADER_SOURCE_POINT_LIGHT_FRAGMENT =
-    "#version 330 core\n"
+static const char* opengl_shader_source_point_light_fragment =
+    SKA_GLSL_VERSION_FRAGMENT
     "out vec4 FragColor;\n"
     "\n"
     "void main() {\n"
     "    FragColor = vec4(1.0); // set alle 4 vector values to 1.0\n"
+    "}\n";
+
+// Debug line batch: positions are already world-space (callers build line endpoints on the
+// CPU), so no model matrix - just view/projection, matching how e.g. chunk meshes already bake
+// their own world transform ahead of the draw. Per-vertex color (not a single uniform) so one
+// batched draw call can mix differently-colored line segments.
+static const char* opengl_shader_source_debug_line_vertex =
+    SKA_GLSL_VERSION_VERTEX
+    "layout (location = 0) in vec3 aPos;\n"
+    "layout (location = 1) in vec4 aColor;\n"
+    "\n"
+    "out vec4 LineColor;\n"
+    "\n"
+    "uniform mat4 view;\n"
+    "uniform mat4 projection;\n"
+    "\n"
+    "void main() {\n"
+    "    LineColor = aColor;\n"
+    "    gl_Position = projection * view * vec4(aPos, 1.0);\n"
+    "}\n";
+
+static const char* opengl_shader_source_debug_line_fragment =
+    SKA_GLSL_VERSION_FRAGMENT
+    "out vec4 FragColor;\n"
+    "\n"
+    "in vec4 LineColor;\n"
+    "\n"
+    "void main() {\n"
+    "    FragColor = LineColor;\n"
     "}\n";

@@ -13,7 +13,8 @@
 // TODO: We'll do some sort of init first
 
 void ska_timer_start(SkaTimer* timer) {
-    if (timer->hasStarted) return;
+  if (timer->has_started)
+    return;
 #if defined(PLATFORM_WINDOWS)
     QueryPerformanceFrequency(&timer->frequency);
     QueryPerformanceCounter(&timer->start);
@@ -22,13 +23,14 @@ void ska_timer_start(SkaTimer* timer) {
 #else
     clock_gettime(CLOCK_MONOTONIC, &timer->start);
 #endif
-    timer->hasStarted = true;
+    timer->has_started = true;
 }
 
 // TODO: Implement
 void ska_timer_stop(SkaTimer* timer) {
-    if (!timer->hasStarted) return;
-    timer->hasStarted = false;
+  if (!timer->has_started)
+    return;
+  timer->has_started = false;
 }
 
 // Get milliseconds since timer started
@@ -51,9 +53,9 @@ uint64 ska_timer_get_time(const SkaTimer* timer) {
 }
 
 uint64 ska_timer_get_global_time() {
-    static SkaTimer globalTimer = {0};
-    ska_timer_start(&globalTimer); // Initialize global timer if needed
-    return ska_timer_get_time(&globalTimer);
+  static SkaTimer global_timer = {0};
+  ska_timer_start(&global_timer); // Initialize global timer if needed
+  return ska_timer_get_time(&global_timer);
 }
 
 void ska_delay(uint32 milliseconds) {
@@ -90,10 +92,10 @@ void ska_delay_us(uint32 us) {
         QueryPerformanceFrequency(&frequency);
         QueryPerformanceCounter(&start);
 
-        uint64 targetTicks = (us * frequency.QuadPart) / 1000000;
+        uint64 target_ticks = (us * frequency.QuadPart) / 1000000;
         do {
             QueryPerformanceCounter(&now);
-        } while ((now.QuadPart - start.QuadPart) < (LONGLONG)targetTicks);
+        } while ((now.QuadPart - start.QuadPart) < (LONGLONG)target_ticks);
     } else {
         Sleep(us / 1000);
     }

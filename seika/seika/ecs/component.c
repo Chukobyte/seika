@@ -2,113 +2,126 @@
 
 #include "component.h"
 
+#include <string.h>
+
 #include "seika/string.h"
 #include "seika/memory.h"
 #include "seika/assert.h"
-#include "seika/data_structures/hash_map_string.h"
+#include "seika/flag_utils.h"
 #include "seika/data_structures/array_list.h"
+#include "seika/data_structures/array_list_template.h"
+#include "seika/data_structures/hash_map_template.h"
 
-//--- Component ---//
-static SkaComponentIndex globalComponentIndex = 0;
-static SkaStringHashMap* componentNameToTypeMap = NULL;
+//--- Typed containers ---//
+SKA_ARRAY_LIST_DECLARE(SkaComponentSignatureList, SkaComponentType)
+SKA_ARRAY_LIST_IMPLEMENT(SkaComponentSignatureList, SkaComponentType)
 
-const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, usize componentSize) {
-    SKA_ASSERT_FMT(globalComponentIndex + 1 < SKA_ECS_MAX_COMPONENTS, "Over the maximum allowed components which are '%d'", SKA_ECS_MAX_COMPONENTS);
-    // Check if component already exists and return that index if it does
-    const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)ska_string_hash_map_get(componentNameToTypeMap, name);
-    if (typeInfo) {
-        return typeInfo;
+SKA_HASH_MAP_DECLARE(ComponentTypeInfoMap, const char*, SkaComponentTypeInfo)
+SKA_HASH_MAP_IMPLEMENT(ComponentTypeInfoMap, const char*, SkaComponentTypeInfo)
+
+static usize component_type_name_hash(const char* const* key) {
+    usize hash = 5381;
+    for (const unsigned char* byte = (const unsigned char*)*key; *byte != '\0'; byte++) {
+        hash = ((hash << 5) + hash) ^ *byte;
     }
-    // Add new type info for component
-    const SkaComponentIndex newTypeIndex = globalComponentIndex++;
-    const SkaComponentTypeInfo newTypeInfo = {
-        .name = ska_strdup(name),
-        .type = 1 << newTypeIndex, // Bitshift for flag assignment
-        .index = newTypeIndex,
-        .size = componentSize
-    };
-    ska_string_hash_map_add(componentNameToTypeMap, name, &newTypeInfo, sizeof(SkaComponentTypeInfo));
-    return ska_ecs_component_get_type_info(name, componentSize);
+    return hash;
 }
 
-const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, usize componentSize) {
-    const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)ska_string_hash_map_get(componentNameToTypeMap, name);
-    SKA_ASSERT(typeInfo);
-    SKA_ASSERT(typeInfo->size == componentSize);
-    return typeInfo;
-}
-
-const SkaComponentTypeInfo* ska_ecs_component_find_type_info(const char* name) {
-    const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)ska_string_hash_map_get(componentNameToTypeMap, name);
-    return typeInfo;
-}
-
-SkaComponentType ska_ecs_component_get_type_flag(const char* name, usize componentSize) {
-    const SkaComponentTypeInfo* typeInfo = ska_ecs_component_get_type_info(name, componentSize);
-    return typeInfo->type;
-}
-
-//--- Component Array ---//
-typedef struct ComponentArray {
-    void* components[SKA_ECS_MAX_COMPONENTS];
-    SkaComponentType signature;
-} ComponentArray;
-
-static bool component_array_has_component(ComponentArray* componentArray, SkaComponentIndex index) {
-    return componentArray->components[index] == NULL ? false : true;
-}
-
-static void* component_array_get_component(ComponentArray* componentArray, SkaComponentIndex index) {
-    return componentArray->components[index];
-}
-
-static void component_array_set_component(ComponentArray* componentArray, SkaComponentIndex index, void* component) {
-    componentArray->components[index] = component;
-}
-
-static void component_array_remove_component(ComponentArray* componentArray, SkaComponentIndex index) {
-    SKA_FREE(componentArray->components[index]);
-    componentArray->components[index] = NULL;
-}
-
-static void component_array_remove_all_components(ComponentArray* componentArray) {
-    for (usize i = 0; i < SKA_ECS_MAX_COMPONENTS; i++) {
-        component_array_remove_component(componentArray, (SkaComponentIndex)i);
-    }
-    componentArray->signature = SKA_ECS_COMPONENT_TYPE_NONE;
+static int32 component_type_name_compare(const char* const* a, const char* const* b) {
+    return strcmp(*a, *b);
 }
 
 //--- Component Manager ---//
+// SoA storage: one contiguous, entity-indexed pool per component type. Pools are byte-generic
+// since component types are registered dynamically at runtime (by name + size), so the engine
+// can't know their concrete C types at compile time. The signature list's element type is known
+// at compile time, so it uses the typed template container instead.
 typedef struct ComponentManager {
-    SkaArrayList componentArrays;
+    SkaArrayList pools[SKA_ECS_MAX_COMPONENTS];
+    SkaComponentSignatureList signatures;
 } ComponentManager;
 
-static ComponentManager componentManager = { .componentArrays = {{0}} };
+static ComponentManager component_manager = {0};
 
-static SkaComponentType component_manager_translate_index_to_type(SkaComponentIndex index);
+static void component_manager_init_pool(SkaComponentIndex index, usize component_size) {
+    component_manager.pools[index] = ska_array_list_init(component_size, 16);
+}
+
+//--- Component ---//
+static SkaComponentIndex global_component_index = 0;
+static ComponentTypeInfoMap* component_name_to_type_map = NULL;
+// Caches populated once per type at registration, for O(1) index -> type/name lookups
+static SkaComponentType type_by_index[SKA_ECS_MAX_COMPONENTS];
+static const char* name_by_index[SKA_ECS_MAX_COMPONENTS];
+
+const SkaComponentTypeInfo* ska_ecs_component_register_type(const char* name, usize component_size) {
+    SKA_ASSERT_FMT(global_component_index + 1 < SKA_ECS_MAX_COMPONENTS, "Over the maximum allowed components which are '%d'", SKA_ECS_MAX_COMPONENTS);
+    // Check if component already exists and return that index if it does
+    const SkaComponentTypeInfo* type_info = ComponentTypeInfoMap_get(component_name_to_type_map, name);
+    if (type_info) {
+        return type_info;
+    }
+    // Add new type info for component
+    const SkaComponentIndex new_type_index = global_component_index++;
+    const SkaComponentTypeInfo new_type_info = {
+        .name = ska_strdup(name),
+        .type = 1 << new_type_index, // Bitshift for flag assignment
+        .index = new_type_index,
+        .size = component_size
+    };
+    type_by_index[new_type_index] = new_type_info.type;
+    name_by_index[new_type_index] = new_type_info.name;
+    // Key is the strdup'd name so its lifetime matches the entry (freed once, in finalize)
+    ComponentTypeInfoMap_add(component_name_to_type_map, new_type_info.name, new_type_info);
+    component_manager_init_pool(new_type_index, component_size);
+    return ComponentTypeInfoMap_get(component_name_to_type_map, name);
+}
+
+const SkaComponentTypeInfo* ska_ecs_component_get_type_info(const char* name, usize component_size) {
+    const SkaComponentTypeInfo* type_info = ComponentTypeInfoMap_get(component_name_to_type_map, name);
+    SKA_ASSERT(type_info);
+    SKA_ASSERT(type_info->size == component_size);
+    return type_info;
+}
+
+const SkaComponentTypeInfo* ska_ecs_component_find_type_info(const char* name) {
+    return ComponentTypeInfoMap_get(component_name_to_type_map, name);
+}
+
+SkaComponentType ska_ecs_component_get_type_flag(const char* name, usize component_size) {
+    const SkaComponentTypeInfo* type_info = ska_ecs_component_get_type_info(name, component_size);
+    return type_info->type;
+}
 
 void ska_ecs_component_manager_initialize() {
-    SKA_ASSERT(componentNameToTypeMap == NULL);
-    componentNameToTypeMap = ska_string_hash_map_create_default_capacity();
+    SKA_ASSERT(component_name_to_type_map == NULL);
+    component_name_to_type_map = ComponentTypeInfoMap_init(16);
+    component_name_to_type_map->hashFunc = component_type_name_hash;
+    component_name_to_type_map->compareFunc = component_type_name_compare;
 
-    componentManager.componentArrays = ska_array_list_init(sizeof(ComponentArray), 1000);
+    component_manager.signatures = SkaComponentSignatureList_init(1000);
 }
 
 // Assumes component data was already deleted previously
 void ska_ecs_component_manager_finalize() {
-    SKA_ASSERT(componentNameToTypeMap != NULL);
-    SKA_STRING_HASH_MAP_FOR_EACH(componentNameToTypeMap, iter) {
-        SkaStringHashMapNode* node = iter.pair;
-        SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)node->value;
-        if (typeInfo) {
-            SKA_FREE(typeInfo->name);
-        }
+    SKA_ASSERT(component_name_to_type_map != NULL);
+    SKA_HASH_MAP_T_FOR_EACH(component_name_to_type_map, ComponentTypeInfoMap, iter) {
+        SKA_FREE(iter.pair->value.name);
     }
-    ska_string_hash_map_deinit(componentNameToTypeMap);
-    componentNameToTypeMap = NULL;
-    globalComponentIndex = 0;
+    ComponentTypeInfoMap_deinit(component_name_to_type_map);
+    component_name_to_type_map = NULL;
 
-    ska_array_list_deinit(&componentManager.componentArrays);
+    for (usize i = 0; i < global_component_index; i++) {
+        ska_array_list_deinit(&component_manager.pools[i]);
+    }
+    global_component_index = 0;
+
+    SkaComponentSignatureList_deinit(&component_manager.signatures);
+}
+
+bool ska_ecs_component_manager_has_component(SkaEntity entity, SkaComponentIndex index) {
+    const SkaComponentType signature = ska_ecs_component_manager_get_component_signature(entity);
+    return SKA_FLAG_CONTAINS(signature, type_by_index[index]);
 }
 
 void* ska_ecs_component_manager_get_component(SkaEntity entity, SkaComponentIndex index) {
@@ -118,71 +131,46 @@ void* ska_ecs_component_manager_get_component(SkaEntity entity, SkaComponentInde
 }
 
 void* ska_ecs_component_manager_get_component_unchecked(SkaEntity entity, SkaComponentIndex index) {
-    ComponentArray* componentArray = ska_array_list_get(&componentManager.componentArrays, (usize)entity);
-    return component_array_get_component(componentArray, index);
+    if (!ska_ecs_component_manager_has_component(entity, index)) {
+        return NULL;
+    }
+    return ska_array_list_get(&component_manager.pools[index], (usize)entity);
 }
 
 void ska_ecs_component_manager_set_component(SkaEntity entity, SkaComponentIndex index, void* component) {
     ska_ecs_component_manager_reserve(entity);
-    ComponentArray* componentArray = ska_array_list_get(&componentManager.componentArrays, (usize)entity);
-    component_array_set_component(componentArray, index, component);
-    componentArray->signature |= component_manager_translate_index_to_type(index);
+    SkaArrayList* pool = &component_manager.pools[index];
+    ska_array_list_resize_zeroed(pool, (usize)entity + 1);
+    memcpy(ska_array_list_get(pool, (usize)entity), component, pool->value_size);
+    SkaComponentType* signature = SkaComponentSignatureList_get(&component_manager.signatures, (usize)entity);
+    *signature |= type_by_index[index];
 }
 
 void ska_ecs_component_manager_remove_component(SkaEntity entity, SkaComponentIndex index) {
-    ComponentArray* componentArray = ska_array_list_get(&componentManager.componentArrays, (usize)entity);
-    componentArray->signature &= component_manager_translate_index_to_type(index);
-    component_array_remove_component(componentArray, index);
+    SkaComponentType* signature = SkaComponentSignatureList_get(&component_manager.signatures, (usize)entity);
+    SKA_REMOVE_FLAGS(*signature, type_by_index[index]);
 }
 
 void ska_ecs_component_manager_remove_all_components(SkaEntity entity) {
-    ComponentArray* componentArray = ska_array_list_get(&componentManager.componentArrays, (usize)entity);
-    component_array_remove_all_components(componentArray);
+    SkaComponentType* signature = SkaComponentSignatureList_get(&component_manager.signatures, (usize)entity);
+    *signature = SKA_ECS_COMPONENT_TYPE_NONE;
 }
 
-bool ska_ecs_component_manager_has_component(SkaEntity entity, SkaComponentIndex index) {
-    ComponentArray* componentArray = ska_array_list_get(&componentManager.componentArrays, (usize)entity);
-    return component_array_has_component(componentArray, index);
-}
-
-void ska_ecs_component_manager_set_component_signature(SkaEntity entity, SkaComponentType componentTypeSignature) {
-    ComponentArray* componentArray = ska_array_list_get(&componentManager.componentArrays, (usize)entity);
-    componentArray->signature = componentTypeSignature;
+void ska_ecs_component_manager_set_component_signature(SkaEntity entity, SkaComponentType component_type_signature) {
+    SkaComponentType* signature = SkaComponentSignatureList_get(&component_manager.signatures, (usize)entity);
+    *signature = component_type_signature;
 }
 
 SkaComponentType ska_ecs_component_manager_get_component_signature(SkaEntity entity) {
-    const ComponentArray* componentArray = ska_array_list_get(&componentManager.componentArrays, (usize)entity);
-    return componentArray->signature;
+    return *SkaComponentSignatureList_get(&component_manager.signatures, (usize)entity);
 }
 
-void ska_ecs_component_manager_reserve(SkaEntity lastEntity) {
-    // Add to component array if entity exceeds size
-    const usize newIndex = (usize)lastEntity;
-    while (componentManager.componentArrays.size <= newIndex) {
-        ska_array_list_append(&componentManager.componentArrays, &(ComponentArray){0});
-    }
-}
-
-SkaComponentType component_manager_translate_index_to_type(SkaComponentIndex index) {
-    SKA_STRING_HASH_MAP_FOR_EACH(componentNameToTypeMap, iter) {
-        SkaStringHashMapNode* node = iter.pair;
-        const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)node->value;
-        if (typeInfo->index == index) {
-            return typeInfo->type;
-        }
-    }
-    return SKA_ECS_COMPONENT_TYPE_NONE;
+void ska_ecs_component_manager_reserve(SkaEntity last_entity) {
+    SkaComponentSignatureList_resize_zeroed(&component_manager.signatures, (usize)last_entity + 1);
 }
 
 const char* ska_ecs_component_get_component_data_index_string(SkaComponentIndex index) {
-    SKA_STRING_HASH_MAP_FOR_EACH(componentNameToTypeMap, iter) {
-        SkaStringHashMapNode* node = iter.pair;
-        const SkaComponentTypeInfo* typeInfo = (SkaComponentTypeInfo*)node->value;
-        if (typeInfo->index == index) {
-            return typeInfo->name;
-        }
-    }
-    return "INVALID";
+    return index < global_component_index ? name_by_index[index] : "INVALID";
 }
 
 #endif // if SKA_ECS

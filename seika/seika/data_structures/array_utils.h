@@ -19,6 +19,7 @@ ARRAY[temp_arac_loop_index + 1] = EMPTY_VALUE;                         \
 }
 
 // Function to perform Selection Sort
-void ska_array_utils_selection_sort_int(int32 arr[], int32 arraySize);
+void ska_array_utils_selection_sort_int(int32 arr[], int32 array_size);
 
-void ska_array_utils_remove_item_uint32(uint32 array[], usize* size, uint32 item, uint32 emptyValue);
+void ska_array_utils_remove_item_uint32(uint32 array[], usize *size,
+                                        uint32 item, uint32 empty_value);

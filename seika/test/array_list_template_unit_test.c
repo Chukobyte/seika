@@ -11,7 +11,7 @@ void tearDown(void) {}
 
 typedef struct TestObject {
     i32 id;
-    i32 refCount;
+    i32 ref_count;
     char name[64];
 } TestObject;
 
@@ -247,10 +247,10 @@ void seika_array_list_template_dynamic_growth_test(void) {
 void seika_array_list_template_pointer_basic_test(void) {
     ObjPtrArrayList list = ObjPtrArrayList_init(5);
 
-    TestObject obj1 = {.id = 1, .refCount = 0};
+    TestObject obj1 = {.id = 1, .ref_count = 0};
     strcpy(obj1.name, "Object1");
 
-    TestObject obj2 = {.id = 2, .refCount = 0};
+    TestObject obj2 = {.id = 2, .ref_count = 0};
     strcpy(obj2.name, "Object2");
 
     ObjPtrArrayList_append(&list, &obj1);
@@ -266,13 +266,13 @@ void seika_array_list_template_pointer_basic_test(void) {
 void seika_array_list_template_pointer_remove_test(void) {
     ObjPtrArrayList list = ObjPtrArrayList_init(5);
 
-    TestObject obj1 = {.id = 1, .refCount = 0};
+    TestObject obj1 = {.id = 1, .ref_count = 0};
     strcpy(obj1.name, "Object1");
 
-    TestObject obj2 = {.id = 2, .refCount = 0};
+    TestObject obj2 = {.id = 2, .ref_count = 0};
     strcpy(obj2.name, "Object2");
 
-    TestObject obj3 = {.id = 3, .refCount = 0};
+    TestObject obj3 = {.id = 3, .ref_count = 0};
     strcpy(obj3.name, "Object3");
 
     ObjPtrArrayList_append(&list, &obj1);
@@ -290,13 +290,13 @@ void seika_array_list_template_pointer_remove_test(void) {
 void seika_array_list_template_pointer_has_test(void) {
     ObjPtrArrayList list = ObjPtrArrayList_init(5);
 
-    TestObject obj1 = {.id = 1, .refCount = 0};
+    TestObject obj1 = {.id = 1, .ref_count = 0};
     strcpy(obj1.name, "Object1");
 
-    TestObject obj2 = {.id = 2, .refCount = 0};
+    TestObject obj2 = {.id = 2, .ref_count = 0};
     strcpy(obj2.name, "Object2");
 
-    TestObject obj_not_in_list = {.id = 1, .refCount = 0};
+    TestObject obj_not_in_list = {.id = 1, .ref_count = 0};
     strcpy(obj_not_in_list.name, "NotInList");
 
     ObjPtrArrayList_append(&list, &obj1);
@@ -314,10 +314,10 @@ void seika_array_list_template_pointer_has_test(void) {
 void seika_array_list_template_ptr_ptr_test(void) {
     ObjPtrPtrArrayList list = ObjPtrPtrArrayList_init(5);
 
-    TestObject obj1 = {.id = 100, .refCount = 0};
+    TestObject obj1 = {.id = 100, .ref_count = 0};
     TestObject* ptr1 = &obj1;
 
-    TestObject obj2 = {.id = 200, .refCount = 0};
+    TestObject obj2 = {.id = 200, .ref_count = 0};
     TestObject* ptr2 = &obj2;
 
     ObjPtrPtrArrayList_append(&list, &ptr1);

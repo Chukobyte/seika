@@ -5,21 +5,21 @@
 #include "seika/logger.h"
 #include "seika/memory.h"
 
-static bool shader_check_compile_errors(uint32 shaderId, const char* type);
+static bool shader_check_compile_errors(uint32 shader_id, const char* type);
 
-SkaShader* ska_shader_compile_new_shader(const char* vertexSource, const char* fragmentSource) {
+SkaShader* ska_shader_compile_new_shader(const char* vertex_source, const char* fragment_source) {
     SkaShader* shader = SKA_ALLOC(SkaShader);
     GLuint vertex, fragment;
     // vertex
     vertex = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(vertex, 1, &vertexSource, NULL);
+    glShaderSource(vertex, 1, &vertex_source, NULL);
     glCompileShader(vertex);
-    shader_check_compile_errors(vertex, SKA_SHADER_VERTEX_TYPE);
+    shader_check_compile_errors(vertex, ska_shader_vertex_type);
     // fragment
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragment, 1, &fragmentSource, NULL);
+    glShaderSource(fragment, 1, &fragment_source, NULL);
     glCompileShader(fragment);
-    if (!shader_check_compile_errors(vertex, SKA_SHADER_FRAGMENT_TYPE)) {
+    if (!shader_check_compile_errors(vertex, ska_shader_fragment_type)) {
         return NULL;
     }
     // attack and link shaders
@@ -27,7 +27,7 @@ SkaShader* ska_shader_compile_new_shader(const char* vertexSource, const char* f
     glAttachShader(shader->id, vertex);
     glAttachShader(shader->id, fragment);
     glLinkProgram(shader->id);
-    if (!shader_check_compile_errors(shader->id, SKA_SHADER_PROGRAM_TYPE)) {
+    if (!shader_check_compile_errors(shader->id, ska_shader_program_type)) {
         return NULL;
     }
     glDeleteShader(vertex);
@@ -39,20 +39,20 @@ void ska_shader_destroy(SkaShader* shader) {
     SKA_FREE(shader);
 }
 
-bool shader_check_compile_errors(uint32 shaderId, const char* type) {
+bool shader_check_compile_errors(uint32 shader_id, const char* type) {
     GLint success;
-    char infoLog[1024];
-    if(type == SKA_SHADER_PROGRAM_TYPE) {
-        glGetProgramiv(shaderId, GL_LINK_STATUS, &success);
+    char info_log[1024];
+    if(type == ska_shader_program_type) {
+        glGetProgramiv(shader_id, GL_LINK_STATUS, &success);
         if(!success) {
-            glGetProgramInfoLog(shaderId, 1024, NULL, infoLog);
-            ska_logger_error("Shader type '%s' linking failed!\nInfoLog = %s", type, &infoLog);
+            glGetProgramInfoLog(shader_id, 1024, NULL, info_log);
+            ska_logger_error("Shader type '%s' linking failed!\nInfoLog = %s", type, &info_log);
         }
     } else {
-        glGetShaderiv(shaderId, GL_COMPILE_STATUS, &success);
+        glGetShaderiv(shader_id, GL_COMPILE_STATUS, &success);
         if(!success) {
-            glGetShaderInfoLog(shaderId, 1024, NULL, infoLog);
-            ska_logger_error("Shader type '%s' compilation failed!InfoLog = \n%s", type, &infoLog);
+            glGetShaderInfoLog(shader_id, 1024, NULL, info_log);
+            ska_logger_error("Shader type '%s' compilation failed!InfoLog = \n%s", type, &info_log);
         }
     }
     return success;

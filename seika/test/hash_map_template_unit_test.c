@@ -10,7 +10,7 @@ void tearDown(void) {}
 
 typedef struct TestObject {
     i32 id;
-    i32 refCount;
+    i32 ref_count;
     char name[64];
 } TestObject;
 
@@ -125,11 +125,11 @@ void seika_hash_map_template_add_test(void) {
     I32I32HashMap* map = I32I32HashMap_init(16);
 
     I32I32HashMapAddResult result1 = I32I32HashMap_add(map, 1, 100);
-    TEST_ASSERT_TRUE(result1.wasAdded);
+    TEST_ASSERT_TRUE(result1.was_added);
     TEST_ASSERT_EQUAL_UINT(1, map->size);
 
     I32I32HashMapAddResult result2 = I32I32HashMap_add(map, 2, 200);
-    TEST_ASSERT_TRUE(result2.wasAdded);
+    TEST_ASSERT_TRUE(result2.was_added);
     TEST_ASSERT_EQUAL_UINT(2, map->size);
 
     I32I32HashMap_deinit(map);
@@ -139,10 +139,10 @@ void seika_hash_map_template_add_duplicate_test(void) {
     I32I32HashMap* map = I32I32HashMap_init(16);
 
     I32I32HashMapAddResult result1 = I32I32HashMap_add(map, 1, 100);
-    TEST_ASSERT_TRUE(result1.wasAdded);
+    TEST_ASSERT_TRUE(result1.was_added);
 
     I32I32HashMapAddResult result2 = I32I32HashMap_add(map, 1, 200);
-    TEST_ASSERT_FALSE(result2.wasAdded);
+    TEST_ASSERT_FALSE(result2.was_added);
     TEST_ASSERT_EQUAL_UINT(1, map->size);
 
     i32* value = I32I32HashMap_get(map, 1);
@@ -277,10 +277,10 @@ void seika_hash_map_template_pointer_key_test(void) {
     map->hashFunc = test_obj_hash_by_id;
     map->compareFunc = test_obj_compare_by_id;
 
-    TestObject obj1 = {.id = 1, .refCount = 0};
+    TestObject obj1 = {.id = 1, .ref_count = 0};
     strcpy(obj1.name, "Object1");
 
-    TestObject obj2 = {.id = 2, .refCount = 0};
+    TestObject obj2 = {.id = 2, .ref_count = 0};
     strcpy(obj2.name, "Object2");
 
     ObjPtrI32HashMap_add(map, &obj1, 100);
@@ -304,16 +304,16 @@ void seika_hash_map_template_pointer_key_custom_hash_test(void) {
     map->hashFunc = test_obj_hash_by_name;
     map->compareFunc = test_obj_compare_by_name;
 
-    TestObject obj1 = {.id = 1, .refCount = 0};
+    TestObject obj1 = {.id = 1, .ref_count = 0};
     strcpy(obj1.name, "Alpha");
 
-    TestObject obj2 = {.id = 2, .refCount = 0};
+    TestObject obj2 = {.id = 2, .ref_count = 0};
     strcpy(obj2.name, "Beta");
 
     ObjPtrI32HashMap_add(map, &obj1, 100);
     ObjPtrI32HashMap_add(map, &obj2, 200);
 
-    TestObject lookup_obj = {.id = 999, .refCount = 0};
+    TestObject lookup_obj = {.id = 999, .ref_count = 0};
     strcpy(lookup_obj.name, "Alpha");
 
     i32* val = ObjPtrI32HashMap_get(map, &lookup_obj);
@@ -330,10 +330,10 @@ void seika_hash_map_template_ptr_ptr_key_test(void) {
     map->hashFunc = test_obj_ptr_ptr_hash_by_id;
     map->compareFunc = test_obj_ptr_ptr_compare_by_id;
 
-    TestObject obj1 = {.id = 100, .refCount = 0};
+    TestObject obj1 = {.id = 100, .ref_count = 0};
     TestObject* ptr1 = &obj1;
 
-    TestObject obj2 = {.id = 200, .refCount = 0};
+    TestObject obj2 = {.id = 200, .ref_count = 0};
     TestObject* ptr2 = &obj2;
 
     ObjPtrPtrI32HashMap_add(map, &ptr1, 1000);
@@ -396,10 +396,10 @@ void seika_hash_map_template_struct_key_custom_hash_test(void) {
 void seika_hash_map_template_pointer_value_test(void) {
     I32ObjPtrHashMap* map = I32ObjPtrHashMap_init(16);
 
-    TestObject obj1 = {.id = 1, .refCount = 0};
+    TestObject obj1 = {.id = 1, .ref_count = 0};
     strcpy(obj1.name, "Object1");
 
-    TestObject obj2 = {.id = 2, .refCount = 0};
+    TestObject obj2 = {.id = 2, .ref_count = 0};
     strcpy(obj2.name, "Object2");
 
     I32ObjPtrHashMap_add(map, 1, &obj1);

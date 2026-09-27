@@ -1,5 +1,11 @@
 #if SKA_RENDERING
 
+// seika/window/window.h pulls in windows.h on Windows; must precede renderer.h
+// (which transitively includes glad.h via font.h), since glad's APIENTRY
+// definition isn't itself guarded against windows.h's unconditional
+// (re)definition (C4005).
+#include "seika/window/window.h"
+
 #include "renderer.h"
 
 #include <stdlib.h>
@@ -8,7 +14,6 @@
 #include "shader/shader.h"
 #include "shader/shader_cache.h"
 #include "shader/shader_source.h"
-#include "seika/window/window.h"
 #include "seika/assert.h"
 #include "../logger.h"
 #include "seika/data_structures/static_array.h"
@@ -21,27 +26,35 @@
 #endif
 
 // Global Shader Params
-static f32 globalShaderParamTime = 0.0f;
+static f32 global_shader_param_time = 0.0f;
 
 // Renderer
 void ska_renderer_init(SkaRendererInitProps props) {
     // glEnable(GL_CULL_FACE); // TODO: Used in 2D, we can flip state for 2D and 3D as needed...
     glEnable(GL_BLEND);
+#if !defined(PLATFORM_ANDROID) && !defined(PLATFORM_EMSCRIPTEN)
+    // GL_MULTISAMPLE doesn't exist in GLES -- there multisampling is controlled via the EGL
+    // config's sample buffers at context-creation time (window_android.c/window_emscripten.c
+    // request none), not a runtime glEnable/glDisable toggle, so there's nothing to disable here.
     glDisable(GL_MULTISAMPLE);
+#endif
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    ska_render_context_initialize((SkaSize2Di){ props.resolutionWidth, props.resolutionHeight });
-    ska_renderer_update_window_size(props.windowWidth, props.windowHeight);
+    ska_render_context_initialize((SkaSize2Di){ props.resolution_width, props.resolution_height });
+    ska_renderer_update_window_size(props.window_width, props.window_height);
     ska_shader_cache_initialize();
-    if (props.init2D) {
+    if (props.init_2d) {
         ska_renderer_init_2d();
     }
-    if (props.initProps3D) {
-        ska_renderer_init_3d((SkaRenderer3DInitProps) { .fov = props.initProps3D->fov, .nearPlane = props.initProps3D->nearPlane, .farPlane = props.initProps3D->farPlane });
+    if (props.init_props_3d) {
+      ska_renderer_init_3d((SkaRenderer3DInitProps){
+          .fov = props.init_props_3d->fov,
+          .near_plane = props.init_props_3d->near_plane,
+          .far_plane = props.init_props_3d->far_plane});
     }
 #ifdef SKA_RENDER_TO_FRAMEBUFFER
     // Initialize framebuffer
-    SKA_ASSERT_FMT(ska_frame_buffer_initialize(props.windowWidth, props.windowHeight, props.resolutionWidth, props.resolutionHeight), "Framebuffer didn't initialize!");
-    ska_frame_buffer_set_maintain_aspect_ratio(props.maintainAspectRatio);
+    SKA_ASSERT_FMT(ska_frame_buffer_initialize(props.window_width, props.window_height, props.resolution_width, props.resolution_height), "Framebuffer didn't initialize!");
+    ska_frame_buffer_set_maintain_aspect_ratio(props.maintain_aspect_ratio);
 #endif
 }
 
@@ -58,9 +71,9 @@ void ska_renderer_clear(f32 red, f32 green, f32 blue, f32 alpha) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 }
 
-void ska_renderer_update_window_size(int32 windowWidth, int32 windowHeight) {
+void ska_renderer_update_window_size(int32 window_width, int32 window_height) {
 #ifdef SKA_RENDER_TO_FRAMEBUFFER
-    const SkaFrameBufferViewportData data = ska_frame_buffer_generate_viewport_data(windowWidth, windowHeight);
+    const SkaFrameBufferViewportData data = ska_frame_buffer_generate_viewport_data(window_width, window_height);
 #else
     struct ViewportData {
         SkaVector2i position;
@@ -82,19 +95,20 @@ static void ska_renderer_flush_batches() {
     ska_renderer_flush_2d_batches();
     ska_renderer_flush_meshes();
     ska_renderer_flush_lights();
+    ska_renderer_flush_debug_lines();
 }
 
-void ska_renderer_process_and_flush_batches(const SkaColor* backgroundColor) {
+void ska_renderer_process_and_flush_batches(const SkaColor* background_color) {
 #ifdef SKA_RENDER_TO_FRAMEBUFFER
     ska_frame_buffer_bind();
 #endif
 
     // Clear framebuffer with background color
-    ska_renderer_clear(backgroundColor->r, backgroundColor->g, backgroundColor->b, backgroundColor->a);
+    ska_renderer_clear(background_color->r, background_color->g, background_color->b, background_color->a);
 
 #ifdef SKA_RENDER_TO_FRAMEBUFFER
-    SkaFrameBufferViewportData* viewportData = ska_frame_buffer_get_cached_viewport_data();
-    glViewport(0, 0, viewportData->size.w, viewportData->size.h);
+    SkaFrameBufferViewportData* viewport_data = ska_frame_buffer_get_cached_viewport_data();
+    glViewport(0, 0, viewport_data->size.w, viewport_data->size.h);
 #endif
 
     ska_renderer_flush_batches();
@@ -103,17 +117,17 @@ void ska_renderer_process_and_flush_batches(const SkaColor* backgroundColor) {
     ska_frame_buffer_unbind();
 
     // Clear screen texture background
-    static const SkaColor screenBackgroundColor = {0.0f, 0.0f, 0.0f, 1.0f };
-    ska_renderer_clear(screenBackgroundColor.r, screenBackgroundColor.g, screenBackgroundColor.b, screenBackgroundColor.a);
+    static const SkaColor screen_background_color = {0.0f, 0.0f, 0.0f, 1.0f };
+    ska_renderer_clear(screen_background_color.r, screen_background_color.g, screen_background_color.b, screen_background_color.a);
     // Draw screen texture from framebuffer
-    SkaShaderInstance* screenShaderInstance = ska_frame_buffer_get_screen_shader();
-    ska_shader_use(screenShaderInstance->shader);
+    SkaShaderInstance* screen_shader_instance = ska_frame_buffer_get_screen_shader();
+    ska_shader_use(screen_shader_instance->shader);
 
     // Apply shader instance params
-    ska_renderer_set_shader_instance_params(screenShaderInstance);
+    ska_renderer_set_shader_instance_params(screen_shader_instance);
 
     glBindVertexArray(ska_frame_buffer_get_quad_vao());
-    glViewport(viewportData->position.x, viewportData->position.y, viewportData->size.w, viewportData->size.h);
+    glViewport(viewport_data->position.x, viewport_data->position.y, viewport_data->size.w, viewport_data->size.h);
 
 
     glActiveTexture(GL_TEXTURE0);
@@ -126,11 +140,11 @@ void ska_renderer_process_and_flush_batches(const SkaColor* backgroundColor) {
 }
 
 #ifdef SKA_RENDER_TO_FRAMEBUFFER
-void ska_renderer_process_and_flush_batches_just_framebuffer(const SkaColor *backgroundColor) {
+void ska_renderer_process_and_flush_batches_just_framebuffer(const SkaColor *background_color) {
     ska_frame_buffer_bind();
 
     // Clear framebuffer with background color
-    ska_renderer_clear(backgroundColor->r, backgroundColor->g, backgroundColor->b, backgroundColor->a);
+    ska_renderer_clear(background_color->r, background_color->g, background_color->b, background_color->a);
 
     ska_renderer_flush_batches();
 
@@ -166,47 +180,46 @@ void ska_renderer_print_opengl_errors() {
 }
 
 // Shader param stuff
-void ska_renderer_set_global_shader_param_time(f32 timeValue) {
-    globalShaderParamTime = timeValue;
+void ska_renderer_set_global_shader_param_time(f32 time_value) {
+    global_shader_param_time = time_value;
 }
 
-void ska_renderer_set_shader_instance_params(SkaShaderInstance* shaderInstance) {
+void ska_renderer_set_shader_instance_params(SkaShaderInstance* shader_instance) {
     // Set global shader params first
-    ska_shader_set_float(shaderInstance->shader, "TIME", globalShaderParamTime);
+    ska_shader_set_float(shader_instance->shader, "TIME", global_shader_param_time);
 
     // Now set shader params specific to the shader instance
-    if (shaderInstance->paramsDirty && shaderInstance->paramMap->size > 0) {
-        SKA_STRING_HASH_MAP_FOR_EACH(shaderInstance->paramMap, iter) {
-            SkaStringHashMapNode* node = iter.pair;
-            SkaShaderParam* param = (SkaShaderParam*)node->value;
+    if (shader_instance->params_dirty && shader_instance->param_map->size > 0) {
+        SKA_STRING_HASH_MAP_FOR_EACH(shader_instance->param_map, iter) {
+            SkaShaderParam* param = (SkaShaderParam*)iter.value;
             switch (param->type) {
                 case SkaShaderParamType_BOOL: {
-                    ska_shader_set_bool(shaderInstance->shader, param->name, param->value.boolValue);
+                    ska_shader_set_bool(shader_instance->shader, param->name, param->value.bool_value);
                     break;
                 }
                 case SkaShaderParamType_INT: {
-                    ska_shader_set_int(shaderInstance->shader, param->name, param->value.intValue);
+                    ska_shader_set_int(shader_instance->shader, param->name, param->value.int_value);
                     break;
                 }
                 case SkaShaderParamType_FLOAT: {
-                    ska_shader_set_float(shaderInstance->shader, param->name, param->value.floatValue);
+                    ska_shader_set_float(shader_instance->shader, param->name, param->value.float_value);
                     break;
                 }
                 case SkaShaderParamType_FLOAT2: {
-                    ska_shader_set_vec2_float(shaderInstance->shader, param->name, param->value.float2Value.x,param->value.float2Value.y);
+                    ska_shader_set_vec2_float(shader_instance->shader, param->name, param->value.float2_value.x,param->value.float2_value.y);
                     break;
                 }
                 case SkaShaderParamType_FLOAT3: {
-                    ska_shader_set_vec3_float(shaderInstance->shader, param->name, param->value.float3Value.x,param->value.float3Value.y, param->value.float3Value.z);
+                    ska_shader_set_vec3_float(shader_instance->shader, param->name, param->value.float3_value.x,param->value.float3_value.y, param->value.float3_value.z);
                     break;
                 }
                 case SkaShaderParamType_FLOAT4: {
-                    ska_shader_set_vec4_float(shaderInstance->shader, param->name, param->value.float4Value.x,param->value.float4Value.y, param->value.float4Value.z,param->value.float4Value.w);
+                    ska_shader_set_vec4_float(shader_instance->shader, param->name, param->value.float4_value.x,param->value.float4_value.y, param->value.float4_value.z,param->value.float4_value.w);
                     break;
                 }
             }
         }
-        shaderInstance->paramsDirty = false;
+        shader_instance->params_dirty = false;
     }
 }
 

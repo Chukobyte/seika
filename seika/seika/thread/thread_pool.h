@@ -13,14 +13,14 @@ typedef struct SkaThreadPoolWork {
 } SkaThreadPoolWork;
 
 typedef struct SkaThreadPool {
-    SkaThreadPoolWork* workFirst;
-    SkaThreadPoolWork* workLast;
-    pthread_mutex_t workMutex;
-    pthread_cond_t workCond;
-    pthread_cond_t workingCond;
-    usize workingCount;
-    usize threadCount;
-    bool shouldStop;
+    SkaThreadPoolWork* work_first;
+    SkaThreadPoolWork* work_last;
+    pthread_mutex_t work_mutex;
+    pthread_cond_t work_cond;
+    pthread_cond_t working_cond;
+    usize working_count;
+    usize thread_count;
+    bool should_stop;
 } SkaThreadPool;
 
 SkaThreadPool* ska_tpool_create(usize num);

@@ -9,17 +9,17 @@ typedef struct SkaPoolBlock {
 
 typedef struct SkaPool {
     void* buffer;
-    usize blockSize;
-    usize blockCount;
-    usize usedCount;
-    SkaPoolBlock* freeList;
-    bool ownsBuffer;
+    usize block_size;
+    usize block_count;
+    usize used_count;
+    SkaPoolBlock* free_list;
+    bool owns_buffer;
 } SkaPool;
 
 // Create pool with its own allocated buffer
-SkaPool* ska_pool_init(usize blockSize, usize blockCount);
+SkaPool* ska_pool_init(usize block_size, usize block_count);
 // Create pool from existing buffer (doesn't own it)
-SkaPool* ska_pool_init_from_buffer(void* buffer, usize bufferSize, usize blockSize);
+SkaPool* ska_pool_init_from_buffer(void* buffer, usize buffer_size, usize block_size);
 // Destroy pool (frees buffer if owned)
 void ska_pool_deinit(SkaPool* pool);
 // Reset pool (marks all blocks as free)
@@ -44,7 +44,7 @@ bool ska_pool_owns_block(const SkaPool* pool, const void* block);
 // ============================================================================
 
 // Create a pool allocator that can be used with the SkaAllocator interface
-SkaAllocator ska_mem_pool_allocator_init(usize blockSize, usize blockCount);
+SkaAllocator ska_mem_pool_allocator_init(usize block_size, usize block_count);
 
 // Destroy a pool allocator
 void ska_mem_pool_allocator_deinit(SkaAllocator allocator);

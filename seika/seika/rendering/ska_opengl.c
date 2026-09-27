@@ -1,5 +1,7 @@
 #include "ska_opengl.h"
 
+#if SKA_RENDERING
+
 #include "seika/logger.h"
 
 void ska_opengl_print_errors(const char* context) {
@@ -31,3 +33,5 @@ void ska_opengl_print_errors(const char* context) {
         }
     }
 }
+
+#endif // #if SKA_RENDERING

@@ -5,11 +5,11 @@
 
 SkaTick* ska_tick_create(SkaTickParams params) {
     SkaTick* tick = SKA_ALLOC_ZEROED(SkaTick);
-    tick->updateFunc = params.updateFunc;
-    tick->fixedUpdateFunc = params.fixedUpdateFunc;
-    tick->updateInterval = 1000 / params.targetFPS;
-    tick->fixedUpdateInterval = 1.0f / (f32)params.targetFixedFPS;
-    tick->fixedDeltaTime = tick->fixedUpdateInterval;
+    tick->update_func = params.update_func;
+    tick->fixed_update_func = params.fixed_update_func;
+    tick->update_interval = 1000 / params.target_fps;
+    tick->fixed_update_interval = 1.0f / (f32)params.target_fixed_fps;
+    tick->fixed_delta_time = tick->fixed_update_interval;
     return tick;
 }
 
@@ -18,19 +18,19 @@ void ska_tick_destroy(SkaTick* tick) {
 }
 
 void ska_tick_update(SkaTick* tick) {
-    const uint64 newTime = ska_timer_get_global_time();
-    const uint64 deltaTime = newTime - tick->currentTime;
-    const f32 deltaTimeSeconds = (f32)deltaTime / 1000.f;
+    const uint64 new_time = ska_timer_get_global_time();
+    const uint64 delta_time = new_time - tick->current_time;
+    const f32 delta_time_seconds = (f32)delta_time / 1000.f;
 
-    tick->currentTime = newTime;
-    if (tick->updateFunc) {
-        tick->updateFunc(deltaTimeSeconds);
+    tick->current_time = new_time;
+    if (tick->update_func) {
+      tick->update_func(delta_time_seconds);
     }
-    if (tick->fixedUpdateFunc) {
-        tick->accumulator += deltaTimeSeconds;
-        while (tick->accumulator >= tick->fixedUpdateInterval) {
-            tick->fixedUpdateFunc(tick->fixedDeltaTime);
-            tick->accumulator -= tick->fixedUpdateInterval;
-        }
+    if (tick->fixed_update_func) {
+      tick->accumulator += delta_time_seconds;
+      while (tick->accumulator >= tick->fixed_update_interval) {
+        tick->fixed_update_func(tick->fixed_delta_time);
+        tick->accumulator -= tick->fixed_update_interval;
+      }
     }
 }

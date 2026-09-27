@@ -90,12 +90,12 @@ typedef struct SkaECSSystemTemplate {
 
 void ska_ecs_system_initialize();
 void ska_ecs_system_finalize();
-SkaECSSystem* ska_ecs_system_create(const char* systemName);
-SkaECSSystem* ska_ecs_system_create_from_template(SkaECSSystemTemplate* systemTemplate);
-SkaECSSystem* ska_ecs_system_create_with_signature_string(const char* systemName, const char* signatures);
-SkaECSSystem* ska_ecs_system_create_from_template_with_signature_string(SkaECSSystemTemplate* systemTemplate, const char* signatures);
-SkaECSSystemTemplate ska_ecs_system_create_default_template(const char* systemName);
-void ska_ecs_system_destroy(SkaECSSystem* entitySystem);
+SkaECSSystem* ska_ecs_system_create(const char* system_name);
+SkaECSSystem* ska_ecs_system_create_from_template(SkaECSSystemTemplate* system_template);
+SkaECSSystem* ska_ecs_system_create_with_signature_string(const char* system_name, const char* signatures);
+SkaECSSystem* ska_ecs_system_create_from_template_with_signature_string(SkaECSSystemTemplate* system_template, const char* signatures);
+SkaECSSystemTemplate ska_ecs_system_create_default_template(const char* system_name);
+void ska_ecs_system_destroy(SkaECSSystem* entity_system);
 void ska_ecs_system_register(SkaECSSystem* system);
 void ska_ecs_system_update_entity_signature_with_systems(SkaEntity entity);
 void ska_ecs_system_remove_entity_from_all_systems(SkaEntity entity);
@@ -108,8 +108,8 @@ void ska_ecs_system_event_entity_entered_scene(SkaEntity entity);
 void ska_ecs_system_event_render_systems();
 void ska_ecs_system_event_pre_update_all_systems();
 void ska_ecs_system_event_post_update_all_systems();
-void ska_ecs_system_event_update_systems(f32 deltaTime);
-void ska_ecs_system_event_fixed_update_systems(f32 deltaTime);
+void ska_ecs_system_event_update_systems(f32 delta_time);
+void ska_ecs_system_event_fixed_update_systems(f32 delta_time);
 void ska_ecs_system_event_network_callback(const char* message);
 
 #endif // if SKA_ECS

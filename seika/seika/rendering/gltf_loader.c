@@ -14,9 +14,9 @@
 
 // Helper to get buffer data for an accessor
 static const void* get_accessor_data(const cgltf_accessor* accessor) {
-    const cgltf_buffer_view* bufferView = accessor->buffer_view;
-    const uint8* data = (const uint8*)bufferView->buffer->data;
-    return data + bufferView->offset + accessor->offset;
+  const cgltf_buffer_view *buffer_view = accessor->buffer_view;
+  const uint8 *data = (const uint8 *)buffer_view->buffer->data;
+  return data + buffer_view->offset + accessor->offset;
 }
 
 // Helper to load a texture from GLTF
@@ -90,67 +90,68 @@ static SkaMesh load_gltf_primitive(const cgltf_primitive* primitive, const char*
         return (SkaMesh){0};
     }
 
-    uint32 vertexCount = (uint32)position_accessor->count;
+    uint32 vertex_count = (uint32)position_accessor->count;
 
     // Allocate vertex array
-    SkaVertex* vertices = SKA_ALLOC_BYTES(vertexCount * sizeof(SkaVertex));
-    memset(vertices, 0, vertexCount * sizeof(SkaVertex));
+    SkaVertex *vertices = SKA_ALLOC_BYTES(vertex_count * sizeof(SkaVertex));
+    memset(vertices, 0, vertex_count * sizeof(SkaVertex));
 
     // Load positions (required)
     const f32* positions = (const f32*)get_accessor_data(position_accessor);
-    for (uint32 i = 0; i < vertexCount; i++) {
-        vertices[i].position.x = positions[i * 3 + 0];
-        vertices[i].position.y = positions[i * 3 + 1];
-        vertices[i].position.z = positions[i * 3 + 2];
+    for (uint32 i = 0; i < vertex_count; i++) {
+      vertices[i].position.x = positions[i * 3 + 0];
+      vertices[i].position.y = positions[i * 3 + 1];
+      vertices[i].position.z = positions[i * 3 + 2];
     }
 
     // Load normals (optional)
     if (normal_accessor) {
         const f32* normals = (const f32*)get_accessor_data(normal_accessor);
-        for (uint32 i = 0; i < vertexCount; i++) {
-            vertices[i].normal.x = normals[i * 3 + 0];
-            vertices[i].normal.y = normals[i * 3 + 1];
-            vertices[i].normal.z = normals[i * 3 + 2];
+        for (uint32 i = 0; i < vertex_count; i++) {
+          vertices[i].normal.x = normals[i * 3 + 0];
+          vertices[i].normal.y = normals[i * 3 + 1];
+          vertices[i].normal.z = normals[i * 3 + 2];
         }
     }
 
     // Load texture coordinates (optional)
     if (texcoord_accessor) {
         const f32* texcoords = (const f32*)get_accessor_data(texcoord_accessor);
-        for (uint32 i = 0; i < vertexCount; i++) {
-            vertices[i].texCoords.x = texcoords[i * 2 + 0];
-            vertices[i].texCoords.y = texcoords[i * 2 + 1];
+        for (uint32 i = 0; i < vertex_count; i++) {
+          vertices[i].tex_coords.x = texcoords[i * 2 + 0];
+          vertices[i].tex_coords.y = texcoords[i * 2 + 1];
         }
     }
 
     // Load indices
     uint32* indices = NULL;
-    uint32 indexCount = 0;
+    uint32 index_count = 0;
 
     if (primitive->indices) {
         const cgltf_accessor* index_accessor = primitive->indices;
-        indexCount = (uint32)index_accessor->count;
-        indices = SKA_ALLOC_BYTES(indexCount * sizeof(uint32));
+        index_count = (uint32)index_accessor->count;
+        indices = SKA_ALLOC_BYTES(index_count * sizeof(uint32));
 
         // GLTF supports different index types
         if (index_accessor->component_type == cgltf_component_type_r_16u) {
             const uint16* src_indices = (const uint16*)get_accessor_data(index_accessor);
-            for (uint32 i = 0; i < indexCount; i++) {
-                indices[i] = src_indices[i];
+            for (uint32 i = 0; i < index_count; i++) {
+              indices[i] = src_indices[i];
             }
         } else if (index_accessor->component_type == cgltf_component_type_r_32u) {
             const uint32* src_indices = (const uint32*)get_accessor_data(index_accessor);
-            memcpy(indices, src_indices, indexCount * sizeof(uint32));
+            memcpy(indices, src_indices, index_count * sizeof(uint32));
         } else if (index_accessor->component_type == cgltf_component_type_r_8u) {
             const uint8* src_indices = (const uint8*)get_accessor_data(index_accessor);
-            for (uint32 i = 0; i < indexCount; i++) {
-                indices[i] = src_indices[i];
+            for (uint32 i = 0; i < index_count; i++) {
+              indices[i] = src_indices[i];
             }
         }
     }
 
     // Create mesh
-    SkaMesh mesh = ska_mesh_create((const f32*)vertices, vertexCount, indices, indexCount);
+    SkaMesh mesh = ska_mesh_create((const f32 *)vertices, vertex_count, indices,
+                                   index_count);
 
     // Load textures from material
     if (primitive->material) {
@@ -184,83 +185,87 @@ static SkaMesh load_gltf_primitive(const cgltf_primitive* primitive, const char*
 }
 
 // Main loading function
-SkaModel* ska_model_load_gltf(const char* gltfPath, const char* binPath) {
-    // Parse GLTF file
-    cgltf_options options = {0};
-    cgltf_data* data = NULL;
-    cgltf_result result = cgltf_parse_file(&options, gltfPath, &data);
+SkaModel *ska_model_load_gltf(const char *gltf_path, const char *bin_path) {
+  // Parse GLTF file
+  cgltf_options options = {0};
+  cgltf_data *data = NULL;
+  cgltf_result result = cgltf_parse_file(&options, gltf_path, &data);
 
-    if (result != cgltf_result_success) {
-        ska_logger_error("Failed to parse GLTF file: %s", gltfPath);
-        return NULL;
-    }
+  if (result != cgltf_result_success) {
+    ska_logger_error("Failed to parse GLTF file: %s", gltf_path);
+    return NULL;
+  }
 
-    // Load buffers (actual vertex/index data)
-    result = cgltf_load_buffers(&options, data, binPath);
-    // result = cgltf_load_buffers(&options, data, filepath);
-    if (result != cgltf_result_success) {
-        ska_logger_error("Failed to load GLTF buffers: %s", binPath);
-        cgltf_free(data);
-        return NULL;
-    }
-
-    // Validate the data
-    result = cgltf_validate(data);
-    if (result != cgltf_result_success) {
-        ska_logger_error("Warning: GLTF validation failed for %s", binPath);
-    }
-
-    // Create model
-    SkaModel* model = ska_model_create();
-
-    // Count total primitives (meshes in our system)
-    uint32 total_primitives = 0;
-    for (size_t i = 0; i < data->meshes_count; i++) {
-        total_primitives += (uint32)data->meshes[i].primitives_count;
-    }
-
-    if (total_primitives == 0) {
-        ska_logger_error("No meshes found in GLTF file: %s", gltfPath);
-        cgltf_free(data);
-        ska_model_destroy(model);
-        return NULL;
-    }
-
-    // Allocate mesh array
-    ska_array_list_reserve(&model->meshesList, total_primitives * sizeof(SkaMesh));
-
-    // Load all meshes
-    for (size_t mesh_idx = 0; mesh_idx < data->meshes_count; mesh_idx++) {
-        const cgltf_mesh* gltf_mesh = &data->meshes[mesh_idx];
-
-        // Each GLTF mesh can have multiple primitives
-        for (size_t prim_idx = 0; prim_idx < gltf_mesh->primitives_count; prim_idx++) {
-            const cgltf_primitive* primitive = &gltf_mesh->primitives[prim_idx];
-
-            // Only load triangle meshes
-            if (primitive->type != cgltf_primitive_type_triangles) {
-                ska_logger_error("Skipping non-triangle primitive in mesh %zu", mesh_idx);
-                continue;
-            }
-
-            SkaMesh mesh = load_gltf_primitive(primitive, gltfPath);
-            const bool isMeshValid = mesh.vertexCount > 0;
-            if (isMeshValid) {
-                ska_array_list_append(&model->meshesList, &mesh);
-            }
-        }
-    }
-
-    // Clean up cgltf data
+  // Load buffers (actual vertex/index data)
+  result = cgltf_load_buffers(&options, data, bin_path);
+  // result = cgltf_load_buffers(&options, data, filepath);
+  if (result != cgltf_result_success) {
+    ska_logger_error("Failed to load GLTF buffers: %s", bin_path);
     cgltf_free(data);
+    return NULL;
+  }
 
-    ska_logger_debug("Loaded GLTF model: %s (%u meshes)", gltfPath, model->meshesList.size);
+  // Validate the data
+  result = cgltf_validate(data);
+  if (result != cgltf_result_success) {
+    ska_logger_error("Warning: GLTF validation failed for %s", bin_path);
+  }
 
-    return model;
+  // Create model
+  SkaModel *model = ska_model_create();
+
+  // Count total primitives (meshes in our system)
+  uint32 total_primitives = 0;
+  for (size_t i = 0; i < data->meshes_count; i++) {
+    total_primitives += (uint32)data->meshes[i].primitives_count;
+  }
+
+  if (total_primitives == 0) {
+    ska_logger_error("No meshes found in GLTF file: %s", gltf_path);
+    cgltf_free(data);
+    ska_model_destroy(model);
+    return NULL;
+  }
+
+  // Allocate mesh array
+  ska_array_list_reserve(&model->meshes_list,
+                         total_primitives * sizeof(SkaMesh));
+
+  // Load all meshes
+  for (size_t mesh_idx = 0; mesh_idx < data->meshes_count; mesh_idx++) {
+    const cgltf_mesh *gltf_mesh = &data->meshes[mesh_idx];
+
+    // Each GLTF mesh can have multiple primitives
+    for (size_t prim_idx = 0; prim_idx < gltf_mesh->primitives_count;
+         prim_idx++) {
+      const cgltf_primitive *primitive = &gltf_mesh->primitives[prim_idx];
+
+      // Only load triangle meshes
+      if (primitive->type != cgltf_primitive_type_triangles) {
+        ska_logger_error("Skipping non-triangle primitive in mesh %zu",
+                         mesh_idx);
+        continue;
+      }
+
+      SkaMesh mesh = load_gltf_primitive(primitive, gltf_path);
+      const bool is_mesh_valid = mesh.vertex_count > 0;
+      if (is_mesh_valid) {
+        ska_array_list_append(&model->meshes_list, &mesh);
+      }
+    }
+  }
+
+  // Clean up cgltf data
+  cgltf_free(data);
+
+  ska_logger_debug("Loaded GLTF model: %s (%u meshes)", gltf_path,
+                   model->meshes_list.size);
+
+  return model;
 }
 
-SkaModel* ska_gltf_load_model(const char* gltfPath, const char* binPath) {
-    return ska_model_load_gltf(gltfPath, binPath);
+SkaModel *ska_gltf_load_model(const char *gltf_path, const char *bin_path) {
+  return ska_model_load_gltf(gltf_path, bin_path);
 }
 
 #endif // #if SKA_RENDERING

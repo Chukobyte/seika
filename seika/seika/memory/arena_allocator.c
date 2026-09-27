@@ -1,6 +1,11 @@
 #include "arena_allocator.h"
 
+#include <string.h>
 #include "seika/assert.h"
+
+// Header size rounded up to 8-byte alignment so the data pointer is always
+// at least 8-byte aligned regardless of platform pointer width.
+#define SKA_ARENA_CR_HEADER_SIZE ((sizeof(usize) + 7u) & ~7u)
 
 // Align pointer forward to given alignment
 static inline usize align_forward(usize ptr, usize alignment) {
@@ -18,7 +23,7 @@ SkaArena* ska_arena_init(usize capacity) {
     arena->buffer = ska_mem_global_allocate(capacity);
     arena->capacity = capacity;
     arena->offset = 0;
-    arena->ownsBuffer = true;
+    arena->owns_buffer = true;
 
     return arena;
 }
@@ -31,7 +36,7 @@ SkaArena* ska_arena_init_from_buffer(void* buffer, usize size) {
     arena->buffer = buffer;
     arena->capacity = size;
     arena->offset = 0;
-    arena->ownsBuffer = false;
+    arena->owns_buffer = false;
 
     return arena;
 }
@@ -39,7 +44,7 @@ SkaArena* ska_arena_init_from_buffer(void* buffer, usize size) {
 void ska_arena_deinit(SkaArena* arena) {
     if (!arena) return;
 
-    if (arena->ownsBuffer && arena->buffer) {
+    if (arena->owns_buffer && arena->buffer) {
         SKA_FREE(arena->buffer);
     }
 
@@ -73,20 +78,20 @@ void* ska_arena_alloc(SkaArena* arena, usize size) {
     if (size == 0) return NULL;
 
     // Default 8-byte alignment
-    usize currentPtr = (usize)arena->buffer + arena->offset;
-    usize alignedPtr = align_forward(currentPtr, 8);
-    usize alignmentOffset = alignedPtr - currentPtr;
+    usize current_ptr = (usize)arena->buffer + arena->offset;
+    usize aligned_ptr = align_forward(current_ptr, 8);
+    usize alignment_offset = aligned_ptr - current_ptr;
 
     // Check space
-    if (arena->offset + alignmentOffset + size > arena->capacity) {
+    if (arena->offset + alignment_offset + size > arena->capacity) {
         SKA_ASSERT_REL_FMT(false,
             "Arena out of memory! Requested: %zu bytes, Available: %zu bytes",
             size, arena->capacity - arena->offset);
         return NULL;
     }
 
-    void* ptr = (void*)alignedPtr;
-    arena->offset += alignmentOffset + size;
+    void* ptr = (void*)aligned_ptr;
+    arena->offset += alignment_offset + size;
 
     return ptr;
 }
@@ -107,27 +112,27 @@ void* ska_arena_alloc_aligned(SkaArena* arena, usize size, usize alignment) {
 
     if (size == 0) return NULL;
 
-    usize currentPtr = (usize)arena->buffer + arena->offset;
-    usize alignedPtr = align_forward(currentPtr, alignment);
-    usize alignmentOffset = alignedPtr - currentPtr;
+    usize current_ptr = (usize)arena->buffer + arena->offset;
+    usize aligned_ptr = align_forward(current_ptr, alignment);
+    usize alignment_offset = aligned_ptr - current_ptr;
 
-    if (arena->offset + alignmentOffset + size > arena->capacity) {
+    if (arena->offset + alignment_offset + size > arena->capacity) {
         SKA_ASSERT_REL_FMT(false,
             "Arena out of memory! Requested: %zu bytes (aligned to %zu), Available: %zu bytes",
             size, alignment, arena->capacity - arena->offset);
         return NULL;
     }
 
-    void* ptr = (void*)alignedPtr;
-    arena->offset += alignmentOffset + size;
+    void* ptr = (void*)aligned_ptr;
+    arena->offset += alignment_offset + size;
 
     return ptr;
 }
 
 // Allocator interface
 
-SkaAllocator ska_mem_arena_allocator_init(usize blockSize) {
-    SkaArena* arena = ska_arena_init(blockSize);
+SkaAllocator ska_mem_arena_allocator_init(usize block_size) {
+    SkaArena* arena = ska_arena_init(block_size);
 
     SkaAllocator allocator = {
         .context = arena,
@@ -162,3 +167,54 @@ void* ska_mem_arena_allocator_reallocate(SkaAllocator* allocator, void* memory, 
 
 // No-op
 void ska_mem_arena_allocator_free(SkaAllocator* allocator, void* memory) {}
+
+// ============================================================================
+// Copy-realloc arena allocator implementation
+// ============================================================================
+
+static void* ska_arena_cr_allocate(SkaAllocator* allocator, usize bytes) {
+    SkaArena* arena = (SkaArena*)allocator->context;
+    void* raw = ska_arena_alloc(arena, SKA_ARENA_CR_HEADER_SIZE + bytes);
+    if (!raw) return NULL;
+    *(usize*)raw = bytes;
+    return (char*)raw + SKA_ARENA_CR_HEADER_SIZE;
+}
+
+static void* ska_arena_cr_allocate_zeroed(SkaAllocator* allocator, usize bytes) {
+    void* ptr = ska_arena_cr_allocate(allocator, bytes);
+    if (ptr) { memset(ptr, 0, bytes); }
+    return ptr;
+}
+
+static void* ska_arena_cr_reallocate(SkaAllocator* allocator, void* memory, usize bytes) {
+    if (!memory) { return ska_arena_cr_allocate(allocator, bytes); }
+    void* raw = (char*)memory - SKA_ARENA_CR_HEADER_SIZE;
+    usize old_size = *(usize*)raw;
+    void* new_ptr = ska_arena_cr_allocate(allocator, bytes);
+    if (!new_ptr) return NULL;
+    memcpy(new_ptr, memory, old_size < bytes ? old_size : bytes);
+    // Old block is abandoned in the arena -- reclaimed on next reset.
+    return new_ptr;
+}
+
+static void ska_arena_cr_free(SkaAllocator* allocator, void* memory) {
+    (void)allocator; (void)memory; // no-op; arena reset frees everything
+}
+
+SkaAllocator ska_mem_arena_copy_realloc_init(usize capacity) {
+    return (SkaAllocator){
+        .context         = ska_arena_init(capacity),
+        .allocate        = ska_arena_cr_allocate,
+        .allocate_zeroed = ska_arena_cr_allocate_zeroed,
+        .reallocate      = ska_arena_cr_reallocate,
+        .free            = ska_arena_cr_free,
+    };
+}
+
+void ska_mem_arena_copy_realloc_deinit(SkaAllocator allocator) {
+    ska_arena_deinit((SkaArena*)allocator.context);
+}
+
+void ska_mem_arena_copy_realloc_reset(SkaAllocator* allocator) {
+    ska_arena_reset((SkaArena*)allocator->context);
+}

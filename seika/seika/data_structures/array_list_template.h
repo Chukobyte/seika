@@ -37,6 +37,7 @@
     bool STRUCT_NAME##_is_empty(const STRUCT_NAME* list); \
     void STRUCT_NAME##_clear(STRUCT_NAME* list); \
     void STRUCT_NAME##_reserve(STRUCT_NAME* list, usize newCapacity); \
+    void STRUCT_NAME##_resize_zeroed(STRUCT_NAME* list, usize newSize); \
     TYPE* STRUCT_NAME##_to_array(STRUCT_NAME* list);
 
 // Internal implementation macro
@@ -70,7 +71,7 @@
     \
     bool STRUCT_NAME##_append(STRUCT_NAME* list, TYPE value) { \
         if (list->size >= list->capacity) { \
-            const usize newCapacity = (usize)((f32)list->capacity * 1.5f); \
+            const usize newCapacity = (usize)((f32)list->capacity * 1.5f) + 1; \
             list->capacity = newCapacity; \
             list->data = (TYPE*)SKA_REALLOC_A(list->allocator, list->data, list->capacity * sizeof(TYPE)); \
             if (list->data == NULL) return false; \
@@ -144,6 +145,22 @@
             list->data = (TYPE*)SKA_REALLOC_A(list->allocator, list->data, newCapacity * sizeof(TYPE)); \
             list->capacity = newCapacity; \
         } \
+    } \
+    \
+    void STRUCT_NAME##_resize_zeroed(STRUCT_NAME* list, usize newSize) { \
+        if (newSize <= list->size) { \
+            return; \
+        } \
+        if (newSize > list->capacity) { \
+            usize newCapacity = list->capacity == 0 ? newSize : list->capacity; \
+            while (newCapacity < newSize) { \
+                newCapacity = (usize)((f32)newCapacity * 1.5f) + 1; \
+            } \
+            list->data = (TYPE*)SKA_REALLOC_A(list->allocator, list->data, newCapacity * sizeof(TYPE)); \
+            list->capacity = newCapacity; \
+        } \
+        memset(list->data + list->size, 0, (newSize - list->size) * sizeof(TYPE)); \
+        list->size = newSize; \
     } \
     \
     TYPE* STRUCT_NAME##_to_array(STRUCT_NAME* list) { \

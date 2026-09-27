@@ -43,7 +43,7 @@
     \
     typedef struct STRUCT_NAME##AddResult { \
         usize hash; \
-        bool wasAdded; \
+        bool was_added; \
     } STRUCT_NAME##AddResult; \
     \
     STRUCT_NAME* STRUCT_NAME##_init(usize capacity); \
@@ -182,13 +182,13 @@
         VALUE_TYPE* existingValue = STRUCT_NAME##_get_with_hash(hashMap, key, index); \
         if (existingValue) { \
             *existingValue = value; \
-            return (STRUCT_NAME##AddResult){ .hash = index, .wasAdded = false }; \
+            return (STRUCT_NAME##AddResult){ .hash = index, .was_added = false }; \
         } \
         if (!STRUCT_NAME##_push_front(hashMap, index, key, value)) { \
-            return (STRUCT_NAME##AddResult){ .hash = index, .wasAdded = false }; \
+            return (STRUCT_NAME##AddResult){ .hash = index, .was_added = false }; \
         } \
         hashMap->size++; \
-        return (STRUCT_NAME##AddResult){ .hash = index, .wasAdded = true }; \
+        return (STRUCT_NAME##AddResult){ .hash = index, .was_added = true }; \
     } \
     \
     VALUE_TYPE* STRUCT_NAME##_get(STRUCT_NAME* hashMap, KEY_TYPE key) { \

@@ -155,27 +155,27 @@ void seika_array_list_test(void) {
 
 
     TEST_ASSERT_NOT_NULL(list.data);
-    TEST_ASSERT_EQUAL_UINT(sizeof(int32), list.valueSize);
+    TEST_ASSERT_EQUAL_UINT(sizeof(int32), list.value_size);
     TEST_ASSERT_EQUAL_UINT(0, list.size);
     TEST_ASSERT_EQUAL_UINT(10, list.capacity);
-    TEST_ASSERT_EQUAL_UINT(10, list.initialCapacity);
+    TEST_ASSERT_EQUAL_UINT(10, list.initial_capacity);
 
     ska_array_list_deinit(&list);
     TEST_ASSERT_NULL(list.data);
     TEST_ASSERT_EQUAL_UINT(0, list.size);
 
     // Test for-each with integers (value type)
-    SkaArrayList intList = ska_array_list_init(sizeof(int32), 4);
-    ska_array_list_append(&intList, &(int32){10});
-    ska_array_list_append(&intList, &(int32){20});
-    ska_array_list_append(&intList, &(int32){30});
+    SkaArrayList int_list = ska_array_list_init(sizeof(int32), 4);
+    ska_array_list_append(&int_list, &(int32){10});
+    ska_array_list_append(&int_list, &(int32){20});
+    ska_array_list_append(&int_list, &(int32){30});
 
     int32 sum = 0;
-    SKA_ARRAY_LIST_FOR_EACH(&intList, int32*, iter) {
+    SKA_ARRAY_LIST_FOR_EACH(&int_list, int32*, iter) {
         sum += *iter;
     }
     TEST_ASSERT_EQUAL_INT32(60, sum);
-    ska_array_list_deinit(&intList);
+    ska_array_list_deinit(&int_list);
 
     // Test for-each with struct (value type)
     typedef struct TestObject {
@@ -183,23 +183,23 @@ void seika_array_list_test(void) {
         int32 value;
     } TestObject;
 
-    SkaArrayList objList = ska_array_list_init(sizeof(TestObject), 4);
-    ska_array_list_append(&objList, &(TestObject){.id = 1, .value = 100});
-    ska_array_list_append(&objList, &(TestObject){.id = 2, .value = 200});
-    ska_array_list_append(&objList, &(TestObject){.id = 3, .value = 300});
+    SkaArrayList obj_list = ska_array_list_init(sizeof(TestObject), 4);
+    ska_array_list_append(&obj_list, &(TestObject){.id = 1, .value = 100});
+    ska_array_list_append(&obj_list, &(TestObject){.id = 2, .value = 200});
+    ska_array_list_append(&obj_list, &(TestObject){.id = 3, .value = 300});
 
-    int32 idSum = 0;
-    int32 valueSum = 0;
-    SKA_ARRAY_LIST_FOR_EACH(&objList, TestObject*, iter) {
-        idSum += iter->id;
-        valueSum += iter->value;
+    int32 id_sum = 0;
+    int32 value_sum = 0;
+    SKA_ARRAY_LIST_FOR_EACH(&obj_list, TestObject*, iter) {
+        id_sum += iter->id;
+        value_sum += iter->value;
     }
-    TEST_ASSERT_EQUAL_INT32(6, idSum);
-    TEST_ASSERT_EQUAL_INT32(600, valueSum);
-    ska_array_list_deinit(&objList);
+    TEST_ASSERT_EQUAL_INT32(6, id_sum);
+    TEST_ASSERT_EQUAL_INT32(600, value_sum);
+    ska_array_list_deinit(&obj_list);
 
     // Test for-each with pointers (pointer to pointer)
-    SkaArrayList ptrList = ska_array_list_init(sizeof(int32*), 4);
+    SkaArrayList ptr_list = ska_array_list_init(sizeof(int32*), 4);
 
     int32* ptr1 = SKA_ALLOC(int32);
     *ptr1 = 111;
@@ -208,34 +208,34 @@ void seika_array_list_test(void) {
     int32* ptr3 = SKA_ALLOC(int32);
     *ptr3 = 333;
 
-    ska_array_list_append(&ptrList, &ptr1);
-    ska_array_list_append(&ptrList, &ptr2);
-    ska_array_list_append(&ptrList, &ptr3);
+    ska_array_list_append(&ptr_list, &ptr1);
+    ska_array_list_append(&ptr_list, &ptr2);
+    ska_array_list_append(&ptr_list, &ptr3);
 
-    int32 ptrSum = 0;
-    SKA_ARRAY_LIST_FOR_EACH(&ptrList, int32**, iter) {
-        ptrSum += **iter;
+    int32 ptr_sum = 0;
+    SKA_ARRAY_LIST_FOR_EACH(&ptr_list, int32**, iter) {
+        ptr_sum += **iter;
     }
-    TEST_ASSERT_EQUAL_INT32(666, ptrSum);
+    TEST_ASSERT_EQUAL_INT32(666, ptr_sum);
 
     // Cleanup pointers
     SKA_FREE(ptr1);
     SKA_FREE(ptr2);
     SKA_FREE(ptr3);
-    ska_array_list_deinit(&ptrList);
+    ska_array_list_deinit(&ptr_list);
 }
 
 void seika_hash_map_test(void) {
     // Test init and deinit
     SkaHashMap* map = ska_hash_map_init(sizeof(int32), sizeof(int32), 8);
     TEST_ASSERT_NOT_NULL(map);
-    TEST_ASSERT_EQUAL_UINT(sizeof(int32), map->keySize);
-    TEST_ASSERT_EQUAL_UINT(sizeof(int32), map->valueSize);
+    TEST_ASSERT_EQUAL_UINT(sizeof(int32), map->key_size);
+    TEST_ASSERT_EQUAL_UINT(sizeof(int32), map->value_size);
     TEST_ASSERT_EQUAL_UINT(0, map->size);
     TEST_ASSERT_EQUAL_UINT(8, map->capacity);
-    TEST_ASSERT_EQUAL_UINT(8, map->initialCapacity);
-    TEST_ASSERT_NOT_NULL(map->hashFunc);
-    TEST_ASSERT_NOT_NULL(map->compareFunc);
+    TEST_ASSERT_EQUAL_UINT(8, map->initial_capacity);
+    TEST_ASSERT_NOT_NULL(map->hash_func);
+    TEST_ASSERT_NOT_NULL(map->compare_func);
 
     ska_hash_map_deinit(map);
 
@@ -244,7 +244,7 @@ void seika_hash_map_test(void) {
 
     int32 key1 = 10;
     int32 value1 = 100;
-    TEST_ASSERT_TRUE(ska_hash_map_add(map, &key1, &value1).wasAdded);
+    TEST_ASSERT_TRUE(ska_hash_map_add(map, &key1, &value1).was_added);
     TEST_ASSERT_EQUAL_UINT(1, map->size);
 
     int32* retrieved = (int32*)ska_hash_map_get(map, &key1);
@@ -253,7 +253,7 @@ void seika_hash_map_test(void) {
 
     // Test update existing key
     int32 value2 = 200;
-    TEST_ASSERT_FALSE(ska_hash_map_add(map, &key1, &value2).wasAdded); // Update failed
+    TEST_ASSERT_FALSE(ska_hash_map_add(map, &key1, &value2).was_added); // Update failed
     TEST_ASSERT_EQUAL_UINT(1, map->size); // Size should not increase
 
     retrieved = (int32*)ska_hash_map_get(map, &key1);
@@ -263,12 +263,12 @@ void seika_hash_map_test(void) {
     // Test multiple keys
     int32 key2 = 20;
     int32 value3 = 300;
-    TEST_ASSERT_TRUE(ska_hash_map_add(map, &key2, &value3).wasAdded);
+    TEST_ASSERT_TRUE(ska_hash_map_add(map, &key2, &value3).was_added);
     TEST_ASSERT_EQUAL_UINT(2, map->size);
 
     int32 key3 = 30;
     int32 value4 = 400;
-    TEST_ASSERT_TRUE(ska_hash_map_add(map, &key3, &value4).wasAdded);
+    TEST_ASSERT_TRUE(ska_hash_map_add(map, &key3, &value4).was_added);
     TEST_ASSERT_EQUAL_UINT(3, map->size);
 
     // Test has
@@ -276,12 +276,12 @@ void seika_hash_map_test(void) {
     TEST_ASSERT_TRUE(ska_hash_map_has(map, &key2));
     TEST_ASSERT_TRUE(ska_hash_map_has(map, &key3));
 
-    int32 nonExistentKey = 999;
-    TEST_ASSERT_FALSE(ska_hash_map_has(map, &nonExistentKey));
+    int32 non_existent_key = 999;
+    TEST_ASSERT_FALSE(ska_hash_map_has(map, &non_existent_key));
 
     // Test get non-existent key
-    int32* nonExistent = (int32*)ska_hash_map_get(map, &nonExistentKey);
-    TEST_ASSERT_NULL(nonExistent);
+    int32* non_existent = (int32*)ska_hash_map_get(map, &non_existent_key);
+    TEST_ASSERT_NULL(non_existent);
 
     // Test erase
     TEST_ASSERT_TRUE(ska_hash_map_erase(map, &key2));
@@ -290,7 +290,7 @@ void seika_hash_map_test(void) {
     TEST_ASSERT_NULL(ska_hash_map_get(map, &key2));
 
     // Test erase non-existent key
-    TEST_ASSERT_FALSE(ska_hash_map_erase(map, &nonExistentKey));
+    TEST_ASSERT_FALSE(ska_hash_map_erase(map, &non_existent_key));
     TEST_ASSERT_EQUAL_UINT(2, map->size);
 
     ska_hash_map_deinit(map);
@@ -298,17 +298,17 @@ void seika_hash_map_test(void) {
     // Test with string keys and values
     map = ska_hash_map_init(sizeof(char*), sizeof(int32), 8);
 
-    const char* strKey1 = "apple";
-    int32 strValue1 = 1;
-    ska_hash_map_add(map, (void*)&strKey1, &strValue1);
+    const char* str_key1 = "apple";
+    int32 str_value1 = 1;
+    ska_hash_map_add(map, (void*)&str_key1, &str_value1);
 
-    const char* strKey2 = "banana";
-    int32 strValue2 = 2;
-    ska_hash_map_add(map, (void*)&strKey2, &strValue2);
+    const char* str_key2 = "banana";
+    int32 str_value2 = 2;
+    ska_hash_map_add(map, (void*)&str_key2, &str_value2);
 
-    int32* strRetrieved = (int32*)ska_hash_map_get(map, (void*)&strKey1);
-    TEST_ASSERT_NOT_NULL(strRetrieved);
-    TEST_ASSERT_EQUAL_INT32(1, *strRetrieved);
+    int32* str_retrieved = (int32*)ska_hash_map_get(map, (void*)&str_key1);
+    TEST_ASSERT_NOT_NULL(str_retrieved);
+    TEST_ASSERT_EQUAL_INT32(1, *str_retrieved);
 
     ska_hash_map_deinit(map);
 
@@ -341,9 +341,9 @@ void seika_hash_map_test(void) {
     ska_hash_map_clear(map);
     TEST_ASSERT_EQUAL_UINT(0, map->size);
 
-    int32 testKey = 0;
-    TEST_ASSERT_FALSE(ska_hash_map_has(map, &testKey));
-    TEST_ASSERT_NULL(ska_hash_map_get(map, &testKey));
+    int32 test_key = 0;
+    TEST_ASSERT_FALSE(ska_hash_map_has(map, &test_key));
+    TEST_ASSERT_NULL(ska_hash_map_get(map, &test_key));
 
     ska_hash_map_deinit(map);
 
@@ -355,27 +355,27 @@ void seika_hash_map_test(void) {
         ska_hash_map_add(map, &i, &value);
     }
 
-    int32 iterCount = 0;
-    int32 iterSum = 0;
+    int32 iter_count = 0;
+    int32 iter_sum = 0;
     SKA_HASH_MAP_FOR_EACH(map, iter) {
         int32* key = (int32*)iter.pair->key;
         int32* value = (int32*)iter.pair->value;
         TEST_ASSERT_NOT_NULL(key);
         TEST_ASSERT_NOT_NULL(value);
         TEST_ASSERT_EQUAL_INT32(*key * 100, *value);
-        iterCount++;
-        iterSum += *value;
+        iter_count++;
+        iter_sum += *value;
     }
-    TEST_ASSERT_EQUAL_INT32(5, iterCount);
-    TEST_ASSERT_EQUAL_INT32(1000, iterSum); // 0 + 100 + 200 + 300 + 400
+    TEST_ASSERT_EQUAL_INT32(5, iter_count);
+    TEST_ASSERT_EQUAL_INT32(1000, iter_sum); // 0 + 100 + 200 + 300 + 400
 
     // Test iterator on empty map
     ska_hash_map_clear(map);
-    iterCount = 0;
+    iter_count = 0;
     SKA_HASH_MAP_FOR_EACH(map, iter) {
-        iterCount++;
+        iter_count++;
     }
-    TEST_ASSERT_EQUAL_INT32(0, iterCount);
+    TEST_ASSERT_EQUAL_INT32(0, iter_count);
 
     ska_hash_map_deinit(map);
 
@@ -406,14 +406,14 @@ void seika_hash_map_test(void) {
 
     map = ska_hash_map_init(sizeof(int32), sizeof(TestStruct), 8);
 
-    int32 structKey = 42;
-    TestStruct structValue = {.id = 100, .score = 95.5f};
-    ska_hash_map_add(map, &structKey, &structValue);
+    int32 struct_key = 42;
+    TestStruct struct_value = {.id = 100, .score = 95.5f};
+    ska_hash_map_add(map, &struct_key, &struct_value);
 
-    TestStruct* retrievedStruct = (TestStruct*)ska_hash_map_get(map, &structKey);
-    TEST_ASSERT_NOT_NULL(retrievedStruct);
-    TEST_ASSERT_EQUAL_INT32(100, retrievedStruct->id);
-    TEST_ASSERT_EQUAL_FLOAT(95.5f, retrievedStruct->score);
+    TestStruct* retrieved_struct = (TestStruct*)ska_hash_map_get(map, &struct_key);
+    TEST_ASSERT_NOT_NULL(retrieved_struct);
+    TEST_ASSERT_EQUAL_INT32(100, retrieved_struct->id);
+    TEST_ASSERT_EQUAL_FLOAT(95.5f, retrieved_struct->score);
 
     ska_hash_map_deinit(map);
 }
@@ -423,16 +423,16 @@ void seika_string_test(void) {
     SkaString str1;
     ska_string_init(&str1, "Hello", 5);
     TEST_ASSERT_EQUAL_UINT(5, str1.len);
-    TEST_ASSERT_FALSE(str1.isHeap);
+    TEST_ASSERT_FALSE(str1.is_heap);
     TEST_ASSERT_EQUAL_STRING("Hello", ska_string_as_slice(&str1));
     ska_string_deinit(&str1);
 
     // Test heap allocation (exceeds SSO capacity of 22)
-    const char* longText = "This is a very long string";
+    const char* long_text = "This is a very long string";
     SkaString str2;
-    ska_string_init(&str2, longText, ska_strlen(longText));
+    ska_string_init(&str2, long_text, ska_strlen(long_text));
     TEST_ASSERT_EQUAL_UINT(26, str2.len);
-    TEST_ASSERT_TRUE(str2.isHeap);
+    TEST_ASSERT_TRUE(str2.is_heap);
     ska_string_deinit(&str2);
 
     // Test append
@@ -624,7 +624,7 @@ void seika_string_enhanced_test(void) {
     // Test ensure null terminated (SSO)
     SkaString str16;
     ska_string_init_cstr(&str16, "Short");
-    TEST_ASSERT_FALSE(str16.isHeap);
+    TEST_ASSERT_FALSE(str16.is_heap);
     TEST_ASSERT_TRUE(ska_string_ensure_null_terminated(&str16));
     // Verify it's actually null terminated
     const char* slice = ska_string_as_slice(&str16);
@@ -634,7 +634,7 @@ void seika_string_enhanced_test(void) {
     // Test ensure null terminated (heap - should fail in current impl)
     SkaString str17;
     ska_string_init_cstr(&str17, "This is a very long string that exceeds SSO capacity");
-    TEST_ASSERT_TRUE(str17.isHeap);
+    TEST_ASSERT_TRUE(str17.is_heap);
     TEST_ASSERT_FALSE(ska_string_ensure_null_terminated(&str17));
     ska_string_deinit(&str17);
 
@@ -679,10 +679,10 @@ void seika_string_enhanced_test(void) {
     // Test SSO boundary conditions
     SkaString str21;
     ska_string_init_cstr(&str21, "  x  "); // Small, fits in SSO
-    TEST_ASSERT_FALSE(str21.isHeap);
+    TEST_ASSERT_FALSE(str21.is_heap);
     ska_string_trim_whitespace(&str21);
     TEST_ASSERT_EQUAL_UINT(1, str21.len);
-    TEST_ASSERT_FALSE(str21.isHeap); // Should still be SSO
+    TEST_ASSERT_FALSE(str21.is_heap); // Should still be SSO
     TEST_ASSERT_EQUAL_STRING("x", ska_string_as_slice(&str21));
     ska_string_deinit(&str21);
 
