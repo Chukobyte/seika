@@ -357,6 +357,8 @@ pub fn build(b: *std.Build) void {
 
     const seika_test_step = b.step("seika-test", "Build and run seika unit tests");
     const unity = buildUnity(b, target, optimize);
+    // Test files define their own main(), which clashes with seika_main.c's on Linux/macOS.
+    const seika_no_main = buildSeika(b, target, optimize, zip, ft, glad, stb, msf_gif, false);
 
     const test_sources = [_][]const u8{
         "test/seika_unit_test.c",
@@ -383,7 +385,7 @@ pub fn build(b: *std.Build) void {
         test_mod.addIncludePath(b.path("thirdparty/unity"));
         test_mod.addCMacro("UNITY_INCLUDE_DOUBLE", "1");
         test_mod.addCMacro("UNITY_SUPPORT_64", "1");
-        test_mod.linkLibrary(seika);
+        test_mod.linkLibrary(seika_no_main);
         test_mod.linkLibrary(unity);
         // seika is always built with SKA_RENDERING=1 (see addSeikaDefines), so these test
         // executables need X11/GL themselves on Linux -- see linkLinuxRenderingLibs's doc comment.

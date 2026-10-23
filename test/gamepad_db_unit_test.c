@@ -23,12 +23,26 @@ void seika_gamepad_db_find_by_guid_unknown_returns_null_test(void) {
     TEST_ASSERT_NULL(ska_gamepad_db_find_by_guid("not-a-real-guid"));
 }
 
-// Xbox 360 Controller (Windows section of the generated table).
+// Xbox 360 Controller, taken from this platform's section of the generated table.
+#if defined(PLATFORM_WINDOWS)
+#define KNOWN_XBOX_360_GUID "03000000380700001647000000000000"
+#define KNOWN_XBOX_360_ENTRY_COUNT 20
+#elif defined(PLATFORM_LINUX)
+#define KNOWN_XBOX_360_GUID "030000005e0400008e02000010010000"
+#define KNOWN_XBOX_360_ENTRY_COUNT 21
+#elif defined(PLATFORM_MACOS)
+#define KNOWN_XBOX_360_GUID "030000005e0400008e02000000000000"
+#define KNOWN_XBOX_360_ENTRY_COUNT 21
+#endif
+
 void seika_gamepad_db_find_by_guid_known_controller_test(void) {
-    const SkaGamepadMapping* mapping = ska_gamepad_db_find_by_guid("03000000380700001647000000000000");
+#ifndef KNOWN_XBOX_360_GUID
+    TEST_IGNORE_MESSAGE("No desktop gamepad table on this platform");
+#else
+    const SkaGamepadMapping* mapping = ska_gamepad_db_find_by_guid(KNOWN_XBOX_360_GUID);
     TEST_ASSERT_NOT_NULL(mapping);
     TEST_ASSERT_EQUAL_STRING("Xbox 360 Controller", mapping->name);
-    TEST_ASSERT_EQUAL_UINT32(20, mapping->entry_count);
+    TEST_ASSERT_EQUAL_UINT32(KNOWN_XBOX_360_ENTRY_COUNT, mapping->entry_count);
 
     bool found_face_south = false, found_left_stick_x = false;
     for (uint32 i = 0; i < mapping->entry_count; i++) {
@@ -46,6 +60,7 @@ void seika_gamepad_db_find_by_guid_known_controller_test(void) {
     }
     TEST_ASSERT_TRUE(found_face_south);
     TEST_ASSERT_TRUE(found_left_stick_x);
+#endif
 }
 
 void seika_gamepad_apply_axis_modifier_none_test(void) {

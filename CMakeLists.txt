@@ -75,7 +75,7 @@ target_compile_definitions(${PROJECT_NAME}
 if (NOT WIN32 AND NOT CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
     target_compile_definitions(${PROJECT_NAME} PRIVATE _DEFAULT_SOURCE)
 endif ()
-target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../seika)
+target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(LIBS_TO_LINK "")
 
