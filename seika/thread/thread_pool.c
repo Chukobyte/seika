@@ -1,5 +1,7 @@
 #include "thread_pool.h"
 
+#if SKA_THREAD
+
 #include "seika/memory.h"
 
 // --- Thread Pool Worker --- //
@@ -32,16 +34,16 @@ static SkaThreadPoolWork* tpool_work_get(SkaThreadPool* tp) {
         return NULL;
     }
 
-    work = tp->workFirst;
+    work = tp->work_first;
     if (work == NULL) {
         return NULL;
     }
 
     if (work->next == NULL) {
-        tp->workFirst = NULL;
-        tp->workLast  = NULL;
+      tp->work_first = NULL;
+      tp->work_last = NULL;
     } else {
-        tp->workFirst = work->next;
+      tp->work_first = work->next;
     }
 
     return work;
@@ -52,36 +54,37 @@ static void* tpool_worker(void *arg) {
     SkaThreadPoolWork* work;
 
     while (true) {
-        pthread_mutex_lock(&(tp->workMutex));
+      pthread_mutex_lock(&(tp->work_mutex));
 
-        while (tp->workFirst == NULL && !tp->shouldStop) {
-            pthread_cond_wait(&(tp->workCond), &(tp->workMutex));
-        }
+      while (tp->work_first == NULL && !tp->should_stop) {
+        pthread_cond_wait(&(tp->work_cond), &(tp->work_mutex));
+      }
 
-        if (tp->shouldStop) {
-            break;
-        }
+      if (tp->should_stop) {
+        break;
+      }
 
         work = tpool_work_get(tp);
-        tp->workingCount++;
-        pthread_mutex_unlock(&(tp->workMutex));
+        tp->working_count++;
+        pthread_mutex_unlock(&(tp->work_mutex));
 
         if (work != NULL) {
             work->func(work->arg);
             tpool_work_destroy(work);
         }
 
-        pthread_mutex_lock(&(tp->workMutex));
-        tp->workingCount--;
-        if (!tp->shouldStop && tp->workingCount == 0 && tp->workFirst == NULL) {
-            pthread_cond_signal(&(tp->workingCond));
+        pthread_mutex_lock(&(tp->work_mutex));
+        tp->working_count--;
+        if (!tp->should_stop && tp->working_count == 0 &&
+            tp->work_first == NULL) {
+          pthread_cond_signal(&(tp->working_cond));
         }
-        pthread_mutex_unlock(&(tp->workMutex));
+        pthread_mutex_unlock(&(tp->work_mutex));
     }
 
-    tp->threadCount--;
-    pthread_cond_signal(&(tp->workingCond));
-    pthread_mutex_unlock(&(tp->workMutex));
+    tp->thread_count--;
+    pthread_cond_signal(&(tp->working_cond));
+    pthread_mutex_unlock(&(tp->work_mutex));
     return NULL;
 }
 
@@ -96,14 +99,14 @@ SkaThreadPool* ska_tpool_create(usize num) {
     }
 
     tp = SKA_ALLOC_BYTES_ZEROED(sizeof(*tp));
-    tp->threadCount = num;
+    tp->thread_count = num;
 
-    pthread_mutex_init(&(tp->workMutex), NULL);
-    pthread_cond_init(&(tp->workCond), NULL);
-    pthread_cond_init(&(tp->workingCond), NULL);
+    pthread_mutex_init(&(tp->work_mutex), NULL);
+    pthread_cond_init(&(tp->work_cond), NULL);
+    pthread_cond_init(&(tp->working_cond), NULL);
 
-    tp->workFirst = NULL;
-    tp->workLast  = NULL;
+    tp->work_first = NULL;
+    tp->work_last = NULL;
 
     for (usize i = 0; i < num; i++) {
         pthread_create(&thread, NULL, tpool_worker, tp);
@@ -120,22 +123,22 @@ void ska_tpool_destroy(SkaThreadPool* tp) {
     if (tp == NULL)
         return;
 
-    pthread_mutex_lock(&(tp->workMutex));
-    work = tp->workFirst;
+    pthread_mutex_lock(&(tp->work_mutex));
+    work = tp->work_first;
     while (work != NULL) {
         work2 = work->next;
         tpool_work_destroy(work);
         work = work2;
     }
-    tp->shouldStop = true;
-    pthread_cond_broadcast(&(tp->workCond));
-    pthread_mutex_unlock(&(tp->workMutex));
+    tp->should_stop = true;
+    pthread_cond_broadcast(&(tp->work_cond));
+    pthread_mutex_unlock(&(tp->work_mutex));
 
     ska_tpool_wait(tp);
 
-    pthread_mutex_destroy(&(tp->workMutex));
-    pthread_cond_destroy(&(tp->workCond));
-    pthread_cond_destroy(&(tp->workingCond));
+    pthread_mutex_destroy(&(tp->work_mutex));
+    pthread_cond_destroy(&(tp->work_cond));
+    pthread_cond_destroy(&(tp->working_cond));
 
     SKA_FREE(tp);
 }
@@ -152,17 +155,17 @@ bool ska_tpool_add_work(SkaThreadPool* tp, SkaThreadFunc func, void* arg) {
         return false;
     }
 
-    pthread_mutex_lock(&(tp->workMutex));
-    if (tp->workFirst == NULL) {
-        tp->workFirst = work;
-        tp->workLast  = tp->workFirst;
+    pthread_mutex_lock(&(tp->work_mutex));
+    if (tp->work_first == NULL) {
+      tp->work_first = work;
+      tp->work_last = tp->work_first;
     } else {
-        tp->workLast->next = work;
-        tp->workLast       = work;
+      tp->work_last->next = work;
+      tp->work_last = work;
     }
 
-    pthread_cond_broadcast(&(tp->workCond));
-    pthread_mutex_unlock(&(tp->workMutex));
+    pthread_cond_broadcast(&(tp->work_cond));
+    pthread_mutex_unlock(&(tp->work_mutex));
 
     return true;
 }
@@ -172,13 +175,15 @@ void ska_tpool_wait(SkaThreadPool* tp) {
         return;
     }
 
-    pthread_mutex_lock(&(tp->workMutex));
+    pthread_mutex_lock(&(tp->work_mutex));
     while (true) {
-        if ((!tp->shouldStop && tp->workingCount != 0) || (tp->shouldStop && tp->threadCount != 0)) {
-            pthread_cond_wait(&(tp->workingCond), &(tp->workMutex));
+        if ((!tp->should_stop && tp->working_count != 0) || (tp->should_stop && tp->thread_count != 0)) {
+            pthread_cond_wait(&(tp->working_cond), &(tp->work_mutex));
         } else {
             break;
         }
     }
-    pthread_mutex_unlock(&(tp->workMutex));
+    pthread_mutex_unlock(&(tp->work_mutex));
 }
+
+#endif // #if SKA_THREAD

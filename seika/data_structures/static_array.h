@@ -6,7 +6,7 @@
 // Helper class for generalized use of static arrays
 
 #define SKA_STATIC_ARRAY_CREATE(ARRAY_TYPE, ARRAY_SIZE, ARRAY_NAME) \
-static ARRAY_TYPE ARRAY_NAME[ARRAY_SIZE];                           \
+static ARRAY_TYPE ARRAY_NAME[ARRAY_SIZE] = {0};                           \
 static usize ARRAY_NAME ##_count = 0
 
 #define SKA_STATIC_ARRAY_FOR_LOOP(ARRAY_NAME) \

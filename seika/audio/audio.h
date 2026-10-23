@@ -17,16 +17,16 @@ typedef struct SkaAudioSource {
     int32 sample_rate;
     void* samples;
     int32 sample_count;
-    uint32 dataId;
+    uint32 data_id;
 } SkaAudioSource;
 
 bool ska_audio_initialize();
 void ska_audio_finalize();
-void ska_audio_print_audio_source(SkaAudioSource* audioSource);
-void ska_audio_set_wav_sample_rate(uint32 wavSampleRate);
+void ska_audio_print_audio_source(SkaAudioSource* audio_source);
+void ska_audio_set_wav_sample_rate(uint32 wav_sample_rate);
 uint32 ska_audio_get_wav_sample_rate();
-SkaAudioSource* ska_audio_load_audio_source_wav(const char* fileName);
-void ska_audio_delete_audio_source_wav(SkaAudioSource* audioSource);
+SkaAudioSource* ska_audio_load_audio_source_wav(const char* file_name);
+void ska_audio_delete_audio_source_wav(SkaAudioSource* audio_source);
 
 #ifdef __cplusplus
 }

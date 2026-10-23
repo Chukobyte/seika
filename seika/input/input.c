@@ -1,11 +1,7 @@
 #if SKA_INPUT
 
-#if SKA_SDL
-#include <SDL3/SDL.h>
-#endif
-
 #include "input.h"
-#include "sdl_input.h"
+#include <math.h>
 #include "seika/string.h"
 #include "seika/assert.h"
 #include "seika/memory.h"
@@ -18,16 +14,16 @@ typedef struct SkaAxisInputValues {
 } SkaAxisInputValues;
 
 typedef struct SkaInputKeyState {
-    bool isPressed;
-    bool isJustPressed;
-    bool isJustReleased;
+    bool is_pressed;
+    bool is_just_pressed;
+    bool is_just_released;
     f32 strength;
-    SkaAxisInputValues prevAxisValues[SKA_INPUT_MAX_DEVICES];
+    SkaAxisInputValues prev_axis_values[SKA_INPUT_MAX_DEVICES];
 } SkaInputKeyState;
 
 typedef struct SkaInputStateCleanup {
     SkaInputKey key;
-    SkaInputDeviceIndex deviceIndex;
+    SkaInputDeviceIndex device_index;
 } SkaInputStateCleanup;
 
 typedef struct SkaInputActionData {
@@ -36,70 +32,44 @@ typedef struct SkaInputActionData {
 } SkaInputActionData;
 
 typedef struct SkaInputState {
-    SkaInputKeyState inputKeyState[SKA_INPUT_MAX_DEVICES][SkaInputKey_NUMBER_OF_KEYS];
+    SkaInputKeyState input_key_state[SKA_INPUT_MAX_DEVICES][SkaInputKey_NUMBER_OF_KEYS];
 
-    SkaAxisInputValues prevAxisInputs[SKA_INPUT_MAX_DEVICES];
+    SkaAxisInputValues prev_axis_inputs[SKA_INPUT_MAX_DEVICES];
 
-    SkaInputStateCleanup cleanupKeyStateJustPressed[SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE];
-    SkaInputStateCleanup cleanupKeyStateJustReleased[SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE];
-    usize cleanupKeyStateJustPressedCount;
-    usize cleanupKeyStateJustReleasedCount;
+    SkaInputStateCleanup cleanup_key_state_just_pressed[SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE];
+    SkaInputStateCleanup cleanup_key_state_just_released[SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE];
+    usize cleanup_key_state_just_pressed_count;
+    usize cleanup_key_state_just_released_count;
 
-    SkaInputActionHandle inputActionHandleIndex;
-    SkaInputActionData inputActionData[SKA_INPUT_MAX_DEVICES][SKA_INPUT_MAX_INPUT_ACTIONS];
+    SkaInputActionHandle input_action_handle_index;
+    SkaInputActionData input_action_data[SKA_INPUT_MAX_DEVICES][SKA_INPUT_MAX_INPUT_ACTIONS];
 } SkaInputState;
 
 #define DEFAULT_INPUT_STATE {0}
 
-static SkaInputState inputState = DEFAULT_INPUT_STATE;
-static SkaMouse globalMouse = {0};
-static bool isInputActive = false;
+static SkaInputState input_state = DEFAULT_INPUT_STATE;
+static SkaMouse global_mouse = {0};
+static bool is_input_active = false;
 
-static SkaInputKey get_key_from_2d_axis_key(SkaInputKey axis2DKey, SkaAxisInputValues* axisInputValues, f32 axisValue);
-static void set_prev_input_axis_value(SkaInputKey key, SkaAxisInputValues* axisInputValues, f32 axisValue);
-static void update_axis_key_state(SkaInputKey key, SkaInputInteractionStatus interactionStatus, f32 axisValue, SkaInputDeviceIndex deviceIndex);
+static SkaInputKey get_axis_direction_key(SkaInputKey axis2_d_key, f32 axis_value);
+static f32* get_prev_input_axis_value(SkaInputKey key, SkaAxisInputValues* axis_input_values);
+static void update_axis_key_state(SkaInputKey key, SkaInputInteractionStatus interaction_status, f32 axis_value, SkaInputDeviceIndex device_index);
 
 bool ska_input_initialize() {
-    SKA_ASSERT(!isInputActive);
+    SKA_ASSERT(!is_input_active);
 
-#if SKA_SDL
-    const bool isSDLInitialized = SDL_WasInit(0) != 0;
-    if (isSDLInitialized) {
-        if (SDL_InitSubSystem( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
-            return false;
-        }
-    } else {
-        if (SDL_Init( SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD) != 0) {
-            return false;
-        }
-    }
-
-
-    if (!ska_sdl_load_gamepad_mappings()) {
-        return false;
-    }
-#endif // #if SKA_SDL
-
-    isInputActive = true;
+    is_input_active = true;
     return true;
 }
 
 void ska_input_finalize() {
-    SKA_ASSERT(isInputActive);
+    SKA_ASSERT(is_input_active);
 
-#if SKA_SDL
-    SDL_QuitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_GAMEPAD);
-    const bool subsystemsStillInitialized = SDL_WasInit(0) != 0;
-    if (!subsystemsStillInitialized) {
-        SDL_Quit();
-    }
-#endif // #if SKA_SDL
-
-    isInputActive = false;
+    is_input_active = false;
 }
 
 const char* ska_input_key_to_string(SkaInputKey key) {
-    static const char* keyNames[SkaInputKey_NUMBER_OF_KEYS] = {
+    static const char* key_names[SkaInputKey_NUMBER_OF_KEYS] = {
         [SkaInputKey_INVALID] = "Invalid",
         // Gamepad
         [SkaInputKey_GAMEPAD_DPAD_DOWN] = "Gamepad Dpad Down",
@@ -122,6 +92,14 @@ const char* ska_input_key_to_string(SkaInputKey key) {
         [SkaInputKey_GAMEPAD_RIGHT_ANALOG_BUTTON] = "Gamepad Right Analog Button",
         [SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X] = "Gamepad Right Analog 2D Axis X",
         [SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_Y] = "Gamepad Right Analog 2D Axis Y",
+        [SkaInputKey_GAMEPAD_GUIDE] = "Gamepad Guide",
+        [SkaInputKey_GAMEPAD_PADDLE1] = "Gamepad Paddle 1",
+        [SkaInputKey_GAMEPAD_PADDLE2] = "Gamepad Paddle 2",
+        [SkaInputKey_GAMEPAD_PADDLE3] = "Gamepad Paddle 3",
+        [SkaInputKey_GAMEPAD_PADDLE4] = "Gamepad Paddle 4",
+        [SkaInputKey_GAMEPAD_MISC1] = "Gamepad Misc 1",
+        [SkaInputKey_GAMEPAD_MISC2] = "Gamepad Misc 2",
+        [SkaInputKey_GAMEPAD_TOUCHPAD] = "Gamepad Touchpad",
         [SkaInputKey_GAMEPAD_LEFT_ANALOG_LEFT] = "Gamepad Left Analog Left",
         [SkaInputKey_GAMEPAD_LEFT_ANALOG_RIGHT] = "Gamepad Left Analog Right",
         [SkaInputKey_GAMEPAD_LEFT_ANALOG_UP] = "Gamepad Left Analog Up",
@@ -255,12 +233,12 @@ const char* ska_input_key_to_string(SkaInputKey key) {
         [SkaInputKey_MOUSE_BUTTON_RIGHT] = "Mouse Button Right",
         [SkaInputKey_MOUSE_BUTTON_MIDDLE] = "Mouse Button Middle",
     };
-    return keyNames[key];
+    return key_names[key];
 }
 
-SkaInputKey ska_input_string_to_key(const char* keyName) {
+SkaInputKey ska_input_string_to_key(const char* key_name) {
     for (SkaInputKey key = 0; key < SkaInputKey_NUMBER_OF_KEYS; ++key) {
-        if (strcmp(keyName, ska_input_key_to_string(key)) == 0) {
+        if (strcmp(key_name, ska_input_key_to_string(key)) == 0) {
             return key;
         }
     }
@@ -280,89 +258,110 @@ bool ska_input_is_gamepad_key(SkaInputKey key) {
 }
 
 // Events
-void ska_input_register_gamepad_added_event(SkaInputDeviceIndex deviceIndex) {}
-
-void ska_input_register_gamepad_removed_event(SkaInputDeviceIndex deviceIndex) {
-    ska_input_reset_gamepad(deviceIndex);
+void ska_input_register_gamepad_added_event(SkaInputDeviceIndex device_index) {
+    // Ensures a newly connected device starts from clean state instead of possibly inheriting
+    // a stale value left behind by whatever previously occupied this device_index slot.
+    ska_input_reset_gamepad(device_index);
 }
 
-void ska_input_register_mouse_move_event(SkaVector2i newPosition) {
-    globalMouse.position = newPosition;
+void ska_input_register_gamepad_removed_event(SkaInputDeviceIndex device_index) {
+    ska_input_reset_gamepad(device_index);
 }
 
-void ska_input_register_input_event3(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType) {
-    ska_input_register_input_event2(sourceType, key, triggerType, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+void ska_input_register_mouse_move_event(SkaVector2i new_position) {
+    global_mouse.position = new_position;
 }
 
-void ska_input_register_input_event2(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType, SkaInputDeviceIndex deviceIndex) {
-    ska_input_register_input_event(sourceType, key, triggerType, deviceIndex, 0.0f);
+void ska_input_register_mouse_scroll_event(SkaVector2 delta) {
+    global_mouse.scroll.x += delta.x;
+    global_mouse.scroll.y += delta.y;
 }
 
-void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType, SkaInputDeviceIndex deviceIndex, f32 gamepadAxisValue) {
-    SkaInputInteractionStatus interactionStatus = SkaInputInteractionStatus_PRESSED;
-    SkaInputKeyState* keyState = &inputState.inputKeyState[deviceIndex][key];
+void ska_input_register_input_event3(SkaInputSourceType source_type, SkaInputKey key, SkaInputTriggerType trigger_type) {
+    ska_input_register_input_event2(source_type, key, trigger_type, SKA_INPUT_FIRST_PLAYER_DEVICE_INDEX);
+}
 
-    switch (triggerType) {
+void ska_input_register_input_event2(SkaInputSourceType source_type, SkaInputKey key, SkaInputTriggerType trigger_type, SkaInputDeviceIndex device_index) {
+    ska_input_register_input_event(source_type, key, trigger_type, device_index, 0.0f);
+}
+
+void ska_input_register_input_event(SkaInputSourceType source_type, SkaInputKey key, SkaInputTriggerType trigger_type, SkaInputDeviceIndex device_index, f32 gamepad_axis_value) {
+    SkaInputInteractionStatus interaction_status = SkaInputInteractionStatus_PRESSED;
+    SkaInputKeyState* key_state = &input_state.input_key_state[device_index][key];
+
+    switch (trigger_type) {
         case SkaInputTriggerType_PRESSED: {
-            if (!keyState->isPressed) {
+            if (!key_state->is_pressed) {
                 // interactionStatus = SkaInputInteractionStatus_JUST_PRESSED;
-                keyState->isJustPressed = true;
-                SKA_ASSERT(inputState.cleanupKeyStateJustPressedCount + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
-                inputState.cleanupKeyStateJustPressed[inputState.cleanupKeyStateJustPressedCount++] = (SkaInputStateCleanup) { .key = key, .deviceIndex = deviceIndex };
+                key_state->is_just_pressed = true;
+                SKA_ASSERT(input_state.cleanup_key_state_just_pressed_count + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
+                input_state.cleanup_key_state_just_pressed
+                    [input_state.cleanup_key_state_just_pressed_count++] =
+                    (SkaInputStateCleanup){.key = key,
+                                           .device_index = device_index};
             } else {
-                keyState->isJustPressed = false;
+                key_state->is_just_pressed = false;
             }
-            keyState->isPressed = true;
-            keyState->isJustReleased = false;
-            keyState->strength = 1.0f;
+            key_state->is_pressed = true;
+            key_state->is_just_released = false;
+            key_state->strength = 1.0f;
             break;
         }
         case SkaInputTriggerType_RELEASED: {
-            if (keyState->isJustReleased) {
+            if (key_state->is_just_released) {
                 return;
             }
-            keyState->isPressed = false;
-            keyState->isJustPressed = false;
-            keyState->isJustReleased = true;
-            keyState->strength = 0.0f;
+            key_state->is_pressed = false;
+            key_state->is_just_pressed = false;
+            key_state->is_just_released = true;
+            key_state->strength = 0.0f;
             // interactionStatus = SkaInputInteractionStatus_JUST_RELEASED;
-            SKA_ASSERT(inputState.cleanupKeyStateJustReleasedCount + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
-            inputState.cleanupKeyStateJustReleased[inputState.cleanupKeyStateJustReleasedCount++] = (SkaInputStateCleanup) { .key = key, .deviceIndex = deviceIndex };
+            SKA_ASSERT(input_state.cleanup_key_state_just_released_count + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
+            input_state.cleanup_key_state_just_released
+                [input_state.cleanup_key_state_just_released_count++] =
+                (SkaInputStateCleanup){.key = key,
+                                       .device_index = device_index};
             break;
         }
         case SkaInputTriggerType_AXIS_IN_MOTION: {
-            if (!keyState->isPressed) {
-                interactionStatus = SkaInputInteractionStatus_AXIS_STARTED_MOTION;
-                keyState->isJustPressed = true;
-                SKA_ASSERT(inputState.cleanupKeyStateJustPressedCount + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
-                inputState.cleanupKeyStateJustPressed[inputState.cleanupKeyStateJustPressedCount++] = (SkaInputStateCleanup) { .key = key, .deviceIndex = deviceIndex };
+            if (!key_state->is_pressed) {
+                interaction_status = SkaInputInteractionStatus_AXIS_STARTED_MOTION;
+                key_state->is_just_pressed = true;
+                SKA_ASSERT(input_state.cleanup_key_state_just_pressed_count + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
+                input_state.cleanup_key_state_just_pressed
+                    [input_state.cleanup_key_state_just_pressed_count++] =
+                    (SkaInputStateCleanup){.key = key,
+                                           .device_index = device_index};
             } else {
-                interactionStatus = SkaInputInteractionStatus_AXIS_IN_MOTION;
-                keyState->isJustPressed = false;
+                interaction_status = SkaInputInteractionStatus_AXIS_IN_MOTION;
+                key_state->is_just_pressed = false;
             }
-            keyState->isPressed = true;
-            keyState->isJustReleased = false;
-            keyState->strength = gamepadAxisValue;
+            key_state->is_pressed = true;
+            key_state->is_just_released = false;
+            key_state->strength = gamepad_axis_value;
 
             if (key != SkaInputKey_GAMEPAD_LEFT_TRIGGER && key != SkaInputKey_GAMEPAD_RIGHT_TRIGGER) {
-                update_axis_key_state(key, interactionStatus, gamepadAxisValue, deviceIndex);
+                update_axis_key_state(key, interaction_status, gamepad_axis_value, device_index);
             }
             break;
         }
         case SkaInputTriggerType_AXIS_STOPPED_MOTION: {
-            if (keyState->isJustReleased) {
+            if (key_state->is_just_released) {
                 return;
             }
-            interactionStatus = SkaInputInteractionStatus_AXIS_STOPPED_MOTION;
-            keyState->isPressed = false;
-            keyState->isJustPressed = false;
-            keyState->isJustReleased = true;
-            keyState->strength = 0.0f;
-            SKA_ASSERT(inputState.cleanupKeyStateJustReleasedCount + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
-            inputState.cleanupKeyStateJustReleased[inputState.cleanupKeyStateJustReleasedCount++] = (SkaInputStateCleanup) { .key = key, .deviceIndex = deviceIndex };
+            interaction_status = SkaInputInteractionStatus_AXIS_STOPPED_MOTION;
+            key_state->is_pressed = false;
+            key_state->is_just_pressed = false;
+            key_state->is_just_released = true;
+            key_state->strength = 0.0f;
+            SKA_ASSERT(input_state.cleanup_key_state_just_released_count + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
+            input_state.cleanup_key_state_just_released
+                [input_state.cleanup_key_state_just_released_count++] =
+                (SkaInputStateCleanup){.key = key,
+                                       .device_index = device_index};
 
             if (key != SkaInputKey_GAMEPAD_LEFT_TRIGGER && key != SkaInputKey_GAMEPAD_RIGHT_TRIGGER) {
-                update_axis_key_state(key, interactionStatus, gamepadAxisValue, deviceIndex);
+                update_axis_key_state(key, interaction_status, gamepad_axis_value, device_index);
             }
             break;
         }
@@ -375,182 +374,175 @@ void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey k
 //    const SkaInputEvent inputEvent = (SkaInputEvent) { .sourceType = sourceType, .interactionStatus = interactionStatus, .key = key, .deviceIndex = deviceIndex, gamepadAxisValue = gamepadAxisValue };
 }
 
-bool ska_input_is_key_pressed(SkaInputKey key, SkaInputDeviceIndex deviceIndex) {
-    return inputState.inputKeyState[deviceIndex][key].isPressed;
+bool ska_input_is_key_pressed(SkaInputKey key, SkaInputDeviceIndex device_index) {
+    return input_state.input_key_state[device_index][key].is_pressed;
 }
-bool ska_input_is_key_just_pressed(SkaInputKey key, SkaInputDeviceIndex deviceIndex) {
-    return inputState.inputKeyState[deviceIndex][key].isJustPressed;
+bool ska_input_is_key_just_pressed(SkaInputKey key, SkaInputDeviceIndex device_index) {
+    return input_state.input_key_state[device_index][key].is_just_pressed;
 }
-bool ska_input_is_key_just_released(SkaInputKey key, SkaInputDeviceIndex deviceIndex) {
-    return inputState.inputKeyState[deviceIndex][key].isJustReleased;
+bool ska_input_is_key_just_released(SkaInputKey key, SkaInputDeviceIndex device_index) {
+    return input_state.input_key_state[device_index][key].is_just_released;
 }
-f32 ska_input_get_key_strength(SkaInputKey key, SkaInputDeviceIndex deviceIndex) {
-    return inputState.inputKeyState[deviceIndex][key].strength;
+f32 ska_input_get_key_strength(SkaInputKey key, SkaInputDeviceIndex device_index) {
+    return input_state.input_key_state[device_index][key].strength;
 }
 
-SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex deviceIndex) {
+SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex device_index) {
     struct SkaAxis2DInputKeys {
         SkaInputKey x;
         SkaInputKey y;
     };
 
-    const struct SkaAxis2DInputKeys axisKeys = axis == SkaInputAxis_LEFT
+    const struct SkaAxis2DInputKeys axis_keys = axis == SkaInputAxis_LEFT
         ? (struct SkaAxis2DInputKeys) { .x = SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X, .y = SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y }
         : (struct SkaAxis2DInputKeys) { .x = SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X, .y = SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_Y };
-    const SkaInputKeyState* xKeyState = &inputState.inputKeyState[deviceIndex][axisKeys.x];
-    const SkaInputKeyState* yKeyState = &inputState.inputKeyState[deviceIndex][axisKeys.y];
-    return (SkaVector2) { .x = xKeyState->strength, .y = yKeyState->strength };
+    const SkaInputKeyState* x_key_state = &input_state.input_key_state[device_index][axis_keys.x];
+    const SkaInputKeyState* y_key_state = &input_state.input_key_state[device_index][axis_keys.y];
+    return (SkaVector2) { .x = x_key_state->strength, .y = y_key_state->strength };
 }
 
 SkaMouse* ska_input_get_mouse() {
-    return &globalMouse;
+    return &global_mouse;
 }
 
 // Input Action
-SkaInputActionHandle ska_input_add_input_action(const char* actionName, const SkaInputActionValue* actionValues, SkaInputDeviceIndex deviceIndex) {
-    SkaInputActionHandle actionHandle = ska_input_find_input_action_handle(actionName, deviceIndex);
-    if (actionHandle == SKA_INPUT_INVALID_INPUT_ACTION_HANDLE) {
-        SKA_ASSERT(inputState.inputActionHandleIndex + 1 < SKA_INPUT_MAX_INPUT_ACTIONS);
-        actionHandle = inputState.inputActionHandleIndex++;
-        SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][actionHandle];
-        actionData->handle = actionHandle;
-        actionData->action.name = ska_strdup(actionName);
-        actionData->action.actionValuesCount = 0;
+SkaInputActionHandle ska_input_add_input_action(const char* action_name, const SkaInputActionValue* action_values, SkaInputDeviceIndex device_index) {
+    SkaInputActionHandle action_handle = ska_input_find_input_action_handle(action_name, device_index);
+    if (action_handle == SKA_INPUT_INVALID_INPUT_ACTION_HANDLE) {
+        SKA_ASSERT(input_state.input_action_handle_index + 1 < SKA_INPUT_MAX_INPUT_ACTIONS);
+        action_handle = input_state.input_action_handle_index++;
+        SkaInputActionData* action_data = &input_state.input_action_data[device_index][action_handle];
+        action_data->handle = action_handle;
+        action_data->action.name = ska_strdup(action_name);
+        action_data->action.action_values_count = 0;
     }
 
-    SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][actionHandle];
+    SkaInputActionData* action_data = &input_state.input_action_data[device_index][action_handle];
     for (usize i = 0; i < SKA_INPUT_MAX_INPUT_ACTION_VALUES; i++) {
-        if (!actionValues[i].key) {
+        if (!action_values[i].key) {
             break;
         }
-        SKA_ASSERT(actionData->action.actionValuesCount + 1 < SKA_INPUT_MAX_INPUT_ACTION_VALUES);
-        actionData->action.actionValues[actionData->action.actionValuesCount++] = actionValues[i];
+        SKA_ASSERT(action_data->action.action_values_count + 1 < SKA_INPUT_MAX_INPUT_ACTION_VALUES);
+        action_data->action.action_values[action_data->action.action_values_count++] = action_values[i];
     }
-    return actionHandle;
+    return action_handle;
 }
 
-SkaInputAction* ska_input_get_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
-    SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    if (actionData->handle) {
-        return &actionData->action;
+SkaInputAction* ska_input_get_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex device_index) {
+    SkaInputActionData* action_data = &input_state.input_action_data[device_index][handle];
+    if (action_data->handle) {
+        return &action_data->action;
     }
     return NULL;
 }
 
-bool ska_input_remove_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
-    SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    if (actionData->handle != SKA_INPUT_INVALID_INPUT_ACTION_HANDLE) {
-        SKA_FREE(actionData->action.name);
-        actionData->action.name = NULL;
-        actionData->handle = SKA_INPUT_INVALID_INPUT_ACTION_HANDLE;
+bool ska_input_remove_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex device_index) {
+    SkaInputActionData* action_data = &input_state.input_action_data[device_index][handle];
+    if (action_data->handle != SKA_INPUT_INVALID_INPUT_ACTION_HANDLE) {
+        SKA_FREE(action_data->action.name);
+        action_data->action.name = NULL;
+        action_data->handle = SKA_INPUT_INVALID_INPUT_ACTION_HANDLE;
         return true;
     }
     return false;
 }
 
-SkaInputActionHandle ska_input_find_input_action_handle(const char* actionName, SkaInputDeviceIndex deviceIndex) {
+SkaInputActionHandle ska_input_find_input_action_handle(const char* action_name, SkaInputDeviceIndex device_index) {
     for (SkaInputActionHandle handle = 0; handle < SKA_INPUT_MAX_INPUT_ACTIONS; handle++) {
-        SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
+        SkaInputActionData* action_data = &input_state.input_action_data[device_index][handle];
         // TODO: Shouldn't have to check for NULL name as handle should be enough
-        if (actionData->handle == SKA_INPUT_INVALID_INPUT_ACTION_HANDLE || actionData->action.name == NULL) {
+        if (action_data->handle == SKA_INPUT_INVALID_INPUT_ACTION_HANDLE || action_data->action.name == NULL) {
             continue;
         }
-        if (strcmp(actionData->action.name, actionName) == 0) {
-            return actionData->handle;
+        if (strcmp(action_data->action.name, action_name) == 0) {
+            return action_data->handle;
         }
     }
     return SKA_INPUT_INVALID_INPUT_ACTION_HANDLE;
 }
 
-bool ska_input_is_input_action_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
-    const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    for (usize i = 0; i < actionData->action.actionValuesCount; i++) {
-        const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
-        if (ska_input_is_key_pressed(actionValue->key, deviceIndex)) {
+bool ska_input_is_input_action_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex device_index) {
+    const SkaInputActionData* action_data = &input_state.input_action_data[device_index][handle];
+    for (usize i = 0; i < action_data->action.action_values_count; i++) {
+        const SkaInputActionValue* action_value = &action_data->action.action_values[i];
+        if (ska_input_is_key_pressed(action_value->key, device_index)) {
             return true;
         }
     }
     return false;
 }
 
-bool ska_input_is_input_action_just_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
-    const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    for (usize i = 0; i < actionData->action.actionValuesCount; i++) {
-        const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
-        if (ska_input_is_key_just_pressed(actionValue->key, deviceIndex)) {
+bool ska_input_is_input_action_just_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex device_index) {
+    const SkaInputActionData* action_data = &input_state.input_action_data[device_index][handle];
+    for (usize i = 0; i < action_data->action.action_values_count; i++) {
+        const SkaInputActionValue* action_value = &action_data->action.action_values[i];
+        if (ska_input_is_key_just_pressed(action_value->key, device_index)) {
             return true;
         }
     }
     return false;
 }
 
-bool ska_input_is_input_action_just_released(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
-    const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    for (usize i = 0; i < actionData->action.actionValuesCount; i++) {
-        const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
-        if (ska_input_is_key_just_released(actionValue->key, deviceIndex)) {
+bool ska_input_is_input_action_just_released(SkaInputActionHandle handle, SkaInputDeviceIndex device_index) {
+    const SkaInputActionData* action_data = &input_state.input_action_data[device_index][handle];
+    for (usize i = 0; i < action_data->action.action_values_count; i++) {
+        const SkaInputActionValue* action_value = &action_data->action.action_values[i];
+        if (ska_input_is_key_just_released(action_value->key, device_index)) {
             return true;
         }
     }
     return false;
 }
 
-f32 ska_input_get_input_action_strength(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex) {
-    const SkaInputActionData* actionData = &inputState.inputActionData[deviceIndex][handle];
-    for (usize i = 0; i < actionData->action.actionValuesCount; i++) {
-        const SkaInputActionValue* actionValue = &actionData->action.actionValues[i];
-        const f32 keyStrength = ska_input_get_key_strength(actionValue->key, deviceIndex);
-        if (keyStrength >= actionValue->strengthThreshold) {
-            return keyStrength;
+f32 ska_input_get_input_action_strength(SkaInputActionHandle handle, SkaInputDeviceIndex device_index) {
+    const SkaInputActionData* action_data = &input_state.input_action_data[device_index][handle];
+    for (usize i = 0; i < action_data->action.action_values_count; i++) {
+        const SkaInputActionValue* action_value = &action_data->action.action_values[i];
+        const f32 key_strength = ska_input_get_key_strength(action_value->key, device_index);
+        if (key_strength >= action_value->strength_threshold) {
+            return key_strength;
         }
     }
     return 0.0f;
 }
 
 void ska_input_new_frame() {
-    for (usize i = 0; i < inputState.cleanupKeyStateJustPressedCount; i++) {
-        const SkaInputStateCleanup* stateCleanup = &inputState.cleanupKeyStateJustPressed[i];
-        SkaInputKeyState* keyState = &inputState.inputKeyState[stateCleanup->deviceIndex][stateCleanup->key];
-        keyState->isJustPressed = false;
+    for (usize i = 0; i < input_state.cleanup_key_state_just_pressed_count; i++) {
+        const SkaInputStateCleanup* state_cleanup = &input_state.cleanup_key_state_just_pressed[i];
+        SkaInputKeyState* key_state = &input_state.input_key_state[state_cleanup->device_index][state_cleanup->key];
+        key_state->is_just_pressed = false;
     }
-    for (usize i = 0; i < inputState.cleanupKeyStateJustReleasedCount; i++) {
-        const SkaInputStateCleanup* stateCleanup = &inputState.cleanupKeyStateJustReleased[i];
-        SkaInputKeyState* keyState = &inputState.inputKeyState[stateCleanup->deviceIndex][stateCleanup->key];
-        keyState->isJustReleased = false;
+    for (usize i = 0; i < input_state.cleanup_key_state_just_released_count; i++) {
+        const SkaInputStateCleanup* state_cleanup = &input_state.cleanup_key_state_just_released[i];
+        SkaInputKeyState* key_state = &input_state.input_key_state[state_cleanup->device_index][state_cleanup->key];
+        key_state->is_just_released = false;
     }
-    inputState.cleanupKeyStateJustPressedCount = 0;
-    inputState.cleanupKeyStateJustReleasedCount = 0;
+    input_state.cleanup_key_state_just_pressed_count = 0;
+    input_state.cleanup_key_state_just_released_count = 0;
+    global_mouse.scroll = (SkaVector2){ 0.0f, 0.0f };
 }
 
-void ska_input_reset_gamepad(SkaInputDeviceIndex deviceIndex) {
+void ska_input_reset_gamepad(SkaInputDeviceIndex device_index) {
     SKA_INPUT_KEY_GAMEPAD_FOR_EACH(key) {
-        inputState.inputKeyState[deviceIndex][key] = (SkaInputKeyState){0};
+        input_state.input_key_state[device_index][key] = (SkaInputKeyState){0};
     }
 }
 
-void ska_input_reset(SkaInputDeviceIndex deviceIndex) {
-    inputState = (SkaInputState)DEFAULT_INPUT_STATE;
+void ska_input_reset(SkaInputDeviceIndex device_index) {
+    input_state = (SkaInputState)DEFAULT_INPUT_STATE;
 }
 
 // Private
-SkaInputKey get_key_from_2d_axis_key(SkaInputKey axis2DKey, SkaAxisInputValues* axisInputValues, f32 axisValue) {
-    switch (axis2DKey) {
-        case SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X: {
-            const f32 activeValue = axisInputValues->left.x != 0.0f ? axisInputValues->left.x : axisValue;
-            return activeValue > 0 ? SkaInputKey_GAMEPAD_LEFT_ANALOG_RIGHT : SkaInputKey_GAMEPAD_LEFT_ANALOG_LEFT;
-        }
-        case SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y: {
-            const f32 activeValue = axisInputValues->left.y != 0.0f ? axisInputValues->left.y : axisValue;
-            return activeValue > 0 ? SkaInputKey_GAMEPAD_LEFT_ANALOG_DOWN : SkaInputKey_GAMEPAD_LEFT_ANALOG_UP;
-        }
-        case SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X: {
-            const f32 activeValue = axisInputValues->right.x != 0.0f ? axisInputValues->right.x : axisValue;
-            return activeValue > 0 ? SkaInputKey_GAMEPAD_RIGHT_ANALOG_RIGHT : SkaInputKey_GAMEPAD_RIGHT_ANALOG_LEFT;
-        }
-        case SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_Y: {
-            const f32 activeValue = axisInputValues->right.y != 0.0f ? axisInputValues->right.y : axisValue;
-            return activeValue > 0 ? SkaInputKey_GAMEPAD_RIGHT_ANALOG_DOWN : SkaInputKey_GAMEPAD_RIGHT_ANALOG_UP;
-        }
+SkaInputKey get_axis_direction_key(SkaInputKey axis2_d_key, f32 axis_value) {
+    switch (axis2_d_key) {
+        case SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X:
+            return axis_value > 0 ? SkaInputKey_GAMEPAD_LEFT_ANALOG_RIGHT : SkaInputKey_GAMEPAD_LEFT_ANALOG_LEFT;
+        case SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y:
+            return axis_value > 0 ? SkaInputKey_GAMEPAD_LEFT_ANALOG_DOWN : SkaInputKey_GAMEPAD_LEFT_ANALOG_UP;
+        case SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X:
+            return axis_value > 0 ? SkaInputKey_GAMEPAD_RIGHT_ANALOG_RIGHT : SkaInputKey_GAMEPAD_RIGHT_ANALOG_LEFT;
+        case SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_Y:
+            return axis_value > 0 ? SkaInputKey_GAMEPAD_RIGHT_ANALOG_DOWN : SkaInputKey_GAMEPAD_RIGHT_ANALOG_UP;
         default: {
             SKA_ASSERT_FMT(false, "Not a valid axis input key!");
             return SkaInputKey_INVALID;
@@ -558,58 +550,66 @@ SkaInputKey get_key_from_2d_axis_key(SkaInputKey axis2DKey, SkaAxisInputValues* 
     }
 }
 
-void set_prev_input_axis_value(SkaInputKey key, SkaAxisInputValues* axisInputValues, f32 axisValue) {
+f32* get_prev_input_axis_value(SkaInputKey key, SkaAxisInputValues* axis_input_values) {
     switch (key) {
-        case SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X: {
-            axisInputValues->left.x = axisValue;
-            break;
-        }
-        case SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y: {
-            axisInputValues->left.y = axisValue;
-            break;
-        }
-        case SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X: {
-            axisInputValues->right.x = axisValue;
-            break;
-        }
-        case SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_Y: {
-            axisInputValues->right.y = axisValue;
-            break;
-        }
+        case SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X: return &axis_input_values->left.x;
+        case SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y: return &axis_input_values->left.y;
+        case SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X: return &axis_input_values->right.x;
+        case SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_Y: return &axis_input_values->right.y;
         default: {
             SKA_ASSERT_FMT(false, "Not a valid axis input key!");
+            return &axis_input_values->left.x;
         }
     }
 }
 
-void update_axis_key_state(SkaInputKey key, SkaInputInteractionStatus interactionStatus, f32 axisValue, SkaInputDeviceIndex deviceIndex) {
-    SkaAxisInputValues* prevAxisInput = &inputState.prevAxisInputs[deviceIndex];
-    const SkaInputKey axisKey = get_key_from_2d_axis_key(key, prevAxisInput, axisValue);
-    SkaInputKeyState* axisKeyState = &inputState.inputKeyState[deviceIndex][axisKey];
-    switch (interactionStatus) {
+static void press_axis_direction_key(SkaInputKey direction_key, f32 strength, SkaInputDeviceIndex device_index) {
+    SkaInputKeyState* key_state = &input_state.input_key_state[device_index][direction_key];
+    if (!key_state->is_pressed) {
+        key_state->is_just_pressed = true;
+        SKA_ASSERT(input_state.cleanup_key_state_just_pressed_count + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
+        input_state.cleanup_key_state_just_pressed[input_state.cleanup_key_state_just_pressed_count++] =
+            (SkaInputStateCleanup){ .key = direction_key, .device_index = device_index };
+    }
+    key_state->is_pressed = true;
+    key_state->is_just_released = false;
+    key_state->strength = strength;
+}
+
+static void release_axis_direction_key(SkaInputKey direction_key, SkaInputDeviceIndex device_index) {
+    SkaInputKeyState* key_state = &input_state.input_key_state[device_index][direction_key];
+    if (!key_state->is_pressed) {
+        return;
+    }
+    key_state->is_pressed = false;
+    key_state->is_just_pressed = false;
+    key_state->is_just_released = true;
+    key_state->strength = 0.0f;
+    SKA_ASSERT(input_state.cleanup_key_state_just_released_count + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
+    input_state.cleanup_key_state_just_released[input_state.cleanup_key_state_just_released_count++] =
+        (SkaInputStateCleanup){ .key = direction_key, .device_index = device_index };
+}
+
+void update_axis_key_state(SkaInputKey key, SkaInputInteractionStatus interaction_status, f32 axis_value, SkaInputDeviceIndex device_index) {
+    f32* prev_value = get_prev_input_axis_value(key, &input_state.prev_axis_inputs[device_index]);
+    const SkaInputKey prev_direction_key = *prev_value != 0.0f ? get_axis_direction_key(key, *prev_value) : SkaInputKey_INVALID;
+    switch (interaction_status) {
         case SkaInputInteractionStatus_AXIS_STARTED_MOTION:
         case SkaInputInteractionStatus_AXIS_IN_MOTION: {
-            axisKeyState->isPressed = true;
-            if (interactionStatus == SkaInputInteractionStatus_AXIS_STARTED_MOTION) {
-                axisKeyState->isJustPressed = true;
-                SKA_ASSERT(inputState.cleanupKeyStateJustPressedCount + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
-                inputState.cleanupKeyStateJustPressed[inputState.cleanupKeyStateJustPressedCount++] = (SkaInputStateCleanup) { .key = key, .deviceIndex = deviceIndex };
-            } else {
-                axisKeyState->isJustPressed = false;
+            const SkaInputKey direction_key = get_axis_direction_key(key, axis_value);
+            // Stick crossed center within one poll (never hit the deadzone) -- release the old direction
+            if (prev_direction_key != SkaInputKey_INVALID && prev_direction_key != direction_key) {
+                release_axis_direction_key(prev_direction_key, device_index);
             }
-            axisKeyState->isJustReleased = false;
-            axisKeyState->strength = (f32)fabs(axisValue);
-            set_prev_input_axis_value(key, prevAxisInput, axisValue);
+            press_axis_direction_key(direction_key, fabsf(axis_value), device_index);
+            *prev_value = axis_value;
             break;
         }
         case SkaInputInteractionStatus_AXIS_STOPPED_MOTION: {
-            axisKeyState->isPressed = false;
-            axisKeyState->isJustPressed = false;
-            axisKeyState->isJustReleased = true;
-            axisKeyState->strength = 0.0f;
-            set_prev_input_axis_value(key, prevAxisInput, 0.0f);
-            SKA_ASSERT(inputState.cleanupKeyStateJustReleasedCount + 1 <= SKA_INPUT_MAX_KEY_STATE_CLEANUP_SIZE);
-            inputState.cleanupKeyStateJustReleased[inputState.cleanupKeyStateJustReleasedCount++] = (SkaInputStateCleanup) { .key = key, .deviceIndex = deviceIndex };
+            if (prev_direction_key != SkaInputKey_INVALID) {
+                release_axis_direction_key(prev_direction_key, device_index);
+            }
+            *prev_value = 0.0f;
             break;
         }
         default: {

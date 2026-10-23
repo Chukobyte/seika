@@ -1,9 +1,11 @@
 #pragma once
 
-#include "seika/defines.h"
+#if SKA_THREAD
+
+#include "../defines.h"
 
 #if defined(PLATFORM_WINDOWS)
-#include <Windows.h>
+#include <windows.h>
 #include <time.h>
 
 #else
@@ -24,7 +26,7 @@ typedef struct {
 } pthread_rwlock_t;
 
 typedef struct {
-    int DUMMY_MEMBER; // FIXME: this is only here because of: 'error C2016: C requires that a struct or union have at least one member'
+    int dummy_member; // FIXME: this is only here because of: 'error C2016: C requires that a struct or union have at least one member'
 } pthread_attr_t;
 
 #endif
@@ -60,3 +62,5 @@ int pthread_rwlock_unlock(pthread_rwlock_t *rwlock);
 unsigned int pcthread_get_num_procs();
 
 void ms_to_timespec(struct timespec *ts, uint32 ms);
+
+#endif // #if SKA_THREAD

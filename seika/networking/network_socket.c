@@ -1,3 +1,5 @@
+#if SKA_NETWORK
+
 #include "network_socket.h"
 
 #include <string.h>
@@ -124,3 +126,5 @@ SkaSocket ska_socket_create_client(const char* serverAddr, int32 serverPort, ska
     ska_logger_debug("Client: Initialized thread.");
     return sock;
 }
+
+#endif // #if SKA_NETWORK

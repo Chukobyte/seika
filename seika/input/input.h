@@ -68,6 +68,14 @@ typedef enum SkaInputKey {
     SkaInputKey_GAMEPAD_RIGHT_ANALOG_BUTTON, // PS R3
     SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X,
     SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_Y,
+    SkaInputKey_GAMEPAD_GUIDE,
+    SkaInputKey_GAMEPAD_PADDLE1,
+    SkaInputKey_GAMEPAD_PADDLE2,
+    SkaInputKey_GAMEPAD_PADDLE3,
+    SkaInputKey_GAMEPAD_PADDLE4,
+    SkaInputKey_GAMEPAD_MISC1,
+    SkaInputKey_GAMEPAD_MISC2,
+    SkaInputKey_GAMEPAD_TOUCHPAD,
     // Keeping these separate as 'RegisterInputEvent' should only use 'SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_X', 'SkaInputKey_GAMEPAD_LEFT_ANALOG_2D_AXIS_Y',
     // 'SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_X', and 'SkaInputKey_GAMEPAD_RIGHT_ANALOG_2D_AXIS_Y'.
     // The key states for these keys will be updated automatically by the input system.
@@ -231,67 +239,75 @@ typedef enum SkaInputAxis {
 
 typedef struct SkaMouse {
     SkaVector2i position;
+    SkaVector2 scroll; // wheel notches accumulated since the last ska_input_new_frame (+x = right, +y = up)
 } SkaMouse;
 
 typedef struct SkaInputEvent {
-    SkaInputSourceType sourceType;
-    SkaInputInteractionStatus interactionStatus;
+    SkaInputSourceType source_type;
+    SkaInputInteractionStatus interaction_status;
     SkaInputKey key;
-    SkaInputDeviceIndex deviceIndex;
-    f32 gamepadAxisValue;
+    SkaInputDeviceIndex device_index;
+    f32 gamepad_axis_value;
 } SkaInputEvent;
 
 typedef struct SkaInputActionValue {
     SkaInputKey key;
-    SkaInputKeyStrength strengthThreshold;
+    SkaInputKeyStrength strength_threshold;
 } SkaInputActionValue;
 
 typedef struct SkaInputAction {
     char* name;
-    SkaInputActionValue actionValues[SKA_INPUT_MAX_INPUT_ACTION_VALUES];
-    usize actionValuesCount;
+    SkaInputActionValue action_values[SKA_INPUT_MAX_INPUT_ACTION_VALUES];
+    usize action_values_count;
 } SkaInputAction;
 
 bool ska_input_initialize();
 void ska_input_finalize();
 
 const char* ska_input_key_to_string(SkaInputKey key);
-SkaInputKey ska_input_string_to_key(const char* keyName);
+SkaInputKey ska_input_string_to_key(const char* key_name);
 
 bool ska_input_is_keyboard_key(SkaInputKey key);
 bool ska_input_is_mouse_key(SkaInputKey key);
 bool ska_input_is_gamepad_key(SkaInputKey key);
 
 // Events
-void ska_input_register_gamepad_added_event(SkaInputDeviceIndex deviceIndex);
-void ska_input_register_gamepad_removed_event(SkaInputDeviceIndex deviceIndex);
-void ska_input_register_mouse_move_event(SkaVector2i newPosition);
-void ska_input_register_input_event(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType, SkaInputDeviceIndex deviceIndex, f32 gamepadAxisValue);
-void ska_input_register_input_event2(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType, SkaInputDeviceIndex deviceIndex);
-void ska_input_register_input_event3(SkaInputSourceType sourceType, SkaInputKey key, SkaInputTriggerType triggerType);
+void ska_input_register_gamepad_added_event(SkaInputDeviceIndex device_index);
+void ska_input_register_gamepad_removed_event(SkaInputDeviceIndex device_index);
+void ska_input_register_mouse_move_event(SkaVector2i new_position);
+void ska_input_register_mouse_scroll_event(SkaVector2 delta);
+void ska_input_register_input_event(SkaInputSourceType source_type, SkaInputKey key, SkaInputTriggerType trigger_type, SkaInputDeviceIndex device_index, f32 gamepad_axis_value);
+void ska_input_register_input_event2(SkaInputSourceType source_type, SkaInputKey key, SkaInputTriggerType trigger_type, SkaInputDeviceIndex device_index);
+void ska_input_register_input_event3(SkaInputSourceType source_type, SkaInputKey key, SkaInputTriggerType trigger_type);
 
-bool ska_input_is_key_pressed(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
-bool ska_input_is_key_just_pressed(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
-bool ska_input_is_key_just_released(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
-f32 ska_input_get_key_strength(SkaInputKey key, SkaInputDeviceIndex deviceIndex);
-SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex deviceIndex);
+bool ska_input_is_key_pressed(SkaInputKey key, SkaInputDeviceIndex device_index);
+bool ska_input_is_key_just_pressed(SkaInputKey key, SkaInputDeviceIndex device_index);
+bool ska_input_is_key_just_released(SkaInputKey key, SkaInputDeviceIndex device_index);
+f32 ska_input_get_key_strength(SkaInputKey key, SkaInputDeviceIndex device_index);
+SkaVector2 ska_input_get_axis_input(SkaInputAxis axis, SkaInputDeviceIndex device_index);
 
 SkaMouse* ska_input_get_mouse();
 
 // Input Action
-SkaInputActionHandle ska_input_add_input_action(const char* actionName, const SkaInputActionValue* actionValues, SkaInputDeviceIndex deviceIndex);
-SkaInputAction* ska_input_get_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
-bool ska_input_remove_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
-SkaInputActionHandle ska_input_find_input_action_handle(const char* actionName, SkaInputDeviceIndex deviceIndex);
+SkaInputActionHandle ska_input_add_input_action(const char* action_name, const SkaInputActionValue* action_values, SkaInputDeviceIndex device_index);
+SkaInputAction* ska_input_get_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex device_index);
+bool ska_input_remove_input_action(SkaInputActionHandle handle, SkaInputDeviceIndex device_index);
+SkaInputActionHandle ska_input_find_input_action_handle(const char* action_name, SkaInputDeviceIndex device_index);
 
-bool ska_input_is_input_action_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
-bool ska_input_is_input_action_just_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
-bool ska_input_is_input_action_just_released(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
-f32 ska_input_get_input_action_strength(SkaInputActionHandle handle, SkaInputDeviceIndex deviceIndex);
+bool ska_input_is_input_action_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex device_index);
+bool ska_input_is_input_action_just_pressed(SkaInputActionHandle handle, SkaInputDeviceIndex device_index);
+bool ska_input_is_input_action_just_released(SkaInputActionHandle handle, SkaInputDeviceIndex device_index);
+f32 ska_input_get_input_action_strength(SkaInputActionHandle handle, SkaInputDeviceIndex device_index);
 
 void ska_input_new_frame();
-void ska_input_reset_gamepad(SkaInputDeviceIndex deviceIndex);
-void ska_input_reset(SkaInputDeviceIndex deviceIndex);
+void ska_input_reset_gamepad(SkaInputDeviceIndex device_index);
+void ska_input_reset(SkaInputDeviceIndex device_index);
+
+// Windowless keyboard backend: polls physical key state directly (no window/message pump required).
+// Call once per frame for apps that never create a seika window.
+#if defined(PLATFORM_WINDOWS)
+void ska_input_poll_headless_keyboard(void);
+#endif
 
 #ifdef __cplusplus
 }

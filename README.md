@@ -1,33 +1,33 @@
 # Seika
 
-[![windows-msvc-build Actions Status](https://github.com/Chukobyte/seika/workflows/windows-msvc-build/badge.svg)](https://github.com/Chukobyte/seika/actions)
-[![windows-mingw-build Actions Status](https://github.com/Chukobyte/seika/workflows/windows-mingw-build/badge.svg)](https://github.com/Chukobyte/seika/actions)
-[![ubuntu-gcc-build Actions Status](https://github.com/Chukobyte/seika/workflows/ubuntu-gcc-build/badge.svg)](https://github.com/Chukobyte/seika/actions)
-[![macosx-clang-build Actions Status](https://github.com/Chukobyte/seika/workflows/macosx-clang-build/badge.svg)](https://github.com/Chukobyte/seika/actions)
-
-A framework for windows, macOS, and linux that can be used to make games.
+A framework for windows, macOS, linux, web (emscripten), and android that can be used to make games.
 
 ## Tech Stack
 
 - [C11](https://en.wikipedia.org/wiki/C_(programming_language))
-- [OpenGL 3.3](https://www.opengl.org/)
-- [SDL3](https://github.com/libsdl-org/SDL) - Window, input, and other misc uses
-- [clgm](https://github.com/recp/cglm) - Math
+- [OpenGL 3.3](https://www.opengl.org/) (GLES3 on android/emscripten)
 - [miniaudio](https://github.com/mackron/miniaudio) - Audio
 - [freetype](https://github.com/freetype/freetype) - Font
 - [unity](https://github.com/ThrowTheSwitch/Unity) - Unit Tests
 - [zip](https://github.com/kuba--/zip) - Reading archives
 - [stb image](https://github.com/nothings/stb) - Image loading
 
+Windowing and input are implemented natively per platform (Win32/DirectInput, X11, Cocoa, Android, Emscripten) — there is no SDL dependency.
+
 ## Current Features
 
 - [x] 2D Sprite Renderer
 - [x] Font Renderer
-- [x] Customizable shaders (with custom langauge)
-- [x] Audio
-- [x] Networking (udp only for now)
+- [x] 3D Renderer (with glTF model loading)
+- [x] Customizable shaders (with custom language)
+- [x] Audio (with spatial audio)
+- [x] Input (keyboard/mouse/gamepad, with a bindable input-action layer and a built-in gamepad database)
+- [x] Networking (UDP, plus a built-in static HTTP server)
 - [x] pthread wrapper and thread pool
 - [x] ECS
+- [x] SIMD helpers
+- [x] Math (vectors, matrices, quaternions, curves/easing)
+- [x] Screen capture (GIF)
 - [x] Multiple data structures such as hashmap and array list (vector)
 
 ## How to include in a project
@@ -35,22 +35,8 @@ A framework for windows, macOS, and linux that can be used to make games.
 Seika uses cmake to build.  To include in your project, add the following to your CMakeLists.txt:
 
 ```cmake
-# Include old_seika framework as a dependency
-include(FetchContent)
-
-FetchContent_Declare(
-        seika
-        GIT_REPOSITORY https://github.com/Chukobyte/seika.git
-        GIT_TAG v0.2.0
-)
-
-FetchContent_MakeAvailable(seika)
-```
-
-Make sure to link seika to the target with `target_link_libraries`.
-
-```cmake
-target_link_libraries(${PROJECT_NAME} seika)
+add_subdirectory(seika)
+target_link_libraries(${PROJECT_NAME} PRIVATE seika)
 ```
 
 ## Example
@@ -60,23 +46,24 @@ A simple example of creating a window and querying for inputs.
 ```c
 #include <stdio.h>
 
-#include <seika/seika.h>
+#include <seika/seika_main.h>
+#include <seika/window/window.h>
+#include <seika/rendering/renderer.h>
 #include <seika/input/input.h>
 
-int main(int argv, char** args) {
-    ska_window_initialize((SkaWindowProperties){
-        .title = "Simple Window",
-        .windowWidth = 800,
-        .windowHeight = 600,
-        .resolutionWidth = 800,
-        .resolutionHeight = 600,
-        .maintainAspectRatio = true,
+SKA_MAIN {
+    SkaWindow* window = ska_win_create_window((SkaCreateWindowProps){
+        .title = "Simple Window", .pos_x = 100, .pos_y = 100, .width = 800, .height = 600
+    });
+    ska_renderer_init((SkaRendererInitProps){
+        .window_width = 800, .window_height = 600,
+        .resolution_width = 800, .resolution_height = 600,
+        .maintain_aspect_ratio = true, .init_2d = true,
     });
     ska_input_initialize();
 
-    while (true) {
-        // TODO: Need to update this
-        ska_update();
+    while (ska_win_is_active(window)) {
+        ska_win_process_events(window);
 
         if (ska_input_is_key_just_pressed(SkaInputKey_KEYBOARD_ESCAPE, 0)) {
             break;
@@ -91,15 +78,14 @@ int main(int argv, char** args) {
             printf("space just released\n");
         }
 
-        static SkaColor windowBackgroundColor = (SkaColor){ 0.2f, 0.2f, 0.2f, 1.0f };
-        ska_window_render(&windowBackgroundColor);
+        ska_renderer_process_and_flush_batches(&(SkaColor){ .r = 0.2f, .g = 0.2f, .b = 0.2f, .a = 1.0f });
+        ska_win_swap_window(window);
+        ska_input_new_frame();
     }
 
-    ska_window_finalize();
     ska_input_finalize();
-
+    ska_renderer_deinit();
+    ska_win_destroy_window(window);
     return 0;
 }
 ```
-
-Example projects found [here](https://github.com/Chukobyte/seika-examples).

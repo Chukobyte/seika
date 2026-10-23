@@ -1,5 +1,7 @@
 #include "pthread.h"
 
+#if SKA_THREAD
+
 #ifdef _WIN32
 #include "seika/memory.h"
 
@@ -253,3 +255,5 @@ void ms_to_timespec(struct timespec *ts, uint32 ms) {
     ts->tv_sec = ((long) ms / 1000) + time(NULL);
     ts->tv_nsec = ((long) ms % 1000) * 1000000;
 }
+
+#endif // # if SKA_THREAD
