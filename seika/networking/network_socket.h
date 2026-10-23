@@ -1,5 +1,7 @@
 #pragma once
 
+#if SKA_NETWORK
+
 #include "seika/defines.h"
 
 #ifdef _WIN32
@@ -39,3 +41,5 @@ SkaSocket ska_socket_create_server(int32 port, ska_on_socket_receive_data callba
 
 //--- Client Socket ---//
 SkaSocket ska_socket_create_client(const char* serverAddr, int32 serverPort, ska_on_socket_receive_data callback_func);
+
+#endif // #if SKA_NETWORK

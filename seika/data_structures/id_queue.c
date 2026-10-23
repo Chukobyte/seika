@@ -3,17 +3,18 @@
 #include "seika/assert.h"
 #include "seika/memory.h"
 
-SkaIdQueue* ska_id_queue_create(usize initialCapacity) {
-    SkaIdQueue* queue = SKA_ALLOC(SkaIdQueue);
-    queue->capacity = initialCapacity;
-    queue->size = initialCapacity;
-    queue->front = 0;
-    queue->rear = (SKA_QUEUE_T)initialCapacity - 1;
-    queue->array = (SKA_QUEUE_T*)SKA_ALLOC_BYTES(queue->capacity * sizeof(SKA_QUEUE_T));
-    for (SKA_QUEUE_T i = 0; i < initialCapacity; i++) {
-        queue->array[i] = i;
-    }
-    return queue;
+SkaIdQueue *ska_id_queue_create(usize initial_capacity) {
+  SkaIdQueue *queue = SKA_ALLOC(SkaIdQueue);
+  queue->capacity = initial_capacity;
+  queue->size = initial_capacity;
+  queue->front = 0;
+  queue->rear = (SKA_QUEUE_T)initial_capacity - 1;
+  queue->array =
+      (SKA_QUEUE_T *)SKA_ALLOC_BYTES(queue->capacity * sizeof(SKA_QUEUE_T));
+  for (SKA_QUEUE_T i = 0; i < initial_capacity; i++) {
+    queue->array[i] = i;
+  }
+  return queue;
 }
 
 void ska_id_queue_destroy(SkaIdQueue* queue) {
@@ -39,39 +40,40 @@ bool ska_id_queue_enqueue(SkaIdQueue* queue, SKA_QUEUE_T item) {
     return true;
 }
 
-bool ska_id_queue_dequeue(SkaIdQueue* queue, SKA_QUEUE_T* outId) {
-    // If id queue is empty recreate data array
-    if (ska_id_queue_is_empty(queue)) {
-        SKA_FREE(queue->array);
-        const usize prevCapacity = queue->capacity;
-        queue->capacity *= 2;
-        queue->array = (SKA_QUEUE_T*)SKA_ALLOC_BYTES_ZEROED(queue->capacity * sizeof(SKA_QUEUE_T));
-        for (SKA_QUEUE_T i = prevCapacity; i < queue->capacity; i++) {
-            queue->array[i] = i;
-        }
-
-        queue->front = prevCapacity;
-        queue->rear = queue->capacity - 1;
-        queue->size = prevCapacity;
+bool ska_id_queue_dequeue(SkaIdQueue *queue, SKA_QUEUE_T *out_id) {
+  // If id queue is empty recreate data array
+  if (ska_id_queue_is_empty(queue)) {
+    SKA_FREE(queue->array);
+    const usize prev_capacity = queue->capacity;
+    queue->capacity *= 2;
+    queue->array = (SKA_QUEUE_T *)SKA_ALLOC_BYTES_ZEROED(queue->capacity *
+                                                         sizeof(SKA_QUEUE_T));
+    for (SKA_QUEUE_T i = (SKA_QUEUE_T)prev_capacity; i < queue->capacity; i++) {
+      queue->array[i] = i;
     }
-    *outId = queue->array[queue->front];
-    queue->front = (queue->front + 1) % queue->capacity;
-    queue->size--;
-    return true;
+
+    queue->front = prev_capacity;
+    queue->rear = queue->capacity - 1;
+    queue->size = prev_capacity;
+  }
+  *out_id = queue->array[queue->front];
+  queue->front = (queue->front + 1) % queue->capacity;
+  queue->size--;
+  return true;
 }
 
-bool ska_id_queue_front(SkaIdQueue* queue, SKA_QUEUE_T* outId) {
-    if (ska_id_queue_is_empty(queue) || outId == NULL) {
-        return false;
-    }
-    *outId = queue->array[queue->front];
-    return true;
+bool ska_id_queue_front(SkaIdQueue *queue, SKA_QUEUE_T *out_id) {
+  if (ska_id_queue_is_empty(queue) || out_id == NULL) {
+    return false;
+  }
+  *out_id = queue->array[queue->front];
+  return true;
 }
 
-bool ska_id_queue_rear(SkaIdQueue* queue, SKA_QUEUE_T* outId) {
-    if (ska_id_queue_is_empty(queue) || outId == NULL) {
-        return false;
-    }
-    *outId = queue->array[queue->rear];
-    return true;
+bool ska_id_queue_rear(SkaIdQueue *queue, SKA_QUEUE_T *out_id) {
+  if (ska_id_queue_is_empty(queue) || out_id == NULL) {
+    return false;
+  }
+  *out_id = queue->array[queue->rear];
+  return true;
 }

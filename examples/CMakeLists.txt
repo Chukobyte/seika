@@ -1,0 +1,5 @@
+add_subdirectory(font_rendering)
+add_subdirectory(screen_capture)
+if (SEIKA_AUDIO)
+    add_subdirectory(audio_spatial_test)
+endif ()

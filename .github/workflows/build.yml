@@ -1,0 +1,65 @@
+name: Build
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  cmake:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # window_x11.c/input_x11.c are always compiled on Linux.
+      - name: Install X11/GL dev packages (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libgl1-mesa-dev libglx-dev
+
+      - name: Configure (full seika stack)
+        run: >
+          cmake -S . -B build
+          -DCMAKE_BUILD_TYPE=Release
+          -DSEIKA_UNIT_TESTS=ON -DSEIKA_EXAMPLES=ON
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      # Examples are visual-only; ctest runs just the unit tests.
+      - name: Unit tests
+        run: ctest --test-dir build -C Release --output-on-failure
+
+  zig:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Zig 0.16.0 via zvm
+        run: |
+          curl -LSs https://raw.githubusercontent.com/tristanisham/zvm/master/install.sh | bash
+          chmod +x "$HOME/.zvm/self/zvm"
+          export PATH="$HOME/.zvm/self:$HOME/.zvm/bin:$PATH"
+          echo "$HOME/.zvm/self" >> $GITHUB_PATH
+          echo "$HOME/.zvm/bin" >> $GITHUB_PATH
+          zvm i 0.16.0
+          zvm use 0.16.0
+
+      - name: Install X11/GL dev packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libx11-dev libgl1-mesa-dev libglx-dev
+
+      - name: Unit tests
+        run: zig build seika-test

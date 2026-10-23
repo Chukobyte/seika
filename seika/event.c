@@ -1,14 +1,14 @@
 #include "event.h"
 
-#include "seika/memory.h"
+#include "memory.h"
 #include "seika/assert.h"
-#include "seika/data_structures/array_utils.h"
+#include "data_structures/array_utils.h"
 
 //--- Observer ---//
-SkaObserver* ska_observer_new(SkaObserverOnNotify onNotifyFunc) {
-    SKA_ASSERT(onNotifyFunc != NULL);
+SkaObserver* ska_observer_new(SkaObserverOnNotify on_notify_func) {
+    SKA_ASSERT(on_notify_func != NULL);
     SkaObserver* observer = SKA_ALLOC_ZEROED(SkaObserver);
-    observer->on_notify = onNotifyFunc;
+    observer->on_notify = on_notify_func;
     return observer;
 }
 
@@ -19,7 +19,7 @@ void ska_observer_delete(SkaObserver* observer) {
 //--- Event ---//
 SkaEvent* ska_event_new() {
     SkaEvent* event = SKA_ALLOC_ZEROED(SkaEvent);
-    event->observerCount = 0;
+    event->observer_count = 0;
     return event;
 }
 
@@ -30,18 +30,18 @@ void ska_event_delete(SkaEvent* event) {
 bool ska_event_register_observer(SkaEvent* event, SkaObserver* observer) {
     SKA_ASSERT(event != NULL);
     SKA_ASSERT(observer != NULL);
-    SKA_ASSERT_FMT(event->observerCount + 1 < SKA_MAX_OBSERVERS, "Reached max observer count, consider increasing 'SKA_MAX_OBSERVERS'!");
-    event->observers[event->observerCount++] = observer;
+    SKA_ASSERT_FMT(event->observer_count + 1 < SKA_MAX_OBSERVERS, "Reached max observer count, consider increasing 'SKA_MAX_OBSERVERS'!");
+    event->observers[event->observer_count++] = observer;
     return true;
 }
 
 bool ska_event_unregister_observer(SkaEvent* event, SkaObserver* observer) {
-    SKA_ARRAY_UTILS_REMOVE_ARRAY_ITEM(event->observers, event->observerCount, observer, NULL);
+    SKA_ARRAY_UTILS_REMOVE_ARRAY_ITEM(event->observers, event->observer_count, observer, NULL);
     return true;
 }
 
 void ska_event_notify_observers(SkaEvent* event, SkaSubjectNotifyPayload* payload) {
-    for (usize i = 0; i < event->observerCount; i++) {
+    for (usize i = 0; i < event->observer_count; i++) {
         event->observers[i]->on_notify(payload);
     }
 }

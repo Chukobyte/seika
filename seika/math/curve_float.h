@@ -11,13 +11,13 @@ extern "C" {
 typedef struct SkaCurveControlPoint {
     f64 x; // a.k.a time
     f64 y; // a.k.a value
-    f64 tangentIn;
-    f64 tangentOut;
+    f64 tangent_in;
+    f64 tangent_out;
 } SkaCurveControlPoint;
 
 typedef struct SkaCurveFloat {
-    usize controlPointCount;
-    SkaCurveControlPoint controlPoints[SKA_CURVE_MAX_CONTROL_POINTS];
+    usize control_point_count;
+    SkaCurveControlPoint control_points[SKA_CURVE_MAX_CONTROL_POINTS];
 } SkaCurveFloat;
 
 void ska_curve_float_add_control_point(SkaCurveFloat* curve, SkaCurveControlPoint point);

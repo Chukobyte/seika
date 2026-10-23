@@ -6,37 +6,37 @@
 
 #define SKA_INITIAL_ENTITY_CAPACITY 1000
 
-static SkaIdQueue* entityIdQueue = NULL;
-static usize activeEntityCount = 0;
+static SkaIdQueue* entity_id_queue = NULL;
+static usize active_entity_count = 0;
 
 void ska_ecs_entity_initialize() {
-    SKA_ASSERT(entityIdQueue == NULL);
-    entityIdQueue = ska_id_queue_create(SKA_INITIAL_ENTITY_CAPACITY);
+    SKA_ASSERT(entity_id_queue == NULL);
+    entity_id_queue = ska_id_queue_create(SKA_INITIAL_ENTITY_CAPACITY);
 }
 
 void ska_ecs_entity_finalize() {
-    SKA_ASSERT(entityIdQueue);
-    ska_id_queue_destroy(entityIdQueue);
-    entityIdQueue = NULL;
-    activeEntityCount = 0;
+    SKA_ASSERT(entity_id_queue);
+    ska_id_queue_destroy(entity_id_queue);
+    entity_id_queue = NULL;
+    active_entity_count = 0;
 }
 
 SkaEntity ska_ecs_entity_create() {
-    SKA_ASSERT(entityIdQueue);
-    SkaEntity newEntity;
-    ska_id_queue_dequeue(entityIdQueue, &newEntity);
-    activeEntityCount++;
-    return newEntity;
+    SKA_ASSERT(entity_id_queue);
+    SkaEntity new_entity;
+    ska_id_queue_dequeue(entity_id_queue, &new_entity);
+    active_entity_count++;
+    return new_entity;
 }
 
 void ska_ecs_entity_return(SkaEntity entity) {
-    SKA_ASSERT(entityIdQueue);
-    ska_id_queue_enqueue(entityIdQueue, entity);
-    activeEntityCount--;
+    SKA_ASSERT(entity_id_queue);
+    ska_id_queue_enqueue(entity_id_queue, entity);
+    active_entity_count--;
 }
 
 usize ska_ecs_entity_get_active_count() {
-    return activeEntityCount;
+    return active_entity_count;
 }
 
 #endif // if SKA_ECS

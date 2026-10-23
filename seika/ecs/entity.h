@@ -2,7 +2,7 @@
 
 #if SKA_ECS
 
-#include "seika/defines.h"
+#include "../defines.h"
 
 // Entity is defined as a unsigned 32-bit integer
 typedef uint32 SkaEntity;

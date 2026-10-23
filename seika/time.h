@@ -1,18 +1,40 @@
 #pragma once
 
-#if SKA_SDL
+// TODO: Figure out if this should move to a different place
 
-#ifdef __cplusplus
-extern "C" {
+#include "defines.h"
+
+#if defined(PLATFORM_WINDOWS)
+#  include <windows.h>
+#elif defined(PLATFORM_EMSCRIPTEN)
+#  include <emscripten/emscripten.h>
+#else
+#  include <time.h>
+#  include <errno.h>
+#  include <sys/time.h>
 #endif
 
-#include "seika/defines.h"
+typedef struct SkaTimer {
+#if defined(PLATFORM_WINDOWS)
+    LARGE_INTEGER frequency;
+    LARGE_INTEGER start;
+#elif defined(PLATFORM_EMSCRIPTEN)
+    double start;
+#else
+    // POSIX: Use clock_gettime with CLOCK_MONOTONIC
+    struct timespec start;
+#endif
 
-uint32 ska_get_ticks();
+    bool has_started;
+} SkaTimer;
+
+// Will make the CPU sleep for the length of the milliseconds param
 void ska_delay(uint32 milliseconds);
 
-#ifdef __cplusplus
-}
-#endif
+// SkaTimer
 
-#endif // #if SKA_SDL
+void ska_timer_start(SkaTimer* timer);
+void ska_timer_stop(SkaTimer* timer);
+uint64 ska_timer_get_time(const SkaTimer* timer);
+// Used to keep track of ticks since the program has started, should call to initialize
+uint64 ska_timer_get_global_time();

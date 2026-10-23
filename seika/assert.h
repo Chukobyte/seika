@@ -9,8 +9,8 @@ extern "C" {
 #include <stdlib.h>
 #include <string.h>
 
-#include "seika/defines.h"
-#include "seika/platform.h"
+#include "defines.h"
+#include "platform.h"
 
 #define SKA_ASSERT_FAIL_EXIT_CODE (-1)
 
@@ -34,6 +34,22 @@ if (se_platform_is_debugger_attached()) { SKA_TRIGGER_BREAKPOINT; }             
 exit(SKA_ASSERT_FAIL_EXIT_CODE);                                                       \
 }                                                                                     \
 )
+
+// Asserts on release builds
+#define SKA_ASSERT_REL(PREDICATE) \
+if (!(PREDICATE)) {                                                                     \
+ska_print_assert_err("Assertion failed in file '%s' on line %u!\n", __FILE__, __LINE__); \
+if (se_platform_is_debugger_attached()) { SKA_TRIGGER_BREAKPOINT; }                      \
+exit(SKA_ASSERT_FAIL_EXIT_CODE);                                                         \
+}
+
+#define SKA_ASSERT_REL_FMT(PREDICATE, FMT, ...)                                            \
+if (!(PREDICATE)) {                                                                   \
+ska_print_assert_err("Assertion failed in file '%s' on line %u!", __FILE__, __LINE__); \
+ska_print_assert_err(FMT, ##__VA_ARGS__);                                              \
+if (se_platform_is_debugger_attached()) { SKA_TRIGGER_BREAKPOINT; }                    \
+exit(SKA_ASSERT_FAIL_EXIT_CODE);                                                       \
+}
 
 // Non-fatal asserts
 #define SKA_ENSURE(PREDICATE)                                                         \

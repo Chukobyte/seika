@@ -8,10 +8,12 @@ extern "C" {
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "seika/version_info.h"
+#include "version_info.h"
 
 #if defined(_WIN32) || defined(_WIN64)
 #define PLATFORM_WINDOWS
+#elif defined(__ANDROID__)
+#define PLATFORM_ANDROID
 #elif defined(__linux__)
 #define PLATFORM_LINUX
 #elif defined(__APPLE__) && defined(__MACH__)
@@ -22,7 +24,12 @@ extern "C" {
 #define PLATFORM_UNKNOWN
 #endif
 
-#if defined(__linux__)
+// The NDK compiler defines both __ANDROID__ and __linux__ -- must check __ANDROID__ first here too,
+// or this redefinition block would leave PLATFORM_LINUX defined alongside PLATFORM_ANDROID and
+// silently break every PLATFORM_LINUX-gated file (window_x11.c, input_x11.c).
+#if defined(__ANDROID__)
+#define PLATFORM_ANDROID
+#elif defined(__linux__)
 #define PLATFORM_LINUX
 #endif
 
@@ -36,17 +43,23 @@ extern "C" {
 
 typedef size_t usize;
 
-typedef int16_t int16;
+typedef int8_t i8;
+typedef int8_t int8;
 typedef int16_t i16;
-typedef int32_t int32;
+typedef int16_t int16;
 typedef int32_t i32;
-typedef int64_t int64;
+typedef int32_t int32;
 typedef int64_t i64;
+typedef int64_t int64;
 
-typedef uint32_t uint32;
+typedef uint8_t u8;
+typedef uint8_t uint8;
+typedef uint16_t u16;
+typedef uint16_t uint16;
 typedef uint32_t u32;
-typedef uint64_t uint64;
+typedef uint32_t uint32;
 typedef uint64_t u64;
+typedef uint64_t uint64;
 
 typedef float f32;
 typedef double f64;

@@ -8,23 +8,105 @@
 extern "C" {
 #endif
 
-#include "seika/defines.h"
+#include "../defines.h"
+#include "../math/math.h"
 
 struct SkaAudioSource;
+
+// An id handle for a single playing audio instance, returned by the play_* functions.
+// SKA_AUDIO_INVALID_INSTANCE_ID means either the sound failed to play or the instance
+// has since finished/been stopped.
+typedef uint32 SkaAudioInstanceId;
+#define SKA_AUDIO_INVALID_INSTANCE_ID ((SkaAudioInstanceId)0)
+
+// Listener state for 3D/2D positional audio, applied once per frame from the
+// camera/player transform. For 2D games, pass a fixed forward/up (e.g. forward =
+// (0, 0, -1), up = (0, -1, 0) to match seika's 2D Y-down convention) instead of
+// rotating them.
+typedef struct SkaAudioListener {
+    SkaVector3 position;
+    SkaVector3 forward;
+    SkaVector3 up;
+    SkaVector3 velocity;
+} SkaAudioListener;
+
+typedef enum SkaAudioAttenuationModel {
+    SkaAudioAttenuationModel_NONE,
+    SkaAudioAttenuationModel_INVERSE,
+    SkaAudioAttenuationModel_LINEAR,
+    SkaAudioAttenuationModel_EXPONENTIAL,
+} SkaAudioAttenuationModel;
+
+// Per-instance 3D params. Doppler and directional cones are left out of this first
+// pass (doppler_factor = 0 disables doppler); see seika-3d-audio-spec.md.
+typedef struct SkaAudio3DParams {
+    f32 min_distance;
+    f32 max_distance;
+    f32 rolloff;
+    f32 doppler_factor;
+    SkaAudioAttenuationModel attenuation_model;
+} SkaAudio3DParams;
+
+#define SKA_AUDIO_3D_PARAMS_DEFAULT SKA_STRUCT_LITERAL(SkaAudio3DParams){ \
+    .min_distance = 1.0f, .max_distance = 100.0f, .rolloff = 1.0f, \
+    .doppler_factor = 0.0f, .attenuation_model = SkaAudioAttenuationModel_INVERSE }
+
+// Per-instance playback params applied atomically when the instance starts.
+// volume is a linear gain (>= 0), pitch a playback-rate multiplier (> 0).
+typedef struct SkaAudioPlayParams {
+    bool loops;
+    f32 volume;
+    f32 pitch;
+} SkaAudioPlayParams;
+
+#define SKA_AUDIO_PLAY_PARAMS_DEFAULT SKA_STRUCT_LITERAL(SkaAudioPlayParams){ .loops = false, .volume = 1.0f, .pitch = 1.0f }
 
 // --- Audio Manager --- //
 bool ska_audio_manager_init();
 void ska_audio_manager_finalize();
+// Call before ska_audio_initialize: output to miniaudio's null device (silent, no hardware needed).
+// init also falls back to it automatically when no real playback device can be opened.
+void ska_audio_manager_set_use_null_device(bool use_null_device);
 void ska_audio_manager_register_source(struct SkaAudioSource *source);
 void ska_audio_manager_unregister_source(struct SkaAudioSource *source);
 // Audio functions
 
-void ska_audio_manager_play_sound(struct SkaAudioSource* audioSource, bool loops);
-void ska_audio_manager_play_sound2(const char* filePath, bool loops);
-void ska_audio_manager_stop_sound(struct SkaAudioSource* audioSource);
-void ska_audio_manager_stop_sound2(const char* filePath);
-f32 ska_audio_manager_get_position(struct SkaAudioSource* audioSource);
-f32 ska_audio_manager_get_position_seconds(struct SkaAudioSource* audioSource);
+SkaAudioInstanceId ska_audio_manager_play_sound(struct SkaAudioSource* audio_source, bool loops);
+SkaAudioInstanceId ska_audio_manager_play_sound2(const char* file_path, bool loops);
+SkaAudioInstanceId ska_audio_manager_play_sound_with_params(struct SkaAudioSource* audio_source, SkaAudioPlayParams play_params);
+// Stops every playing instance of the source
+void ska_audio_manager_stop_sound(struct SkaAudioSource* audio_source);
+void ska_audio_manager_stop_sound2(const char* file_path);
+// Playback position of the most recently started (still alive) instance of the source
+f32 ska_audio_manager_get_position(struct SkaAudioSource* audio_source);
+f32 ska_audio_manager_get_position_seconds(struct SkaAudioSource* audio_source);
+
+// Linear gain applied to the final mix (>= 0)
+void ska_audio_manager_set_master_volume(f32 volume);
+f32 ska_audio_manager_get_master_volume();
+
+// --- Spatial (3D/2D positional) Audio --- //
+void ska_audio_manager_set_listener(SkaVector3 position, SkaVector3 forward, SkaVector3 up, SkaVector3 velocity);
+SkaAudioInstanceId ska_audio_manager_play_sound_3d(struct SkaAudioSource* audio_source, bool loops, SkaVector3 position, SkaAudio3DParams params);
+SkaAudioInstanceId ska_audio_manager_play_sound_3d_with_params(struct SkaAudioSource* audio_source, SkaAudioPlayParams play_params, SkaVector3 position, SkaAudio3DParams params);
+void ska_audio_manager_set_instance_position(SkaAudioInstanceId instance_id, SkaVector3 position);
+void ska_audio_manager_set_instance_velocity(SkaAudioInstanceId instance_id, SkaVector3 velocity);
+
+// --- Instance control --- //
+// Setters are no-ops and getters return 0 once an instance has finished or been stopped.
+void ska_audio_manager_stop_instance(SkaAudioInstanceId instance_id);
+// True until the instance finishes or is stopped (a paused instance still counts as playing)
+bool ska_audio_manager_is_instance_playing(SkaAudioInstanceId instance_id);
+void ska_audio_manager_set_instance_paused(SkaAudioInstanceId instance_id, bool paused);
+bool ska_audio_manager_is_instance_paused(SkaAudioInstanceId instance_id);
+void ska_audio_manager_set_instance_volume(SkaAudioInstanceId instance_id, f32 volume);
+f32 ska_audio_manager_get_instance_volume(SkaAudioInstanceId instance_id);
+void ska_audio_manager_set_instance_pitch(SkaAudioInstanceId instance_id, f32 pitch);
+f32 ska_audio_manager_get_instance_pitch(SkaAudioInstanceId instance_id);
+// -1 = full left, 0 = center, 1 = full right (clamped). Non-3D instances only; 3D instances pan from position.
+void ska_audio_manager_set_instance_pan(SkaAudioInstanceId instance_id, f32 pan);
+f32 ska_audio_manager_get_instance_pan(SkaAudioInstanceId instance_id);
+
 #ifdef __cplusplus
 }
 #endif

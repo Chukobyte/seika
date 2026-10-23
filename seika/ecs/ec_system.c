@@ -4,7 +4,7 @@
 
 #include "seika/string.h"
 #include "seika/flag_utils.h"
-#include "seika/logger.h"
+#include "../logger.h"
 #include "seika/memory.h"
 #include "seika/assert.h"
 
@@ -37,48 +37,48 @@ typedef struct EntitySystemData {
 void ska_ecs_system_insert_entity_into_system(SkaEntity entity, SkaECSSystem* system);
 void ska_ecs_system_remove_entity_from_system(SkaEntity entity, SkaECSSystem* system);
 
-static EntitySystemData entitySystemData;
+static EntitySystemData entity_system_data;
 
 void ska_ecs_system_initialize() {
     // Initialize system data to 0
-    entitySystemData = (EntitySystemData){0};
+    entity_system_data = (EntitySystemData){0};
 }
 
 void ska_ecs_system_finalize() {
-    for (usize i = 0; i < entitySystemData.entity_systems_count; i++) {
-        ska_ecs_system_destroy(entitySystemData.entity_systems[i]);
-        entitySystemData.entity_systems[i] = NULL;
+    for (usize i = 0; i < entity_system_data.entity_systems_count; i++) {
+        ska_ecs_system_destroy(entity_system_data.entity_systems[i]);
+        entity_system_data.entity_systems[i] = NULL;
     }
 }
 
-SkaECSSystem* ska_ecs_system_create(const char* systemName) {
-    SkaECSSystem* newSystem = SKA_ALLOC_ZEROED(SkaECSSystem);
-    newSystem->name = ska_strdup(systemName);
-    newSystem->entities = ska_array_list_create_default_capacity(sizeof(SkaEntity));
-    return newSystem;
+SkaECSSystem* ska_ecs_system_create(const char* system_name) {
+    SkaECSSystem* new_system = SKA_ALLOC_ZEROED(SkaECSSystem);
+    new_system->name = ska_strdup(system_name);
+    new_system->entities = ska_array_list_init_default_capacity(sizeof(SkaEntity));
+    return new_system;
 }
 
-SkaECSSystem* ska_ecs_system_create_from_template(SkaECSSystemTemplate* systemTemplate) {
-    SkaECSSystem* newSystem = ska_ecs_system_create(systemTemplate->name);
-    newSystem->on_ec_system_register = systemTemplate->on_ec_system_register;
-    newSystem->on_ec_system_destroy = systemTemplate->on_ec_system_destroy;
-    newSystem->on_entity_registered_func = systemTemplate->on_entity_registered_func;
-    newSystem->on_entity_start_func = systemTemplate->on_entity_start_func;
-    newSystem->on_entity_end_func = systemTemplate->on_entity_end_func;
-    newSystem->on_entity_unregistered_func = systemTemplate->on_entity_unregistered_func;
-    newSystem->on_entity_entered_scene_func = systemTemplate->on_entity_entered_scene_func;
-    newSystem->render_func = systemTemplate->render_func;
-    newSystem->pre_update_all_func = systemTemplate->pre_update_all_func;
-    newSystem->post_update_all_func = systemTemplate->post_update_all_func;
-    newSystem->update_func = systemTemplate->update_func;
-    newSystem->fixed_update_func = systemTemplate->fixed_update_func;
-    newSystem->network_callback_func = systemTemplate->network_callback_func;
-    return newSystem;
+SkaECSSystem* ska_ecs_system_create_from_template(SkaECSSystemTemplate* system_template) {
+    SkaECSSystem* new_system = ska_ecs_system_create(system_template->name);
+    new_system->on_ec_system_register = system_template->on_ec_system_register;
+    new_system->on_ec_system_destroy = system_template->on_ec_system_destroy;
+    new_system->on_entity_registered_func = system_template->on_entity_registered_func;
+    new_system->on_entity_start_func = system_template->on_entity_start_func;
+    new_system->on_entity_end_func = system_template->on_entity_end_func;
+    new_system->on_entity_unregistered_func = system_template->on_entity_unregistered_func;
+    new_system->on_entity_entered_scene_func = system_template->on_entity_entered_scene_func;
+    new_system->render_func = system_template->render_func;
+    new_system->pre_update_all_func = system_template->pre_update_all_func;
+    new_system->post_update_all_func = system_template->post_update_all_func;
+    new_system->update_func = system_template->update_func;
+    new_system->fixed_update_func = system_template->fixed_update_func;
+    new_system->network_callback_func = system_template->network_callback_func;
+    return new_system;
 }
 
-SkaECSSystemTemplate ska_ecs_system_create_default_template(const char* systemName) {
+SkaECSSystemTemplate ska_ecs_system_create_default_template(const char* system_name) {
     return (SkaECSSystemTemplate){
-        .name = systemName, .on_ec_system_register = NULL, .on_ec_system_destroy = NULL, .on_entity_registered_func = NULL, .on_entity_start_func = NULL, .on_entity_end_func = NULL,
+        .name = system_name, .on_ec_system_register = NULL, .on_ec_system_destroy = NULL, .on_entity_registered_func = NULL, .on_entity_start_func = NULL, .on_entity_end_func = NULL,
         .on_entity_unregistered_func = NULL, .on_entity_entered_scene_func = NULL, .render_func = NULL, .pre_update_all_func = NULL, .post_update_all_func = NULL,
         .update_func = NULL, .fixed_update_func = NULL, .network_callback_func = NULL
     };
@@ -86,16 +86,16 @@ SkaECSSystemTemplate ska_ecs_system_create_default_template(const char* systemNa
 
 static SkaECSSystem* update_system_with_type_signature_string(SkaECSSystem* system, const char* signatures) {
     // Take signature string, create flags, and add to system's component signature
-    static char typeNameBuffer[256];
-    char* word = typeNameBuffer;
+    static char type_name_buffer[256];
+    char* word = type_name_buffer;
     char* start = word;
     for (const char* src = signatures; *src != '\0'; ++src) {
         // Skip commas and whitespace
         if (*src == ',') {
             *word = '\0';
-            const SkaComponentTypeInfo* typeInfo = ska_ecs_component_find_type_info(typeNameBuffer);
-            SKA_ASSERT_FMT(typeInfo, "Unable to get type info for '%s'", typeNameBuffer);
-            system->component_signature |= typeInfo->type;
+            const SkaComponentTypeInfo* type_info = ska_ecs_component_find_type_info(type_name_buffer);
+            SKA_ASSERT_FMT(type_info, "Unable to get type info for '%s'", type_name_buffer);
+            system->component_signature |= type_info->type;
             word = start;
             continue;
         } else if (*src == ' ') {
@@ -105,93 +105,95 @@ static SkaECSSystem* update_system_with_type_signature_string(SkaECSSystem* syst
     }
 
     *word = '\0';
-    const SkaComponentTypeInfo* typeInfo = ska_ecs_component_find_type_info(typeNameBuffer);
-    SKA_ASSERT_FMT(typeInfo, "Unable to get type info for '%s'", typeNameBuffer);
-    system->component_signature |= typeInfo->type;
+    const SkaComponentTypeInfo* type_info = ska_ecs_component_find_type_info(type_name_buffer);
+    SKA_ASSERT_FMT(type_info, "Unable to get type info for '%s'", type_name_buffer);
+    system->component_signature |= type_info->type;
     return system;
 }
 
-SkaECSSystem* ska_ecs_system_create_with_signature_string(const char* systemName, const char* signatures) {
-    SkaECSSystem* newSystem = ska_ecs_system_create(systemName);
-    update_system_with_type_signature_string(newSystem, signatures);
-    return newSystem;
+SkaECSSystem* ska_ecs_system_create_with_signature_string(const char* system_name, const char* signatures) {
+    SkaECSSystem* new_system = ska_ecs_system_create(system_name);
+    update_system_with_type_signature_string(new_system, signatures);
+    return new_system;
 }
 
-SkaECSSystem* ska_ecs_system_create_from_template_with_signature_string(SkaECSSystemTemplate* systemTemplate, const char* signatures) {
-    SkaECSSystem* newSystem = ska_ecs_system_create_from_template(systemTemplate);
-    update_system_with_type_signature_string(newSystem, signatures);
-    return newSystem;
+SkaECSSystem* ska_ecs_system_create_from_template_with_signature_string(SkaECSSystemTemplate* system_template, const char* signatures) {
+    SkaECSSystem* new_system = ska_ecs_system_create_from_template(system_template);
+    update_system_with_type_signature_string(new_system, signatures);
+    return new_system;
 }
 
-void ska_ecs_system_destroy(SkaECSSystem* entitySystem) {
-    if (entitySystem->on_ec_system_destroy) {
-        entitySystem->on_ec_system_destroy(entitySystem);
+void ska_ecs_system_destroy(SkaECSSystem* entity_system) {
+    if (entity_system->on_ec_system_destroy) {
+        entity_system->on_ec_system_destroy(entity_system);
     }
-    SKA_FREE(entitySystem);
+    ska_array_list_deinit(&entity_system->entities);
+    SKA_FREE(entity_system->name);
+    SKA_FREE(entity_system);
 }
 
 void ska_ecs_system_register(SkaECSSystem* system) {
     SKA_ASSERT_FMT(system != NULL, "Passed in system is NULL!");
-    SKA_ASSERT_FMT(entitySystemData.entity_systems_count + 1 < SKA_ECS_MAX_COMPONENTS, "At system limit of '%d'", SKA_ECS_MAX_COMPONENTS);
-    entitySystemData.entity_systems[entitySystemData.entity_systems_count++] = system;
+    SKA_ASSERT_FMT(entity_system_data.entity_systems_count + 1 < SKA_ECS_MAX_COMPONENTS, "At system limit of '%d'", SKA_ECS_MAX_COMPONENTS);
+    entity_system_data.entity_systems[entity_system_data.entity_systems_count++] = system;
     if (system->on_ec_system_register != NULL) {
         system->on_ec_system_register(system);
     }
     if (system->on_entity_start_func != NULL) {
-        SKA_ASSERT_FMT(entitySystemData.on_entity_start_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'on_entity_start_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
-        entitySystemData.on_entity_start_systems[entitySystemData.on_entity_start_systems_count++] = system;
+        SKA_ASSERT_FMT(entity_system_data.on_entity_start_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'on_entity_start_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
+        entity_system_data.on_entity_start_systems[entity_system_data.on_entity_start_systems_count++] = system;
     }
     if (system->on_entity_end_func != NULL) {
-        SKA_ASSERT_FMT(entitySystemData.on_entity_end_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'on_entity_end_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
-        entitySystemData.on_entity_end_systems[entitySystemData.on_entity_end_systems_count++] = system;
+        SKA_ASSERT_FMT(entity_system_data.on_entity_end_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'on_entity_end_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
+        entity_system_data.on_entity_end_systems[entity_system_data.on_entity_end_systems_count++] = system;
     }
     if (system->on_entity_entered_scene_func != NULL) {
-        SKA_ASSERT_FMT(entitySystemData.on_entity_entered_scene_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'on_entity_entered_scene_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
-        entitySystemData.on_entity_entered_scene_systems[entitySystemData.on_entity_entered_scene_systems_count++] = system;
+        SKA_ASSERT_FMT(entity_system_data.on_entity_entered_scene_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'on_entity_entered_scene_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
+        entity_system_data.on_entity_entered_scene_systems[entity_system_data.on_entity_entered_scene_systems_count++] = system;
     }
     if (system->render_func != NULL) {
-        SKA_ASSERT_FMT(entitySystemData.render_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'render_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
-        entitySystemData.render_systems[entitySystemData.render_systems_count++] = system;
+        SKA_ASSERT_FMT(entity_system_data.render_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'render_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
+        entity_system_data.render_systems[entity_system_data.render_systems_count++] = system;
     }
     if (system->pre_update_all_func != NULL) {
-        SKA_ASSERT_FMT(entitySystemData.pre_update_all_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'pre_update_all_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
-        entitySystemData.pre_update_all_systems[entitySystemData.pre_update_all_systems_count++] = system;
+        SKA_ASSERT_FMT(entity_system_data.pre_update_all_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'pre_update_all_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
+        entity_system_data.pre_update_all_systems[entity_system_data.pre_update_all_systems_count++] = system;
     }
     if (system->post_update_all_func != NULL) {
-        SKA_ASSERT_FMT(entitySystemData.post_update_all_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'post_update_all_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
-        entitySystemData.post_update_all_systems[entitySystemData.post_update_all_systems_count++] = system;
+        SKA_ASSERT_FMT(entity_system_data.post_update_all_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'post_update_all_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
+        entity_system_data.post_update_all_systems[entity_system_data.post_update_all_systems_count++] = system;
     }
     if (system->update_func != NULL) {
-        SKA_ASSERT_FMT(entitySystemData.update_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'update_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
-        entitySystemData.update_systems[entitySystemData.update_systems_count++] = system;
+        SKA_ASSERT_FMT(entity_system_data.update_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'update_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
+        entity_system_data.update_systems[entity_system_data.update_systems_count++] = system;
     }
     if (system->fixed_update_func != NULL) {
-        SKA_ASSERT_FMT(entitySystemData.fixed_update_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'fixed_update_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
-        entitySystemData.fixed_update_systems[entitySystemData.fixed_update_systems_count++] = system;
+        SKA_ASSERT_FMT(entity_system_data.fixed_update_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'fixed_update_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
+        entity_system_data.fixed_update_systems[entity_system_data.fixed_update_systems_count++] = system;
     }
     if (system->network_callback_func != NULL) {
-        SKA_ASSERT_FMT(entitySystemData.network_callback_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'network_callback_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
-        entitySystemData.network_callback_systems[entitySystemData.network_callback_systems_count++] = system;
+        SKA_ASSERT_FMT(entity_system_data.network_callback_systems_count + 1 < MAX_ENTITY_SYSTEMS_PER_HOOK, "At system 'network_callback_func' limit of '%d'", MAX_ENTITY_SYSTEMS_PER_HOOK);
+        entity_system_data.network_callback_systems[entity_system_data.network_callback_systems_count++] = system;
     }
 }
 
 void ska_ecs_system_update_entity_signature_with_systems(SkaEntity entity) {
-    const SkaComponentType entityComponentSignature = ska_ecs_component_manager_get_component_signature(entity);
-    for (usize i = 0; i < entitySystemData.entity_systems_count; i++) {
-        if (SKA_FLAG_CONTAINS(entityComponentSignature, entitySystemData.entity_systems[i]->component_signature)) {
-            ska_ecs_system_insert_entity_into_system(entity, entitySystemData.entity_systems[i]);
+    const SkaComponentType entity_component_signature = ska_ecs_component_manager_get_component_signature(entity);
+    for (usize i = 0; i < entity_system_data.entity_systems_count; i++) {
+        if (SKA_FLAG_CONTAINS(entity_component_signature, entity_system_data.entity_systems[i]->component_signature)) {
+            ska_ecs_system_insert_entity_into_system(entity, entity_system_data.entity_systems[i]);
         } else {
-            ska_ecs_system_remove_entity_from_system(entity, entitySystemData.entity_systems[i]);
+            ska_ecs_system_remove_entity_from_system(entity, entity_system_data.entity_systems[i]);
         }
     }
 }
 
 void ska_ecs_system_event_entity_start(SkaEntity entity) {
-    const SkaComponentType entityComponentSignature = ska_ecs_component_manager_get_component_signature(entity);
-    for (usize i = 0; i < entitySystemData.on_entity_start_systems_count; i++) {
-        SkaECSSystem* ecsSystem = entitySystemData.on_entity_start_systems[i];
-        if (SKA_FLAG_CONTAINS(entityComponentSignature, ecsSystem->component_signature)) {
-            ecsSystem->on_entity_start_func(ecsSystem, entity);
+    const SkaComponentType entity_component_signature = ska_ecs_component_manager_get_component_signature(entity);
+    for (usize i = 0; i < entity_system_data.on_entity_start_systems_count; i++) {
+        SkaECSSystem* ecs_system = entity_system_data.on_entity_start_systems[i];
+        if (SKA_FLAG_CONTAINS(entity_component_signature, ecs_system->component_signature)) {
+            ecs_system->on_entity_start_func(ecs_system, entity);
         }
     }
 }
@@ -199,74 +201,74 @@ void ska_ecs_system_event_entity_start(SkaEntity entity) {
 void ska_ecs_system_event_entity_end(SkaEntity entity) {
     // Notify scene exit observers before calling it on systems
     // TODO: Consider hooks for components instead of direct node component references
-    const SkaComponentType entityComponentSignature = ska_ecs_component_manager_get_component_signature(entity);
-    for (usize i = 0; i < entitySystemData.on_entity_end_systems_count; i++) {
-        SkaECSSystem* ecsSystem = entitySystemData.on_entity_end_systems[i];
-        if (SKA_FLAG_CONTAINS(entityComponentSignature, ecsSystem->component_signature)) {
-            ecsSystem->on_entity_end_func(ecsSystem, entity);
+    const SkaComponentType entity_component_signature = ska_ecs_component_manager_get_component_signature(entity);
+    for (usize i = 0; i < entity_system_data.on_entity_end_systems_count; i++) {
+        SkaECSSystem* ecs_system = entity_system_data.on_entity_end_systems[i];
+        if (SKA_FLAG_CONTAINS(entity_component_signature, ecs_system->component_signature)) {
+            ecs_system->on_entity_end_func(ecs_system, entity);
         }
     }
 }
 
 void ska_ecs_system_event_entity_entered_scene(SkaEntity entity) {
-    const SkaComponentType entityComponentSignature = ska_ecs_component_manager_get_component_signature(entity);
-    for (usize i = 0; i < entitySystemData.on_entity_entered_scene_systems_count; i++) {
-        SkaECSSystem* ecsSystem = entitySystemData.on_entity_entered_scene_systems[i];
-        if (SKA_FLAG_CONTAINS(entityComponentSignature, ecsSystem->component_signature)) {
-            ecsSystem->on_entity_entered_scene_func(ecsSystem, entity);
+    const SkaComponentType entity_component_signature = ska_ecs_component_manager_get_component_signature(entity);
+    for (usize i = 0; i < entity_system_data.on_entity_entered_scene_systems_count; i++) {
+        SkaECSSystem* ecs_system = entity_system_data.on_entity_entered_scene_systems[i];
+        if (SKA_FLAG_CONTAINS(entity_component_signature, ecs_system->component_signature)) {
+            ecs_system->on_entity_entered_scene_func(ecs_system, entity);
         }
     }
 }
 
 void ska_ecs_system_event_render_systems() {
-    for (usize i = 0; i < entitySystemData.render_systems_count; i++) {
-        SkaECSSystem* ecsSystem = entitySystemData.render_systems[i];
-        ecsSystem->render_func(ecsSystem);
+    for (usize i = 0; i < entity_system_data.render_systems_count; i++) {
+        SkaECSSystem* ecs_system = entity_system_data.render_systems[i];
+        ecs_system->render_func(ecs_system);
     }
 }
 
 void ska_ecs_system_event_pre_update_all_systems() {
-    for (usize i = 0; i < entitySystemData.pre_update_all_systems_count; i++) {
-        SkaECSSystem* ecsSystem = entitySystemData.pre_update_all_systems[i];
-        ecsSystem->pre_update_all_func(ecsSystem);
+    for (usize i = 0; i < entity_system_data.pre_update_all_systems_count; i++) {
+        SkaECSSystem* ecs_system = entity_system_data.pre_update_all_systems[i];
+        ecs_system->pre_update_all_func(ecs_system);
     }
 }
 
 void ska_ecs_system_event_post_update_all_systems() {
-    for (usize i = 0; i < entitySystemData.post_update_all_systems_count; i++) {
-        SkaECSSystem* ecsSystem = entitySystemData.post_update_all_systems[i];
-        ecsSystem->post_update_all_func(ecsSystem);
+    for (usize i = 0; i < entity_system_data.post_update_all_systems_count; i++) {
+        SkaECSSystem* ecs_system = entity_system_data.post_update_all_systems[i];
+        ecs_system->post_update_all_func(ecs_system);
     }
 }
 
-void ska_ecs_system_event_update_systems(f32 deltaTime) {
-    for (usize i = 0; i < entitySystemData.update_systems_count; i++) {
-        SkaECSSystem* ecsSystem = entitySystemData.update_systems[i];
-        ecsSystem->update_func(ecsSystem, deltaTime);
+void ska_ecs_system_event_update_systems(f32 delta_time) {
+    for (usize i = 0; i < entity_system_data.update_systems_count; i++) {
+        SkaECSSystem* ecs_system = entity_system_data.update_systems[i];
+        ecs_system->update_func(ecs_system, delta_time);
     }
 }
 
-void ska_ecs_system_event_fixed_update_systems(f32 deltaTime) {
-    for (usize i = 0; i < entitySystemData.fixed_update_systems_count; i++) {
-        SkaECSSystem* ecsSystem = entitySystemData.fixed_update_systems[i];
-        ecsSystem->fixed_update_func(ecsSystem, deltaTime);
+void ska_ecs_system_event_fixed_update_systems(f32 delta_time) {
+    for (usize i = 0; i < entity_system_data.fixed_update_systems_count; i++) {
+        SkaECSSystem* ecs_system = entity_system_data.fixed_update_systems[i];
+        ecs_system->fixed_update_func(ecs_system, delta_time);
     }
 }
 
 void ska_ecs_system_event_network_callback(const char* message) {
-    for (usize i = 0; i < entitySystemData.network_callback_systems_count; i++) {
-        SkaECSSystem* ecsSystem = entitySystemData.network_callback_systems[i];
-        ecsSystem->network_callback_func(ecsSystem, message);
+    for (usize i = 0; i < entity_system_data.network_callback_systems_count; i++) {
+        SkaECSSystem* ecs_system = entity_system_data.network_callback_systems[i];
+        ecs_system->network_callback_func(ecs_system, message);
     }
 }
 
 bool ska_ecs_system_has_entity(SkaEntity entity, SkaECSSystem* system) {
-    return ska_array_list_has(system->entities, &entity);
+    return ska_array_list_has(&system->entities, &entity);
 }
 
 void ska_ecs_system_remove_entity_from_all_systems(SkaEntity entity) {
-    for (usize i = 0; i < entitySystemData.entity_systems_count; i++) {
-        ska_ecs_system_remove_entity_from_system(entity, entitySystemData.entity_systems[i]);
+    for (usize i = 0; i < entity_system_data.entity_systems_count; i++) {
+        ska_ecs_system_remove_entity_from_system(entity, entity_system_data.entity_systems[i]);
     }
 }
 
@@ -274,7 +276,7 @@ void ska_ecs_system_remove_entity_from_all_systems(SkaEntity entity) {
 
 void ska_ecs_system_insert_entity_into_system(SkaEntity entity, SkaECSSystem* system) {
     if (!ska_ecs_system_has_entity(entity, system)) {
-        ska_array_list_push_back(system->entities, &entity);
+        ska_array_list_append(&system->entities, &entity);
         if (system->on_entity_registered_func != NULL) {
             system->on_entity_registered_func(system, entity);
         }
@@ -284,7 +286,7 @@ void ska_ecs_system_insert_entity_into_system(SkaEntity entity, SkaECSSystem* sy
 }
 
 void ska_ecs_system_remove_entity_from_system(SkaEntity entity, SkaECSSystem* system) {
-    ska_array_list_remove(system->entities, &entity);
+    ska_array_list_remove(&system->entities, &entity);
 }
 
 #endif // if SKA_ECS

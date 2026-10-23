@@ -4,7 +4,7 @@
 extern "C" {
 #endif
 
-#include "seika/defines.h"
+#include "defines.h"
 
 #ifndef SKA_LOG_BUFFER_SIZE
 #define SKA_LOG_BUFFER_SIZE 512
@@ -23,6 +23,7 @@ void ska_logger_warn(const char* fmt, ...);
 void ska_logger_info(const char* fmt, ...);
 void ska_logger_debug(const char* fmt, ...);
 void ska_logger_message(const char* fmt, ...);
+void ska_logger_message_and_flush(const char* fmt, ...);
 
 void ska_logger_internal_queue_message(const char* fmt, ...);
 bool ska_logger_internal_print_queue();
