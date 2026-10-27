@@ -17,7 +17,7 @@
 #include "seika/data_structures/static_array.h"
 
 #define SKA_RENDER_LAYER_BATCH_ITEM_MAX 1024
-#define SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX 100
+#define SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX 1024
 #define SKA_RENDER_TEXTURE_LAYER_TEXTURE_MAX 64
 
 typedef struct SkaTextureCoordinates {
@@ -198,6 +198,7 @@ void ska_renderer_queue_font_draw_call(SkaFont* font, const char* text, f32 x, f
     item.scale = scale;
     item.color = color;
     const int32 array_z_index = ska_math_clamp_int(z_index + SKA_RENDERER_MAX_Z_INDEX / 2, 0, SKA_RENDERER_MAX_Z_INDEX - 1);
+    SKA_ASSERT_FMT(render_layer_items[array_z_index].font_batch_item_count < SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX, "Exceeded SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX '%d'", SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX);
     // Update font batch item on render layer
     render_layer_items[array_z_index].font_batch_items[render_layer_items[array_z_index].font_batch_item_count++] = item;
     // Update active render layer indices
@@ -294,15 +295,15 @@ void sprite_renderer_update_resolution() {
 }
 
 void renderer_batching_draw_sprites(SpriteBatchItem items[], usize sprite_count) {
-#define MAX_SPRITE_COUNT 2000
+// Must match the size of the sprite shader's CRE_MODELS[] uniform array (shader_source.h); a sprite
+// indexed past it gets no model matrix and silently doesn't render, so larger batches are drawn in chunks.
+#define MAX_SPRITES_PER_DRAW 100
 #define NUMBER_OF_VERTICES 6
-#define VERTEX_BUFFER_SIZE (VERTS_STRIDE * NUMBER_OF_VERTICES * MAX_SPRITE_COUNT)
+#define VERTEX_BUFFER_SIZE (VERTS_STRIDE * NUMBER_OF_VERTICES * MAX_SPRITES_PER_DRAW)
 
     if (sprite_count <= 0) {
         return;
     }
-
-    SKA_ASSERT(sprite_count <= MAX_SPRITE_COUNT);
 
     glDepthMask(false);
 
@@ -312,62 +313,66 @@ void renderer_batching_draw_sprites(SpriteBatchItem items[], usize sprite_count)
     SkaTexture* texture = items[0].texture;
 
     GLfloat verts[VERTEX_BUFFER_SIZE];
-    for (usize i = 0; i < sprite_count; i++) {
-        if (items[i].shader_instance != NULL) {
-            ska_shader_use(items[i].shader_instance->shader);
-            ska_renderer_set_shader_instance_params(items[i].shader_instance);
-        } else {
-            ska_shader_use(sprite_shader);
-        }
-
-        ska_matrix4_scale_and_mul(&items[i].transform2_d.model, (SkaVector3) {
-            items[i].dest_size.w, items[i].dest_size.h, 1.0f
-        });
-        const f32 sprite_id = (f32) i;
-        const f32 determinate = ska_matrix4_determinant(&items[i].transform2_d.model);
-        const SkaTextureCoordinates texture_coords = renderer_get_texture_coordinates(texture, &items[i].source_rect, items[i].flip_h, items[i].flip_v);
-        // concat CRE_MODELS[] string for uniform param
-        char models_buffer[24];
-        sprintf(models_buffer, "CRE_MODELS[%zu]", i);
-        ska_shader_set_mat4_float(sprite_shader, models_buffer, &items[i].transform2_d.model);
-
-        // Loop over vertices
-        for (int32 j = 0; j < NUMBER_OF_VERTICES; j++) {
-            bool is_s_min;
-            bool is_t_min;
-            if (determinate >= 0.0f) {
-                is_s_min = j == 0 || j == 2 || j == 3;
-                is_t_min = j == 1 || j == 2 || j == 5;
+    for (usize chunk_start = 0; chunk_start < sprite_count; chunk_start += MAX_SPRITES_PER_DRAW) {
+        const usize chunk_count = SKA_MATH_MIN(sprite_count - chunk_start, (usize)MAX_SPRITES_PER_DRAW);
+        for (usize n = 0; n < chunk_count; n++) {
+            SpriteBatchItem* item = &items[chunk_start + n];
+            if (item->shader_instance != NULL) {
+                ska_shader_use(item->shader_instance->shader);
+                ska_renderer_set_shader_instance_params(item->shader_instance);
             } else {
-                is_s_min = j == 1 || j == 2 || j == 5;
-                is_t_min = j == 0 || j == 2 || j == 3;
+                ska_shader_use(sprite_shader);
             }
-            const int32 row = (j * VERTS_STRIDE) + ((int32) i * (VERTS_STRIDE * NUMBER_OF_VERTICES));
-            verts[row + 0] = sprite_id;
-            verts[row + 1] = is_s_min ? 0.0f : 1.0f;
-            verts[row + 2] = is_t_min ? 0.0f : 1.0f;
-            verts[row + 3] = is_s_min ? texture_coords.s_min : texture_coords.s_max;
-            verts[row + 4] = is_t_min ? texture_coords.t_min : texture_coords.t_max;
-            verts[row + 5] = items[i].color.r;
-            verts[row + 6] = items[i].color.g;
-            verts[row + 7] = items[i].color.b;
-            verts[row + 8] = items[i].color.a;
-            verts[row + 9] = (f32)texture->apply_nearest_neighbor;
+
+            ska_matrix4_scale_and_mul(&item->transform2_d.model, (SkaVector3) {
+                item->dest_size.w, item->dest_size.h, 1.0f
+            });
+            const f32 sprite_id = (f32) n;
+            const f32 determinate = ska_matrix4_determinant(&item->transform2_d.model);
+            const SkaTextureCoordinates texture_coords = renderer_get_texture_coordinates(texture, &item->source_rect, item->flip_h, item->flip_v);
+            // concat CRE_MODELS[] string for uniform param
+            char models_buffer[24];
+            sprintf(models_buffer, "CRE_MODELS[%zu]", n);
+            ska_shader_set_mat4_float(sprite_shader, models_buffer, &item->transform2_d.model);
+
+            // Loop over vertices
+            for (int32 j = 0; j < NUMBER_OF_VERTICES; j++) {
+                bool is_s_min;
+                bool is_t_min;
+                if (determinate >= 0.0f) {
+                    is_s_min = j == 0 || j == 2 || j == 3;
+                    is_t_min = j == 1 || j == 2 || j == 5;
+                } else {
+                    is_s_min = j == 1 || j == 2 || j == 5;
+                    is_t_min = j == 0 || j == 2 || j == 3;
+                }
+                const int32 row = (j * VERTS_STRIDE) + ((int32) n * (VERTS_STRIDE * NUMBER_OF_VERTICES));
+                verts[row + 0] = sprite_id;
+                verts[row + 1] = is_s_min ? 0.0f : 1.0f;
+                verts[row + 2] = is_t_min ? 0.0f : 1.0f;
+                verts[row + 3] = is_s_min ? texture_coords.s_min : texture_coords.s_max;
+                verts[row + 4] = is_t_min ? texture_coords.t_min : texture_coords.t_max;
+                verts[row + 5] = item->color.r;
+                verts[row + 6] = item->color.g;
+                verts[row + 7] = item->color.b;
+                verts[row + 8] = item->color.a;
+                verts[row + 9] = (f32)texture->apply_nearest_neighbor;
+            }
         }
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, texture->id);
+
+        glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) (sizeof(GLfloat) * VERTS_STRIDE * NUMBER_OF_VERTICES * chunk_count), verts, GL_DYNAMIC_DRAW);
+        glDrawArrays(GL_TRIANGLES, 0, (GLsizei) (chunk_count * NUMBER_OF_VERTICES));
+
+        ska_renderer_print_opengl_errors();
     }
-
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texture->id);
-
-    glBufferData(GL_ARRAY_BUFFER, (GLsizeiptr) sizeof(verts), verts, GL_DYNAMIC_DRAW);
-    glDrawArrays(GL_TRIANGLES, 0, (GLsizei) (sprite_count * NUMBER_OF_VERTICES));
-
-    ska_renderer_print_opengl_errors();
 
     glBindVertexArray(0);
     glDepthMask(true);
 
-#undef MAX_SPRITE_COUNT
+#undef MAX_SPRITES_PER_DRAW
 #undef NUMBER_OF_VERTICES
 #undef VERTEX_BUFFER_SIZE
 }
