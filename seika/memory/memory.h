@@ -30,6 +30,9 @@ Allocator.allocate(&Allocator, Bytes)
 #define SKA_ALLOC_BYTES_ZEROED_A(Allocator, Bytes)             \
 Allocator.allocate_zeroed(&Allocator, Bytes)
 
+#define SKA_REALLOC(Memory, Bytes)             \
+ska_mem_global_reallocate(Memory, Bytes)
+
 #define SKA_REALLOC_A(Allocator, Memory, Bytes)             \
 Allocator.reallocate(&Allocator, Memory, Bytes)
 

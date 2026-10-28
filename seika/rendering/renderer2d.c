@@ -15,10 +15,9 @@
 #include "seika/assert.h"
 #include "../logger.h"
 #include "seika/data_structures/static_array.h"
+#include "seika/memory/memory.h"
 
-#define SKA_RENDER_LAYER_BATCH_ITEM_MAX 1024
-#define SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX 1024
-#define SKA_RENDER_TEXTURE_LAYER_TEXTURE_MAX 64
+#define SKA_RENDER_BATCH_INITIAL_CAPACITY 16
 
 typedef struct SkaTextureCoordinates {
     GLfloat s_min;
@@ -83,21 +82,37 @@ typedef struct FontBatchItem {
 
 void renderer_batching_draw_sprites(SpriteBatchItem items[], usize sprite_count);
 
-// Render Layer - Arranges draw order by z index
+// Render Layer - Arranges draw order by z index. Batch arrays grow on demand and keep their capacity across frames.
 typedef struct RenderTextureLayer {
-    SpriteBatchItem sprite_batch_items[SKA_RENDER_LAYER_BATCH_ITEM_MAX];
+    SpriteBatchItem* sprite_batch_items;
     usize sprite_batch_item_count;
+    usize sprite_batch_item_capacity;
 } RenderTextureLayer;
 
 typedef struct RenderLayer {
-    RenderTextureLayer render_texture_layers[SKA_RENDER_TEXTURE_LAYER_TEXTURE_MAX];
-    FontBatchItem font_batch_items[SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX];
+    RenderTextureLayer* render_texture_layers;
+    FontBatchItem* font_batch_items;
     usize render_texture_layer_count;
+    usize render_texture_layer_capacity;
     usize font_batch_item_count;
+    usize font_batch_item_capacity;
 } RenderLayer;
 
 SKA_STATIC_ARRAY_CREATE(RenderLayer, SKA_RENDERER_MAX_Z_INDEX, render_layer_items);
 SKA_STATIC_ARRAY_CREATE(int32, SKA_RENDERER_MAX_Z_INDEX, active_render_layer_items_indices);
+
+// Grows a batch array (doubling) so index 'needed - 1' is valid; new slots are uninitialized
+static void* batch_array_reserve(void* items, usize* capacity, usize needed, usize item_size) {
+    if (needed <= *capacity) {
+        return items;
+    }
+    usize new_capacity = *capacity > 0 ? *capacity * 2 : SKA_RENDER_BATCH_INITIAL_CAPACITY;
+    while (new_capacity < needed) {
+        new_capacity *= 2;
+    }
+    *capacity = new_capacity;
+    return SKA_REALLOC(items, new_capacity * item_size);
+}
 
 // Renderer
 void ska_renderer_init_2d() {
@@ -114,6 +129,16 @@ void ska_renderer_init_2d() {
 void ska_renderer_deinit_2d() {
     font_renderer_finalize();
     sprite_renderer_finalize();
+    for (usize i = 0; i < SKA_RENDERER_MAX_Z_INDEX; i++) {
+        RenderLayer* layer = &render_layer_items[i];
+        for (usize t = 0; t < layer->render_texture_layer_capacity; t++) {
+            SKA_FREE(layer->render_texture_layers[t].sprite_batch_items);
+        }
+        SKA_FREE(layer->render_texture_layers);
+        SKA_FREE(layer->font_batch_items);
+        *layer = (RenderLayer){0};
+    }
+    SKA_STATIC_ARRAY_EMPTY(active_render_layer_items_indices);
 }
 
 static inline void update_active_render_layer_index(int32 z_index) {
@@ -127,21 +152,25 @@ static inline void update_active_render_layer_index(int32 z_index) {
 
 static inline void ska_renderer_queue_sprite_draw_call(SpriteBatchItem* item, int32 z_index) {
     const int32 array_z_index = ska_math_clamp_int(z_index + SKA_RENDERER_MAX_Z_INDEX / 2, 0, SKA_RENDERER_MAX_Z_INDEX - 1);
+    RenderLayer* layer = &render_layer_items[array_z_index];
     // Get texture layer index for render texture
-    usize texture_layer_index = render_layer_items[array_z_index].render_texture_layer_count;
-    for (usize i = 0; i < render_layer_items[array_z_index].render_texture_layer_count; i++) {
-        if (item->texture == render_layer_items[array_z_index].render_texture_layers[i].sprite_batch_items[0].texture && item->shader_instance == render_layer_items[array_z_index].render_texture_layers[i].sprite_batch_items[0].shader_instance) {
+    usize texture_layer_index = layer->render_texture_layer_count;
+    for (usize i = 0; i < layer->render_texture_layer_count; i++) {
+        if (item->texture == layer->render_texture_layers[i].sprite_batch_items[0].texture && item->shader_instance == layer->render_texture_layers[i].sprite_batch_items[0].shader_instance) {
             texture_layer_index = i;
             break;
         }
     }
-    RenderTextureLayer* texture_layer =  &render_layer_items[array_z_index].render_texture_layers[texture_layer_index];
-    // Increment render texture layer count if first sprite
-    if (texture_layer->sprite_batch_item_count == 0) {
-        render_layer_items[array_z_index].render_texture_layer_count++;
+    // First sprite with this texture this frame: claim a texture layer, keeping any batch array it held last frame
+    if (texture_layer_index == layer->render_texture_layer_count) {
+        const usize old_capacity = layer->render_texture_layer_capacity;
+        layer->render_texture_layers = batch_array_reserve(layer->render_texture_layers, &layer->render_texture_layer_capacity, texture_layer_index + 1, sizeof(RenderTextureLayer));
+        memset(&layer->render_texture_layers[old_capacity], 0, (layer->render_texture_layer_capacity - old_capacity) * sizeof(RenderTextureLayer));
+        layer->render_texture_layer_count++;
     }
+    RenderTextureLayer* texture_layer = &layer->render_texture_layers[texture_layer_index];
+    texture_layer->sprite_batch_items = batch_array_reserve(texture_layer->sprite_batch_items, &texture_layer->sprite_batch_item_capacity, texture_layer->sprite_batch_item_count + 1, sizeof(SpriteBatchItem));
     // Copy batch item into batch items array and increment item count
-    SKA_ASSERT_FMT(texture_layer->sprite_batch_item_count + 1 < SKA_RENDER_LAYER_BATCH_ITEM_MAX, "Exceeded SKA_RENDER_LAYER_BATCH_ITEM_MAX '%d'", SKA_RENDER_LAYER_BATCH_ITEM_MAX);
     SpriteBatchItem* current_item = &texture_layer->sprite_batch_items[texture_layer->sprite_batch_item_count++];
     memcpy(current_item, item, sizeof(SpriteBatchItem));
     // Update active render layer indices
@@ -198,9 +227,10 @@ void ska_renderer_queue_font_draw_call(SkaFont* font, const char* text, f32 x, f
     item.scale = scale;
     item.color = color;
     const int32 array_z_index = ska_math_clamp_int(z_index + SKA_RENDERER_MAX_Z_INDEX / 2, 0, SKA_RENDERER_MAX_Z_INDEX - 1);
-    SKA_ASSERT_FMT(render_layer_items[array_z_index].font_batch_item_count < SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX, "Exceeded SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX '%d'", SKA_RENDER_LAYER_FONT_BATCH_ITEM_MAX);
+    RenderLayer* layer = &render_layer_items[array_z_index];
     // Update font batch item on render layer
-    render_layer_items[array_z_index].font_batch_items[render_layer_items[array_z_index].font_batch_item_count++] = item;
+    layer->font_batch_items = batch_array_reserve(layer->font_batch_items, &layer->font_batch_item_capacity, layer->font_batch_item_count + 1, sizeof(FontBatchItem));
+    layer->font_batch_items[layer->font_batch_item_count++] = item;
     // Update active render layer indices
     update_active_render_layer_index(array_z_index);
 }
