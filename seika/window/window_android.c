@@ -191,6 +191,10 @@ static void update_touch(void) {
     if (touch.release_left) {
         ska_input_register_input_event3(SkaInputSourceType_MOUSE, SkaInputKey_MOUSE_BUTTON_LEFT, SkaInputTriggerType_RELEASED);
         touch.release_left = false;
+        // the tap's frame has seen the click; a lifted finger hovers nothing
+        if (!touch.down) {
+            touch_move_mouse(-10000.0f, -10000.0f);
+        }
     }
     if (touch.release_right) {
         ska_input_register_input_event3(SkaInputSourceType_MOUSE, SkaInputKey_MOUSE_BUTTON_RIGHT, SkaInputTriggerType_RELEASED);
