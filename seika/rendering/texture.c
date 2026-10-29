@@ -203,6 +203,12 @@ void ska_texture_generate(SkaTexture* texture) {
     } else if (texture->nr_channels == 4) {
       texture->image_format = GL_RGBA;
     }
+    // GLES rejects an RGBA internalformat for RGB/RED data (desktop GL converts), so match the data's channels
+    if (texture->internal_format == GL_RGBA && texture->nr_channels == 3) {
+      texture->internal_format = GL_RGB8;
+    } else if (texture->internal_format == GL_RGBA && texture->nr_channels == 1) {
+      texture->internal_format = GL_R8;
+    }
 
     // Create texture
     glGenTextures(1, &texture->id);
@@ -210,6 +216,11 @@ void ska_texture_generate(SkaTexture* texture) {
     glTexImage2D(GL_TEXTURE_2D, 0, texture->internal_format, texture->width, texture->height, 0, texture->image_format, GL_UNSIGNED_BYTE, texture->data);
     glGenerateMipmap(GL_TEXTURE_2D);
     // Wrap and filter modes
+#if defined(PLATFORM_ANDROID) || defined(PLATFORM_EMSCRIPTEN)
+    // GLES3 has no border clamp without GL_EXT_texture_border_clamp (missing on the emulator, WebGL2)
+    if (texture->wrap_s == GL_CLAMP_TO_BORDER) texture->wrap_s = GL_CLAMP_TO_EDGE;
+    if (texture->wrap_t == GL_CLAMP_TO_BORDER) texture->wrap_t = GL_CLAMP_TO_EDGE;
+#endif
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, texture->wrap_s);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, texture->wrap_t);
     // Defaults to bilinear interpolation

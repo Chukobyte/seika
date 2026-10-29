@@ -33,6 +33,8 @@ bool ska_fs_make_dirs(const char *dir_path);
 // heap-allocated path (free with SKA_FREE) with no trailing separator, or NULL if the platform's
 // base directory env var isn't set or the directory couldn't be created.
 char *ska_fs_get_user_data_dir(const char *org, const char *app);
+// Base dir for ska_fs_get_user_data_dir instead of the env var (Android: activity->internalDataPath)
+void ska_fs_set_user_data_root(const char *path);
 
 // Same as ska_fs_get_user_data_dir, but for re-creatable cached data (downloads, build artifacts):
 // Windows `%LOCALAPPDATA%/org/app`, macOS `~/Library/Caches/org/app`, Linux

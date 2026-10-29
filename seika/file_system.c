@@ -228,27 +228,37 @@ bool ska_fs_make_dirs(const char* dir_path) {
     return ska_fs_does_dir_exist(buffer);
 }
 
+static char user_data_root[512] = {0};
+
+void ska_fs_set_user_data_root(const char* path) {
+    snprintf(user_data_root, sizeof(user_data_root), "%s", path ? path : "");
+}
+
 char* ska_fs_get_user_data_dir(const char* org, const char* app) {
     if (!org || !app) return NULL;
     char base[512];
-#if defined(_WIN32)
-    const char* appdata = getenv("APPDATA");
-    if (!appdata) return NULL;
-    snprintf(base, sizeof(base), "%s/%s/%s", appdata, org, app);
-#elif defined(__APPLE__)
-    const char* home = getenv("HOME");
-    if (!home) return NULL;
-    snprintf(base, sizeof(base), "%s/Library/Application Support/%s/%s", home, org, app);
-#else
-    const char* xdg_data_home = getenv("XDG_DATA_HOME");
-    if (xdg_data_home && xdg_data_home[0]) {
-        snprintf(base, sizeof(base), "%s/%s/%s", xdg_data_home, org, app);
+    if (user_data_root[0]) {
+        snprintf(base, sizeof(base), "%s/%s/%s", user_data_root, org, app);
     } else {
+#if defined(_WIN32)
+        const char* appdata = getenv("APPDATA");
+        if (!appdata) return NULL;
+        snprintf(base, sizeof(base), "%s/%s/%s", appdata, org, app);
+#elif defined(__APPLE__)
         const char* home = getenv("HOME");
         if (!home) return NULL;
-        snprintf(base, sizeof(base), "%s/.local/share/%s/%s", home, org, app);
-    }
+        snprintf(base, sizeof(base), "%s/Library/Application Support/%s/%s", home, org, app);
+#else
+        const char* xdg_data_home = getenv("XDG_DATA_HOME");
+        if (xdg_data_home && xdg_data_home[0]) {
+            snprintf(base, sizeof(base), "%s/%s/%s", xdg_data_home, org, app);
+        } else {
+            const char* home = getenv("HOME");
+            if (!home) return NULL;
+            snprintf(base, sizeof(base), "%s/.local/share/%s/%s", home, org, app);
+        }
 #endif
+    }
     if (!ska_fs_make_dirs(base)) return NULL;
     return ska_strdup(base);
 }
