@@ -40,7 +40,6 @@ void ska_renderer_init(SkaRendererInitProps props) {
 #endif
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     ska_render_context_initialize((SkaSize2Di){ props.resolution_width, props.resolution_height });
-    ska_renderer_update_window_size(props.window_width, props.window_height);
     ska_shader_cache_initialize();
     if (props.init_2d) {
         ska_renderer_init_2d();
@@ -53,9 +52,11 @@ void ska_renderer_init(SkaRendererInitProps props) {
     }
 #ifdef SKA_RENDER_TO_FRAMEBUFFER
     // Initialize framebuffer
-    SKA_ASSERT_FMT(ska_frame_buffer_initialize(props.window_width, props.window_height, props.resolution_width, props.resolution_height), "Framebuffer didn't initialize!");
     ska_frame_buffer_set_maintain_aspect_ratio(props.maintain_aspect_ratio);
+    SKA_ASSERT_FMT(ska_frame_buffer_initialize(props.window_width, props.window_height, props.resolution_width, props.resolution_height), "Framebuffer didn't initialize!");
 #endif
+    // after the framebuffer knows the resolution and aspect mode, so the first viewport is already letterboxed
+    ska_renderer_update_window_size(props.window_width, props.window_height);
 }
 
 void ska_renderer_deinit() {
@@ -88,6 +89,14 @@ void ska_renderer_update_window_size(int32 window_width, int32 window_height) {
     window->height = data.size.h;
 #ifdef SKA_RENDER_TO_FRAMEBUFFER
     ska_frame_buffer_resize_texture(data.size.w, data.size.h);
+#endif
+}
+
+SkaVector2 ska_renderer_window_to_resolution(SkaVector2i window_position) {
+#ifdef SKA_RENDER_TO_FRAMEBUFFER
+    return ska_frame_buffer_window_to_resolution(window_position);
+#else
+    return (SkaVector2){ (f32)window_position.x, (f32)window_position.y };
 #endif
 }
 

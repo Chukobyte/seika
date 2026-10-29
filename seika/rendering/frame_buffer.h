@@ -36,6 +36,8 @@ SkaFrameBufferViewportData
 ska_frame_buffer_generate_viewport_data(int32 window_width,
                                         int32 window_height);
 SkaFrameBufferViewportData* ska_frame_buffer_get_cached_viewport_data();
+// Window pixels -> resolution coordinates through the (possibly letterboxed) viewport
+SkaVector2 ska_frame_buffer_window_to_resolution(SkaVector2i window_position);
 
 #ifdef __cplusplus
 }

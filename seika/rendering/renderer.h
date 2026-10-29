@@ -40,6 +40,8 @@ void ska_renderer_init(SkaRendererInitProps props);
 void ska_renderer_deinit();
 void ska_renderer_clear(f32 red, f32 green, f32 blue, f32 alpha);
 void ska_renderer_update_window_size(int32 window_width, int32 window_height);
+// Window pixels (e.g. the mouse) -> resolution coordinates, accounting for stretching and letterbox bars
+SkaVector2 ska_renderer_window_to_resolution(SkaVector2i window_position);
 void ska_renderer_set_sprite_shader_default_params(SkaShader* shader);
 
 void ska_renderer_process_and_flush_batches(const SkaColor* background_color);

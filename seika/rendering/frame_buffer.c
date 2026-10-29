@@ -59,6 +59,17 @@ SkaFrameBufferViewportData* ska_frame_buffer_get_cached_viewport_data() {
     return &cached_viewport_data;
 }
 
+SkaVector2 ska_frame_buffer_window_to_resolution(SkaVector2i window_position) {
+    const SkaFrameBufferViewportData* vp = &cached_viewport_data;
+    if (vp->size.w <= 0 || vp->size.h <= 0) {
+        return (SkaVector2){ (f32)window_position.x, (f32)window_position.y };
+    }
+    return (SkaVector2){
+        (f32)(window_position.x - vp->position.x) * (f32)resolution_width / (f32)vp->size.w,
+        (f32)(window_position.y - vp->position.y) * (f32)resolution_height / (f32)vp->size.h,
+    };
+}
+
 bool recreate_frame_buffer_object() {
     // Clean up old objects if they exist
     if (frame_buffer != (GLuint)-1) {
