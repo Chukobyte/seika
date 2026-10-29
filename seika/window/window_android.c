@@ -27,15 +27,60 @@ static SkaWindow main_window = {0};
 typedef struct SkaAndroidData {
     struct android_app* app;
     bool window_ready; // true once APP_CMD_INIT_WINDOW has been delivered at least once
+    bool paused;       // backgrounded: between TERM_WINDOW and the next INIT_WINDOW
 #if SKA_RENDERING
     EGLDisplay display;
     EGLSurface surface;
     EGLContext context;
     EGLConfig config;
+    EGLint surface_width, surface_height; // last size handed to ska_win_update_size (window->width becomes the viewport's)
 #endif
 } SkaAndroidData;
 
 static SkaAndroidData android_data = {0};
+
+#if SKA_RENDERING
+// INIT_WINDOW can arrive before the window has its real size (a 1x1 surface), and resumes/rotations resize it
+static void egl_sync_surface_size(bool force) {
+    EGLint width = 0, height = 0;
+    if (!eglQuerySurface(android_data.display, android_data.surface, EGL_WIDTH, &width)
+        || !eglQuerySurface(android_data.display, android_data.surface, EGL_HEIGHT, &height)) return;
+    if (!force && width == android_data.surface_width && height == android_data.surface_height) return;
+    android_data.surface_width = width;
+    android_data.surface_height = height;
+    ska_win_update_size(&main_window, (int32)width, (int32)height);
+}
+
+// Backgrounding destroys the native window; only the surface goes, the context (textures, fonts, shaders) is kept
+static void egl_release_surface(void) {
+    if (android_data.display == EGL_NO_DISPLAY) return;
+    eglMakeCurrent(android_data.display, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
+    if (android_data.surface != EGL_NO_SURFACE) {
+        eglDestroySurface(android_data.display, android_data.surface);
+        android_data.surface = EGL_NO_SURFACE;
+    }
+}
+
+// Binds the kept context to a surface on the new native window; false if the context didn't survive
+static bool egl_restore_surface(void) {
+    EGLint native_visual_id = 0;
+    eglGetConfigAttrib(android_data.display, android_data.config, EGL_NATIVE_VISUAL_ID, &native_visual_id);
+    ANativeWindow_setBuffersGeometry(android_data.app->window, 0, 0, native_visual_id);
+    android_data.surface = eglCreateWindowSurface(android_data.display, android_data.config, android_data.app->window, NULL);
+    if (android_data.surface == EGL_NO_SURFACE) {
+        ska_logger_error("resume: eglCreateWindowSurface failed (0x%x)", eglGetError());
+        return false;
+    }
+    if (!eglMakeCurrent(android_data.display, android_data.surface, android_data.surface, android_data.context)) {
+        ska_logger_error("resume: eglMakeCurrent failed (0x%x)", eglGetError());
+        return false;
+    }
+    egl_sync_surface_size(true);
+    // swap interval belongs to the surface
+    eglSwapInterval(android_data.display, main_window.vsync_enabled ? 1 : 0);
+    return true;
+}
+#endif
 
 // Runs on the android_main thread via ALooper_pollOnce -> source->process -> this callback
 // (native_app_glue's convention, installed onto app->onAppCmd below).
@@ -44,15 +89,27 @@ static void handle_app_cmd(struct android_app* app, int32_t cmd) {
     switch (cmd) {
         case APP_CMD_INIT_WINDOW:
             android_data.window_ready = true;
+            if (android_data.paused) {
+                android_data.paused = false;
+#if SKA_RENDERING
+                // without a context there's nothing to draw with, so end the game cleanly
+                if (!egl_restore_surface()) {
+                    main_window.is_active = false;
+                }
+#endif
+            }
             break;
         case APP_CMD_TERM_WINDOW:
-        case APP_CMD_DESTROY:
-            // Full suspend/resume (recreating the EGL surface after backgrounding) is out of
-            // scope for now -- treat both the same as a clean exit request so std_game_run's
-            // `while (... && ska_win_is_active(window) ...)` loop (koa/koa/std/game.c) exits
-            // cleanly (runs deinit, tears down) instead of continuing to issue GL calls against
-            // a dead surface.
+            // app->window is still valid here; the game loop blocks in ska_win_process_events until INIT_WINDOW
             android_data.window_ready = false;
+            android_data.paused = main_window.is_active;
+#if SKA_RENDERING
+            egl_release_surface();
+#endif
+            break;
+        case APP_CMD_DESTROY:
+            android_data.window_ready = false;
+            android_data.paused = false;
             main_window.is_active = false;
             break;
         default:
@@ -232,16 +289,22 @@ bool ska_win_init(void) {
     return true;
 }
 
+// Processes one looper event (timeout -1 blocks); false when there was nothing to process
+static bool pump_event(int timeout_ms) {
+    int events;
+    struct android_poll_source* source;
+    if (ALooper_pollOnce(timeout_ms, NULL, &events, (void**)&source) < 0) return false;
+    if (source != NULL) {
+        source->process(android_data.app, source);
+    }
+    return true;
+}
+
 // Pumps the looper (blocking while there's nothing else to do) until either the native window
 // becomes available or the app is torn down before ever getting one.
 static void wait_for_native_window(void) {
     while (!android_data.window_ready && !android_data.app->destroyRequested) {
-        int events;
-        struct android_poll_source* source;
-        const int result = ALooper_pollOnce(-1, NULL, &events, (void**)&source);
-        if (result >= 0 && source != NULL) {
-            source->process(android_data.app, source);
-        }
+        pump_event(-1);
     }
 }
 
@@ -318,6 +381,8 @@ SkaWindow* ska_win_create_window(SkaCreateWindowProps props) {
     eglQuerySurface(android_data.display, android_data.surface, EGL_HEIGHT, &surface_height);
     width = (int32)surface_width;
     height = (int32)surface_height;
+    android_data.surface_width = surface_width;
+    android_data.surface_height = surface_height;
 #endif
 
     // Native windows are always fullscreen; eglSwapInterval defaults to 1
@@ -349,25 +414,33 @@ void ska_win_destroy_window(SkaWindow* window) {
 #endif
 }
 
-// Called once per frame from std_game_run's loop (koa/koa/std/game.c) -- must never block, unlike
-// wait_for_native_window's initial (-1 timeout) wait.
+// Called once per frame from std_game_run's loop (koa/koa/std/game.c). Only blocks while backgrounded,
+// so the game loop stalls here (no GL calls without a surface) until the window comes back.
 void ska_win_process_events(SkaWindow* window) {
     (void)window;
 #if SKA_INPUT
     update_touch();
 #endif
-    int events;
-    struct android_poll_source* source;
-    int result;
-    while ((result = ALooper_pollOnce(0, NULL, &events, (void**)&source)) >= 0) {
-        if (source != NULL) {
-            source->process(android_data.app, source);
+    while (!android_data.app->destroyRequested && pump_event(0)) {}
+    if (android_data.paused) {
+        while (android_data.paused && !android_data.app->destroyRequested) {
+            pump_event(-1);
         }
-        if (android_data.app->destroyRequested != 0) {
-            main_window.is_active = false;
-            return;
-        }
+#if SKA_INPUT
+        // a finger that was down when the app left never sends its UP
+        touch.down = false;
+        touch_move_mouse(-10000.0f, -10000.0f);
+#endif
     }
+    if (android_data.app->destroyRequested != 0) {
+        main_window.is_active = false;
+        return;
+    }
+#if SKA_RENDERING
+    if (main_window.is_active && android_data.surface != EGL_NO_SURFACE) {
+        egl_sync_surface_size(false);
+    }
+#endif
 }
 
 void ska_win_swap_window(SkaWindow* window) {

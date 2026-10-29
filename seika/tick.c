@@ -17,10 +17,16 @@ void ska_tick_destroy(SkaTick* tick) {
     SKA_FREE(tick);
 }
 
+// Caps a stalled frame (app backgrounded, window dragged, debugger) so fixed updates don't spiral to catch up
+#define SKA_TICK_MAX_DELTA_SECONDS 0.25f
+
 void ska_tick_update(SkaTick* tick) {
     const uint64 new_time = ska_timer_get_global_time();
     const uint64 delta_time = new_time - tick->current_time;
-    const f32 delta_time_seconds = (f32)delta_time / 1000.f;
+    f32 delta_time_seconds = (f32)delta_time / 1000.f;
+    if (delta_time_seconds > SKA_TICK_MAX_DELTA_SECONDS) {
+        delta_time_seconds = SKA_TICK_MAX_DELTA_SECONDS;
+    }
 
     tick->current_time = new_time;
     if (tick->update_func) {
