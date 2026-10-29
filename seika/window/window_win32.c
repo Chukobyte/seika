@@ -372,6 +372,20 @@ void ska_win_enable_vscroll_bar(SkaWindow* window, bool enable) {
     SetWindowPos(win32_data.hwnd, NULL, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
 }
 
+#if SKA_INPUT
+// WM_KEYDOWN/WM_KEYUP report VK_SHIFT/VK_CONTROL for either side; resolve the sided key from the scancode / extended bit
+static uint32 win32_key_vkcode(WPARAM w_param, LPARAM l_param) {
+    const uint32 vk_code = (uint32)w_param;
+    if (vk_code == VK_SHIFT) {
+        return MapVirtualKeyA((UINT)((l_param >> 16) & 0xFF), MAPVK_VSC_TO_VK_EX);
+    }
+    if (vk_code == VK_CONTROL) {
+        return (l_param & (1 << 24)) ? VK_RCONTROL : VK_LCONTROL;
+    }
+    return vk_code;
+}
+#endif
+
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT u_msg, WPARAM w_param, LPARAM l_param) {
     switch (u_msg) {
         case WM_DESTROY: {
@@ -393,13 +407,13 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT u_msg, WPARAM w_param, LPARAM l_para
         }
 #if SKA_INPUT
         case WM_KEYDOWN: {
-            const uint32 vk_code = (uint32)w_param;
+            const uint32 vk_code = win32_key_vkcode(w_param, l_param);
             const SkaInputKey translated_key = ska_input_win32_vkcode_to_keycode(vk_code);
             ska_input_register_input_event3(SkaInputSourceType_KEYBOARD, translated_key, SkaInputTriggerType_PRESSED);
             return 0;
         }
         case WM_KEYUP: {
-            const uint32 vk_code = (uint32)w_param;
+            const uint32 vk_code = win32_key_vkcode(w_param, l_param);
             const SkaInputKey translated_key = ska_input_win32_vkcode_to_keycode(vk_code);
             ska_input_register_input_event3(SkaInputSourceType_KEYBOARD, translated_key, SkaInputTriggerType_RELEASED);
             return 0;
