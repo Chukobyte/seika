@@ -216,6 +216,7 @@ if (SEIKA_UNIT_TESTS)
             gamepad_db
             ecs_component
             simd
+            asset_manager
     )
 
     # Create test executables

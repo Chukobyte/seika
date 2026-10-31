@@ -16,6 +16,19 @@ static SkaStringHashMap* audio_source_map = NULL;
 // module unregistering can't free assets the other still uses.
 static usize init_count = 0;
 
+// Textures and audio sources are small enough to sit inline in the map's slots, which move when the map
+// grows, and callers keep the returned pointers (a queued sprite holds its texture until the frame's flush).
+// So the map holds pointers to them, keeping their addresses stable for the manager's lifetime.
+static void* store_pointer(SkaStringHashMap* map, const char* key, void* asset) {
+    ska_string_hash_map_add(map, key, &asset, sizeof(asset));
+    return asset;
+}
+
+static void* get_pointer(const SkaStringHashMap* map, const char* key) {
+    void** entry = (void**)ska_string_hash_map_get(map, key);
+    return entry ? *entry : NULL;
+}
+
 void ska_asset_manager_initialize() {
     if (init_count++ > 0) {
         return;
@@ -31,9 +44,15 @@ void ska_asset_manager_finalize() {
     }
 #if SKA_AUDIO
     SKA_STRING_HASH_MAP_FOR_EACH(audio_source_map, iter) {
-        SkaAudioSource* source = (SkaAudioSource*)iter.value;
+        SkaAudioSource* source = *(SkaAudioSource**)iter.value;
         SKA_FREE(source->samples);
         SKA_FREE((char*)source->file_path);
+        SKA_FREE(source);
+    }
+#endif
+#if SKA_RENDERING
+    SKA_STRING_HASH_MAP_FOR_EACH(textures_map, iter) {
+        ska_texture_delete(*(SkaTexture**)iter.value);
     }
 #endif
     ska_string_hash_map_deinit(textures_map);
@@ -49,11 +68,7 @@ void ska_asset_manager_finalize() {
 SkaTexture* ska_asset_manager_load_texture(const char* file_name, const char* key) {
     SKA_ASSERT(textures_map != NULL);
     SKA_ASSERT_FMT(!ska_string_hash_map_has(textures_map, file_name), "Already loaded texture at file path '%'s!  Has key '%s'.", file_name, key);
-    SkaTexture* texture = ska_texture_create(file_name);
-    ska_string_hash_map_add(textures_map, key, texture, sizeof(SkaTexture));
-    SKA_FREE(texture);
-    texture = (SkaTexture*) ska_string_hash_map_get(textures_map, key);
-    return texture;
+    return (SkaTexture*)store_pointer(textures_map, key, ska_texture_create(file_name));
 }
 
 SkaTexture* ska_asset_manager_load_texture_ex(const char* file_name, const char* key, const char* wrap_s, const char* wrap_t, bool apply_nearest_neighbor) {
@@ -65,24 +80,17 @@ SkaTexture* ska_asset_manager_load_texture_ex(const char* file_name, const char*
                              ska_texture_wrap_string_to_int(wrap_t),
                              apply_nearest_neighbor
                          );
-    ska_string_hash_map_add(textures_map, key, texture, sizeof(SkaTexture));
-    SKA_FREE(texture);
-    texture = (SkaTexture*) ska_string_hash_map_get(textures_map, key);
-    return texture;
+    return (SkaTexture*)store_pointer(textures_map, key, texture);
 }
 
 SkaTexture* ska_asset_manager_load_texture_from_memory(const char* key, const void* buffer, usize buffer_size) {
     SKA_ASSERT(textures_map != NULL);
     SKA_ASSERT_FMT(!ska_string_hash_map_has(textures_map, key), "Already loaded texture with key '%s'.", key);
-    SkaTexture* texture = ska_texture_create_from_memory(buffer, buffer_size);
-    ska_string_hash_map_add(textures_map, key, texture, sizeof(SkaTexture));
-    SKA_FREE(texture);
-    texture = (SkaTexture*) ska_string_hash_map_get(textures_map, key);
-    return texture;
+    return (SkaTexture*)store_pointer(textures_map, key, ska_texture_create_from_memory(buffer, buffer_size));
 }
 
 SkaTexture* ska_asset_manager_get_texture(const char* key) {
-    return (SkaTexture*) ska_string_hash_map_get(textures_map, key);
+    return (SkaTexture*)get_pointer(textures_map, key);
 }
 
 bool ska_asset_manager_has_texture(const char* key) {
@@ -122,36 +130,28 @@ bool ska_asset_manager_has_font(const char* key) {
 
 #if SKA_AUDIO
 // --- Audio Source --- //
-// The map keeps its own copy of the source struct; the loaded one is freed (its buffers now
-// belong to the copy, released in ska_asset_manager_finalize).
-static SkaAudioSource* store_audio_source(const char* key, SkaAudioSource* loaded) {
-    ska_string_hash_map_add(audio_source_map, key, loaded, sizeof(SkaAudioSource));
-    SKA_FREE(loaded);
-    return (SkaAudioSource*)ska_string_hash_map_get(audio_source_map, key);
-}
-
 SkaAudioSource* ska_asset_manager_load_audio_source_wav(const char* file_name, const char* key) {
     SKA_ASSERT(audio_source_map != NULL);
     SKA_ASSERT_FMT(!ska_string_hash_map_has(audio_source_map, file_name), "Already loaded audio source at file path '%'s!  Has key '%s'.", file_name, key);
     SkaAudioSource* new_audio_source = ska_audio_load_audio_source_wav(file_name);
     SKA_ASSERT_FMT(new_audio_source != NULL, "Audio source is null!  file_name = '%s', key = '%s'", file_name, key);
-    return store_audio_source(key, new_audio_source);
+    return (SkaAudioSource*)store_pointer(audio_source_map, key, new_audio_source);
 }
 
 SkaAudioSource* ska_asset_manager_try_load_audio_source_wav(const char* file_name, const char* key) {
     SKA_ASSERT(audio_source_map != NULL);
     if (ska_string_hash_map_has(audio_source_map, key)) {
-        return (SkaAudioSource*)ska_string_hash_map_get(audio_source_map, key);
+        return (SkaAudioSource*)get_pointer(audio_source_map, key);
     }
     SkaAudioSource* new_audio_source = ska_audio_load_audio_source_wav(file_name);
     if (!new_audio_source) {
         return NULL;
     }
-    return store_audio_source(key, new_audio_source);
+    return (SkaAudioSource*)store_pointer(audio_source_map, key, new_audio_source);
 }
 
 SkaAudioSource* ska_asset_manager_get_audio_source(const char* key) {
-    return (SkaAudioSource*) ska_string_hash_map_get(audio_source_map, key);
+    return (SkaAudioSource*)get_pointer(audio_source_map, key);
 }
 
 bool ska_asset_manager_has_audio_source(const char* key) {
