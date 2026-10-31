@@ -19,7 +19,7 @@ SkaShader* ska_shader_compile_new_shader(const char* vertex_source, const char* 
     fragment = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fragment, 1, &fragment_source, NULL);
     glCompileShader(fragment);
-    if (!shader_check_compile_errors(vertex, ska_shader_fragment_type)) {
+    if (!shader_check_compile_errors(fragment, ska_shader_fragment_type)) {
         return NULL;
     }
     // attack and link shaders

@@ -15,6 +15,8 @@ struct SkaTexture* ska_asset_manager_load_texture_ex(const char* file_name, cons
 struct SkaTexture* ska_asset_manager_load_texture_from_memory(const char* key, const void* buffer, usize buffer_size);
 struct SkaTexture* ska_asset_manager_get_texture(const char* key);
 bool ska_asset_manager_has_texture(const char* key);
+// Removes the texture and hands it to the caller, or NULL if there's none; free it with ska_texture_delete_with_gl after any queued sprites using it are flushed
+struct SkaTexture* ska_asset_manager_take_texture(const char* key);
 
 struct SkaFont* ska_asset_manager_load_font(const char* file_name, const char* key, int size, bool apply_nearest_neighbor);
 struct SkaFont* ska_asset_manager_load_font_from_memory(const char* key, void* buffer, usize buffer_size, int size, bool apply_nearest_neighbor);

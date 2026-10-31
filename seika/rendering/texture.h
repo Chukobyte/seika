@@ -35,6 +35,8 @@ SkaTexture* ska_texture_create_checkerboard(GLsizei width, GLsizei height);
 // Meant to be drawn as a color-tinted sprite (tint via the draw call's own color, not this texture).
 SkaTexture* ska_texture_create_circle(GLsizei diameter);
 void ska_texture_delete(SkaTexture* texture);
+// Also frees the GPU texture, so it needs a current GL context
+void ska_texture_delete_with_gl(SkaTexture* texture);
 GLint ska_texture_wrap_string_to_int(const char* wrap);
 const char* ska_texture_get_wrap_s_string(const SkaTexture* texture);
 const char* ska_texture_get_wrap_t_string(const SkaTexture* texture);

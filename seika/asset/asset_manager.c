@@ -93,6 +93,14 @@ SkaTexture* ska_asset_manager_get_texture(const char* key) {
     return (SkaTexture*)get_pointer(textures_map, key);
 }
 
+SkaTexture* ska_asset_manager_take_texture(const char* key) {
+    SkaTexture* texture = (SkaTexture*)get_pointer(textures_map, key);
+    if (texture) {
+        ska_string_hash_map_erase(textures_map, key);
+    }
+    return texture;
+}
+
 bool ska_asset_manager_has_texture(const char* key) {
     return ska_string_hash_map_has(textures_map, key);
 }

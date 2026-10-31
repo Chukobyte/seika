@@ -60,16 +60,15 @@ SkaTexture *ska_texture_create2(const char *file_path, GLint wrap_s,
   SKA_ASSERT_FMT(file_image_data->data != NULL,
                  "Failed to load texture image data at file path '%s'",
                  file_path);
-  const usize image_data_size = strlen((char *)file_image_data->data);
-  texture->data = (unsigned char *)SKA_ALLOC_BYTES(image_data_size);
-  //    memcpy(texture->data, fileImageData->data, imageDataSize);
-  texture->data = file_image_data->data; // TODO: Fix
+  texture->data = file_image_data->data;
   texture->width = file_image_data->width;
   texture->height = file_image_data->height;
   texture->nr_channels = file_image_data->nr_channels;
 
   ska_texture_generate(texture);
 
+  // the pixels live on the GPU now
+  texture->data = NULL;
   ska_asset_file_loader_free_image_data(file_image_data);
 
   return texture;
@@ -90,16 +89,16 @@ SkaTexture *ska_texture_create_from_memory2(const void *buffer,
   texture->wrap_s = wrap_s;
   texture->wrap_t = wrap_t;
   texture->apply_nearest_neighbor = apply_nearest_neighbor;
-  texture->data = (unsigned char *)SKA_ALLOC_BYTES(buffer_size);
   unsigned char *image_data = stbi_load_from_memory(
       (unsigned char *)buffer, (int32)buffer_size, &texture->width,
       &texture->height, &texture->nr_channels, 0);
   SKA_ASSERT(image_data);
-  //    memcpy(texture->data, imageData, bufferSize);
   texture->data = image_data;
 
   ska_texture_generate(texture);
 
+  // the pixels live on the GPU now
+  texture->data = NULL;
   stbi_image_free(image_data);
 
   return texture;
@@ -236,6 +235,11 @@ void ska_texture_generate(SkaTexture* texture) {
 void ska_texture_delete(SkaTexture* texture) {
     SKA_FREE(texture->file_name);
     SKA_FREE(texture);
+}
+
+void ska_texture_delete_with_gl(SkaTexture* texture) {
+    glDeleteTextures(1, &texture->id);
+    ska_texture_delete(texture);
 }
 
 GLint ska_texture_wrap_string_to_int(const char* wrap) {
