@@ -327,7 +327,7 @@ void sprite_renderer_update_resolution() {
 void renderer_batching_draw_sprites(SpriteBatchItem items[], usize sprite_count) {
 // Must match the size of the sprite shader's CRE_MODELS[] uniform array (shader_source.h); a sprite
 // indexed past it gets no model matrix and silently doesn't render, so larger batches are drawn in chunks.
-#define MAX_SPRITES_PER_DRAW 100
+#define MAX_SPRITES_PER_DRAW SKA_SPRITE_MAX_MODELS
 #define NUMBER_OF_VERTICES 6
 #define VERTEX_BUFFER_SIZE (VERTS_STRIDE * NUMBER_OF_VERTICES * MAX_SPRITES_PER_DRAW)
 

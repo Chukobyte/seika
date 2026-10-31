@@ -6,10 +6,15 @@
 #if defined(PLATFORM_ANDROID) || defined(PLATFORM_EMSCRIPTEN)
 #define SKA_GLSL_VERSION_VERTEX   "#version 300 es\n"
 #define SKA_GLSL_VERSION_FRAGMENT "#version 300 es\n" "precision mediump float;\n" "precision mediump sampler2D;\n"
+// GLES 3.0 only guarantees 256 vertex uniform vectors and a mat4 takes 4, so 100 fails to link on some GPUs
+#define SKA_SPRITE_MAX_MODELS 60
 #else
 #define SKA_GLSL_VERSION_VERTEX   "#version 330 core\n"
 #define SKA_GLSL_VERSION_FRAGMENT "#version 330 core\n"
+#define SKA_SPRITE_MAX_MODELS 100
 #endif
+#define SKA_GLSL_INT_IMPL(VALUE) #VALUE
+#define SKA_GLSL_INT(VALUE) SKA_GLSL_INT_IMPL(VALUE)
 
 #if SKA_RENDERING
 
@@ -34,7 +39,7 @@ static const char* ska_opengl_shader_source_vertex_sprite =
     // visible precision loss/jitter the longer the app has been running.
     "uniform highp float TIME;\n"
     "uniform sampler2D TEXTURE;\n"
-    "uniform mat4 CRE_MODELS[100];\n"
+    "uniform mat4 CRE_MODELS[" SKA_GLSL_INT(SKA_SPRITE_MAX_MODELS) "];\n"
     "uniform mat4 CRE_PROJECTION;\n"
     "\n"
     "//@@UNIFORMS\n"
